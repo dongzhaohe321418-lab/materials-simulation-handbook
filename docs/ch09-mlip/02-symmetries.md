@@ -11,6 +11,152 @@ that matter — translation, rotation, permutation, smoothness,
 compactness — and introduces the distinction between *invariant* and
 *equivariant* features that organises the modern literature.
 
+## 9.2.0 Invariance and equivariance — the central distinction
+
+Before walking through the individual symmetries, we make sharp the
+single most important distinction in the modern MLIP literature: that
+between *invariance* and *equivariance*. Many beginners conflate the
+two and then find Section 9.5 mysterious. The conceptual investment
+here pays back many times over.
+
+!!! note "Definitions"
+    Let $G$ be a group (e.g. $\mathrm{O}(3)$, rotations and
+    reflections in 3D) acting on the input space of a function $f$.
+    Let $\rho_\mathrm{in}$ denote that action on the input and
+    $\rho_\mathrm{out}$ its action on the output. The function $f$ is
+
+    - **invariant** under $G$ if
+      $f(\rho_\mathrm{in}(g) \cdot \mathbf{x}) = f(\mathbf{x})$ for
+      every group element $g \in G$. The output never changes.
+    - **equivariant** under $G$ if
+      $f(\rho_\mathrm{in}(g) \cdot \mathbf{x}) = \rho_\mathrm{out}(g) \cdot
+      f(\mathbf{x})$ for every $g \in G$. The output transforms in a
+      *predictable, group-consistent way*.
+
+    Invariance is the special case of equivariance in which
+    $\rho_\mathrm{out}$ is the *trivial* representation, i.e. the
+    output is a scalar.
+
+The energy $U(\{\mathbf{r}_i\})$ is invariant under translations,
+rotations, reflections, and same-species permutations. Forces and
+stresses are *not* invariant: they transform predictably under those
+operations. Specifically, if we apply a rotation $R$ to every position
+in the system, then
+
+$$
+U(\{R\mathbf{r}_i\}) = U(\{\mathbf{r}_i\}), \qquad
+\mathbf{F}_i(\{R\mathbf{r}_j\}) = R\,\mathbf{F}_i(\{\mathbf{r}_j\}),
+$$
+
+and the stress tensor transforms as
+$\sigma'_{\alpha\beta} = R_{\alpha\gamma} R_{\beta\delta} \sigma_{\gamma\delta}$.
+Energy is scalar, forces are vectors ($\ell = 1$), stress is a
+symmetric rank-2 tensor ($\ell = 0$ plus $\ell = 2$).
+
+!!! example "A concrete check"
+    Take three atoms at $\mathbf{r}_1 = (0, 0, 0)$,
+    $\mathbf{r}_2 = (1, 0, 0)$, $\mathbf{r}_3 = (0, 1, 0)$ and any
+    rotation, say a $90^\circ$ rotation $R$ about the $z$-axis,
+    $R: (x, y, z) \mapsto (-y, x, z)$. The rotated configuration is
+    $R\mathbf{r}_1 = (0, 0, 0)$, $R\mathbf{r}_2 = (0, 1, 0)$,
+    $R\mathbf{r}_3 = (-1, 0, 0)$.
+
+    The pairwise distances are unchanged: $|r_{12}| = |R r_{12}| = 1$,
+    $|r_{13}| = |R r_{13}| = 1$, $|r_{23}| = |R r_{23}| = \sqrt{2}$.
+    The energy, being a function of these distances, is unchanged
+    (invariance). If atom $1$ originally felt force $\mathbf{F}_1 =
+    (F_x, F_y, F_z)$, in the rotated frame it feels $R\mathbf{F}_1 =
+    (-F_y, F_x, F_z)$ — the force has rotated alongside the
+    configuration (equivariance).
+
+The whole point of this chapter is that one can choose to build an
+MLIP whose *internal features* are either invariant or equivariant.
+Both yield invariant energies (just take a final inner product to
+collapse equivariant features to scalars). But equivariant features
+preserve more information per dimension and therefore yield more
+data-efficient potentials — the empirical lesson of §9.5.
+
+The slogan to memorise: **invariance throws away information,
+equivariance keeps it.** Both are correct; one is wasteful.
+
+## 9.2.0a Why differentiability matters
+
+The forces that drive molecular dynamics are not measured; they are
+*computed* as gradients of the energy with respect to positions:
+
+$$
+\mathbf{F}_i = -\nabla_{\mathbf{r}_i} U(\{\mathbf{r}_j\}).
+$$
+
+This identity, banal in classical mechanics, has sharp consequences
+for MLIP design.
+
+**Consequence 1: continuity.** The energy must be a *continuous*
+function of every atomic coordinate. A discontinuity at any
+configuration produces a delta-function in the force, which integrates
+to a finite-momentum kick in MD. The kick injects energy on every
+neighbour-list update, and energy conservation in NVE fails
+catastrophically.
+
+**Consequence 2: differentiability.** The energy must be
+*differentiable*. A continuous but kinked function (think
+$|r - r_0|$ as a stand-in bond term) has finite forces on either
+side but no well-defined force at the kink, and the integrator
+oscillates pathologically near it.
+
+**Consequence 3: smooth derivatives for thermodynamic integration
+and free-energy methods.** Many post-MD analyses — free-energy
+perturbation, thermodynamic integration, response-function evaluation —
+require *second* derivatives of the energy (the Hessian). Models with
+$C^1$ but not $C^2$ smoothness will produce noisy phonon spectra and
+unreliable enhanced-sampling free-energy estimates.
+
+The implication for design: we will require not just *invariance and
+equivariance* of the energy, but *smooth invariance and equivariance*.
+This rules out hard-cutoff descriptors, requires smooth cutoff
+envelopes (§9.2.4), and forbids $\mathrm{ReLU}$-like non-smooth
+activations in the network (we use $\tanh$, SiLU, softplus instead).
+
+A useful heuristic: the energy should be at least $C^2$ for honest
+phonon work and $C^1$ at the very least for stable MD. Best-of-breed
+MACE potentials are $C^\infty$ inside the cutoff sphere and $C^p$ at
+the cutoff with $p \approx 5$.
+
+## 9.2.0b On the body-order hierarchy
+
+The atomic energy $E_i$ depends on the geometry of all neighbours of
+$i$ inside the cutoff. With $n$ neighbours one can in principle
+construct features of *body order* $1, 2, 3, \dots, n + 1$ (the $+1$
+counts atom $i$ itself). A two-body feature depends on $i$ and one
+neighbour; a three-body feature depends on $i$ and two neighbours
+(and thus involves an angle); a four-body feature involves three
+neighbours; and so on.
+
+Why truncate? Two reasons:
+
+1. **Combinatorial explosion.** With $n = 12$ neighbours (a typical
+   first coordination shell), there are $n$ two-body terms, $\binom{n}{2}
+   = 66$ three-body terms, $\binom{n}{3} = 220$ four-body terms,
+   $\binom{n}{4} = 495$ five-body terms. The number of distinct
+   feature parameters grows correspondingly.
+2. **Diminishing physical relevance.** Most chemistries are well
+   described by terms up to four-body order: covalent bonds
+   (two-body), bond angles (three-body), dihedrals (four-body). The
+   five-body and higher contributions to the energy are small
+   corrections.
+
+The practical consequence is the body-order truncation: Behler
+descriptors capture two- and three-body, ACE and MACE go to four- or
+five-body, and that is essentially sufficient. Where it is not — in
+some metallic systems with strong electronic-structure non-locality,
+in conjugated $\pi$-systems with delocalised electrons — one needs
+deeper message-passing networks whose effective receptive field grows
+beyond a single cutoff sphere.
+
+We will return to body order constantly in §9.3 (it is the organising
+principle of the ACE expansion) and §9.5 (it sets MACE apart from
+NequIP).
+
 ## 9.2.1 Translation invariance
 
 The first symmetry is the simplest. Translate every atom by the same
@@ -34,6 +180,35 @@ $$
 or on functions of relative coordinates such as scalar distances
 $r_{ij} = \|\mathbf{r}_{ij}\|$ and angles
 $\cos\theta_{ijk} = \hat{\mathbf{r}}_{ij}\cdot\hat{\mathbf{r}}_{ik}$.
+
+!!! note "Why distances are automatically translation- and rotation-invariant"
+    The pairwise distance $r_{ij} = \|\mathbf{r}_j - \mathbf{r}_i\|$ is
+    invariant under any global translation $\mathbf{r}_i \mapsto
+    \mathbf{r}_i + \mathbf{t}$, because the translation cancels in
+    the difference. It is also invariant under any rotation $R \in
+    \mathrm{O}(3)$, because
+
+    $$
+    \|R\mathbf{r}_j - R\mathbf{r}_i\| =
+    \|R(\mathbf{r}_j - \mathbf{r}_i)\| =
+    \|\mathbf{r}_j - \mathbf{r}_i\|,
+    $$
+
+    using the fact that rotations preserve the Euclidean norm. So
+    *any* function $f$ built from pairwise distances alone satisfies
+    $f(\{R\mathbf{r}_i + \mathbf{t}\}) = f(\{\mathbf{r}_i\})$ for
+    every $(R, \mathbf{t})$ — translation and rotation invariance
+    come for free.
+
+    The corresponding statement for angles, which are inner products of
+    unit vectors $\hat{\mathbf{r}}_{ij} \cdot \hat{\mathbf{r}}_{ik}$, is
+    the same: inner products are rotation-invariant scalars. Two- and
+    three-body invariants built from distances and angles are
+    automatically $\mathrm{O}(3) \times \mathbb{R}^3$-invariant.
+
+    This is why §9.3.1's Behler symmetry functions, built only from
+    $r_{ij}$ and $\cos\theta_{ijk}$, are invariant by inspection — no
+    extra machinery is needed.
 
 In a periodic cell with lattice vectors $\mathbf{L}_a$ the relative
 coordinate must be taken modulo the lattice: we use the *minimum-image*
@@ -166,6 +341,45 @@ where the aggregation is sum, mean, or max — all permutation-invariant.
 NequIP and MACE are message-passing networks of this kind, with
 equivariant features playing the role of $h$.
 
+!!! example "Permutation invariance — three atoms by hand"
+    Let us verify permutation invariance for three identical atoms
+    explicitly. Take three hydrogens at $\mathbf{r}_1 = (0, 0, 0)$,
+    $\mathbf{r}_2 = (1, 0, 0)$, $\mathbf{r}_3 = (0, 1, 0)$, and a
+    Behler radial descriptor
+
+    $$
+    G_i = \sum_{j \neq i} g(r_{ij}), \qquad g(r) = e^{-r^2}.
+    $$
+
+    With the original labelling,
+    $G_1 = g(1) + g(1) = 2e^{-1}$;
+    $G_2 = g(1) + g(\sqrt{2}) = e^{-1} + e^{-2}$;
+    $G_3 = g(1) + g(\sqrt{2}) = e^{-1} + e^{-2}$.
+
+    Now swap labels $1 \leftrightarrow 2$, so the same three atoms are
+    relabelled as $\mathbf{r}'_1 = (1, 0, 0)$, $\mathbf{r}'_2 =
+    (0, 0, 0)$, $\mathbf{r}'_3 = (0, 1, 0)$.
+    $G'_1 = g(1) + g(\sqrt{2}) = e^{-1} + e^{-2}$;
+    $G'_2 = g(1) + g(1) = 2e^{-1}$;
+    $G'_3 = g(1) + g(\sqrt{2}) = e^{-1} + e^{-2}$.
+
+    The descriptor values are *permuted along with the labels*, but
+    the multiset $\{G_1, G_2, G_3\}$ is identical. The sum
+    $E = E_1 + E_2 + E_3 = f(G_1) + f(G_2) + f(G_3)$ — for any choice
+    of regression function $f$ — is therefore invariant under the
+    relabelling. The atom-centred sum structure is what makes
+    permutation invariance automatic.
+
+    Now consider what would go wrong with a non-atom-centred model.
+    Suppose we tried $E = \mathrm{NN}(\mathbf{r}_1, \mathbf{r}_2,
+    \mathbf{r}_3)$ as a single function of nine ordered coordinates.
+    The neural network would treat $(0, 0, 0; 1, 0, 0; 0, 1, 0)$ and
+    $(1, 0, 0; 0, 0, 0; 0, 1, 0)$ as different inputs, and would
+    return different energies unless trained to symmetrise — which it
+    will only learn approximately, never exactly. Atom-centred sums
+    are the architectural commitment that makes permutation invariance
+    exact rather than approximate.
+
 ## 9.2.4 Smoothness and the cutoff function
 
 Molecular dynamics integrators rely on forces that are continuous and
@@ -196,6 +410,39 @@ molecular dynamics requires. Higher-order alternatives — polynomial
 $(1 - r/r_\mathrm{c})^p$ envelopes with $p \ge 4$, or the
 $1/r^p$-style envelopes used in MACE — buy additional smoothness at
 the cost of slightly more arithmetic.
+
+!!! note "Why this step? Derivative of the cosine cutoff"
+    Let us check that the cosine cutoff vanishes smoothly. Set $u =
+    \pi r / r_\mathrm{c}$ for brevity. Then $f_\mathrm{c}(r) =
+    \tfrac{1}{2}(\cos u + 1)$ and
+
+    $$
+    f_\mathrm{c}'(r) = -\frac{\pi}{2 r_\mathrm{c}} \sin\!\left(\frac{\pi r}{r_\mathrm{c}}\right).
+    $$
+
+    At $r = r_\mathrm{c}$: $\cos(\pi) = -1$, so $f_\mathrm{c}(r_\mathrm{c}) =
+    \tfrac{1}{2}(-1 + 1) = 0$. Good — the value goes to zero.
+
+    Also at $r = r_\mathrm{c}$: $\sin(\pi) = 0$, so
+    $f_\mathrm{c}'(r_\mathrm{c}) = 0$. The first derivative also vanishes
+    at the cutoff. This is the $C^1$ property: both $f_\mathrm{c}$ and
+    its first derivative are continuous at $r = r_\mathrm{c}$ (with the
+    convention $f_\mathrm{c}(r) = 0$ for $r > r_\mathrm{c}$). Forces,
+    which involve $\partial r_{ij}/\partial \mathbf{r}_i$ multiplied
+    by $f_\mathrm{c}'(r_{ij})$ (chain rule through a descriptor),
+    therefore go smoothly to zero at the cutoff and there is no jump.
+
+    Sanity check: $f_\mathrm{c}(0) = \tfrac{1}{2}(\cos 0 + 1) = 1$. The
+    cutoff is unity at the origin and decays smoothly to zero at
+    $r_\mathrm{c}$ — exactly the envelope we want.
+
+    The second derivative does *not* vanish at $r_\mathrm{c}$:
+    $f_\mathrm{c}''(r_\mathrm{c}) = -\pi^2/(2 r_\mathrm{c}^2) \cos(\pi)
+    = \pi^2 / (2 r_\mathrm{c}^2) \neq 0$. So the cosine cutoff is $C^1$
+    but not $C^2$ at the boundary. For phonon work and for sensitive
+    free-energy estimates one prefers a polynomial cutoff
+    $(1 - r/r_\mathrm{c})^p$ with $p \ge 4$, which is $C^{p-1}$ at the
+    boundary.
 
 Every descriptor in this chapter applies $f_\mathrm{c}$ at every place
 where a neighbour enters a sum:
@@ -318,3 +565,96 @@ satisfy these constraints in different ways, and an exploration of
 the trade-offs between them. We begin with the oldest and simplest
 of the modern descriptors — Behler–Parrinello symmetry functions —
 which makes every constraint visible in a few lines of code.
+
+## 9.2.8 Locality and the cutoff radius
+
+A symmetry not yet stated but implicit throughout is **locality**: the
+atomic energy $E_i$ depends only on neighbours within a finite cutoff
+$r_\mathrm{c}$. This is not a symmetry of nature — Coulomb
+interactions are long-ranged — but a *modelling decision*. Three
+considerations justify it.
+
+**Physical.** In condensed matter at non-trivial density, screening
+suppresses long-range correlations rapidly. The bonded and
+short-range non-bonded contributions to the energy decay over a few
+$\text{\AA}$; the residual long-range dispersion and Coulomb
+contributions are small enough to be absorbed into smooth, slowly
+varying corrections, or, in the case of strongly ionic systems, treated
+by an explicit long-range term (a learnable charge model or an Ewald
+sum on top of the local MLIP).
+
+**Algorithmic.** Locality makes the per-atom evaluation cost
+*constant in system size*. Without locality the cost would scale as
+$O(N)$ per atom and $O(N^2)$ for the whole configuration, the same
+unfavourable scaling that dooms naive DFT. The factor that turns MLIPs
+into practical tools is exactly the linear total cost in $N$.
+
+**Statistical.** Locality is a strong regulariser. By forcing $E_i$ to
+be a function of only $\mathcal{O}(50)$ inputs (the neighbour list
+within $r_\mathrm{c}$), we shrink the hypothesis class enormously and
+require far less training data. A non-local architecture would have to
+learn that distant atoms do not influence the energy — wasteful, when
+we already know this is true to good approximation.
+
+The choice of $r_\mathrm{c}$ is the main hyperparameter that
+controls the locality assumption. Typical values are:
+
+- $r_\mathrm{c} = 3.5$ to $4.0\,\text{\AA}$ for tightly bound
+  molecular systems (organic chemistry, biomolecules) — captures
+  first-shell covalent bonding and immediate hydrogen bonds.
+- $r_\mathrm{c} = 5$ to $6\,\text{\AA}$ for general condensed
+  matter — captures the first two coordination shells in most metals
+  and oxides.
+- $r_\mathrm{c} = 6$ to $8\,\text{\AA}$ for ionic and polar systems
+  where electrostatic screening is partial.
+
+For a message-passing network with $T$ layers, the *effective*
+receptive field is $T \times r_\mathrm{c}$; a two-layer MACE network
+with $r_\mathrm{c} = 5\,\text{\AA}$ sees information up to
+$10\,\text{\AA}$ away from each atom, even though no single layer
+extends beyond $5\,\text{\AA}$. This is the trick that lets modest
+cutoffs cover surprisingly long-range correlations.
+
+!!! tip "How to choose $r_\mathrm{c}$ in practice"
+    A good empirical rule: pick the smallest cutoff such that the
+    radial distribution function $g(r)$ of your system is essentially
+    unity ($g(r) \approx 1.0 \pm 0.05$) at $r = r_\mathrm{c}$. This
+    ensures the cutoff lies past the structured part of the local
+    environment, in the bulk-like regime where neighbours look like a
+    uniform sea. Pre-computing $g(r)$ from a short classical-force-field
+    or DFT-MD trajectory costs almost nothing and saves considerable
+    later debugging.
+
+## 9.2.9 Why the symmetry constraints come *first*
+
+A pedagogical note before we move on. Many introductions to MLIPs
+present the architecture (Behler network, GAP, MACE) and then add
+"oh, and it respects rotation/translation/permutation symmetry" as a
+side remark. The presentation in this chapter inverts that emphasis
+deliberately. We have stated the symmetry constraints first because:
+
+1. **The constraints are universal.** Any correct MLIP — past, present,
+   future — must satisfy them. Architectures come and go; the
+   symmetries persist.
+2. **The constraints determine the design space.** Once you have
+   accepted that you must be translation-, rotation-, and
+   permutation-invariant with smooth cutoffs and bounded body order,
+   the set of possible architectures is greatly narrowed. The
+   architectures we will study are *natural answers* to the
+   constraints, not arbitrary inventions.
+3. **The constraints are how you debug.** If your trained potential
+   fails — energy drifts in NVE, the radial distribution function
+   has spurious sharp features, MD blows up in five picoseconds —
+   the first questions are: does it respect the symmetries exactly?
+   Is the cutoff smooth to the required order? Are the descriptor
+   gradients correct at boundary? Almost every MLIP bug traces back
+   to a violated symmetry constraint.
+
+Reader's compass: as you read §9.3 through §9.5, ask yourself for
+each architecture which of the five symmetries it satisfies *exactly*,
+which it satisfies *approximately*, and which it relies on the data
+to teach. The honest architectures (modern equivariant networks)
+satisfy all five exactly; older architectures cut corners on one or
+two (e.g. older message-passing nets approximate rotation invariance
+rather than enforcing it). The trend is clear: enforce more, learn
+less, generalise better.

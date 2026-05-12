@@ -29,6 +29,220 @@ gains in data efficiency. This section develops the machinery, sketches
 the NequIP and MACE architectures, and reviews the benchmark results
 that have driven equivariant networks to dominance.
 
+## 9.5.0 Equivariance from scratch — a worked introduction
+
+This section develops the representation-theoretic machinery of
+equivariance in slow, careful detail. Readers familiar with
+$\mathrm{O}(3)$ irreps and Clebsch–Gordan coefficients from atomic
+physics can skim to §9.5.4. Everyone else: please read this section
+carefully. The pay-off is that NequIP and MACE will feel inevitable
+rather than mysterious.
+
+### Step 1: what is a representation?
+
+A *representation* of a group $G$ is a map $\rho$ from group elements
+to invertible matrices (acting on a vector space $V$) that respects
+group multiplication: $\rho(g_1 g_2) = \rho(g_1) \rho(g_2)$. The
+vector space $V$ is the *representation space*, and elements
+$\mathbf{v} \in V$ are said to *transform under* the representation
+$\rho$ if $\mathbf{v} \mapsto \rho(g) \mathbf{v}$ when $g$ acts.
+
+The simplest example: $G = \mathrm{SO}(3)$ (rotations in 3D),
+$V = \mathbb{R}^3$, $\rho(R) = R$ (the rotation matrix itself). A
+3D vector $\mathbf{v}$ transforms as $\mathbf{v} \mapsto R\mathbf{v}$
+under rotation. This is the *defining* representation.
+
+Another example: $G = \mathrm{SO}(3)$, $V = \mathbb{R}$, $\rho(R) = 1$
+for all $R$. The 1D space transforms trivially — every "rotation"
+maps a number to itself. This is the *trivial* representation, and
+its elements are the *scalars*.
+
+A third example: $G = \mathrm{SO}(3)$, $V = $ symmetric traceless
+$3 \times 3$ matrices (a 5-dimensional space), $\rho(R)$ acts as
+$T \mapsto R T R^\top$. Stress tensors live here.
+
+The conceptual point: vectors of different *types* transform
+differently under rotation. Scalars are unmoved; 3-vectors rotate as
+$R$; symmetric traceless tensors rotate as $R \otimes R$ (a $5 \times
+5$ matrix in suitable basis). The set of vector types forms a
+classification of *how things rotate*.
+
+### Step 2: irreducible representations of $\mathrm{O}(3)$
+
+A representation is *irreducible* (an "irrep") if it has no non-trivial
+invariant subspace. For $\mathrm{O}(3)$, the irreps are labelled by a
+non-negative integer $\ell \in \{0, 1, 2, \dots\}$ (and a parity which
+we set aside for clarity). The $\ell$-th irrep has dimension
+$2\ell + 1$:
+
+- $\ell = 0$: scalar, dim $1$.
+- $\ell = 1$: vector, dim $3$.
+- $\ell = 2$: symmetric traceless tensor, dim $5$.
+- $\ell = 3$: irreducible rank-3 tensor, dim $7$.
+- General $\ell$: dim $2\ell + 1$.
+
+These are *exhaustive*: every representation of $\mathrm{O}(3)$
+decomposes as a direct sum of these irreps. So any object that
+transforms under rotation can be expressed as a list
+$(\mathbf{x}^{(0)}, \mathbf{x}^{(1)}, \mathbf{x}^{(2)}, \dots)$ of
+irrep components, where $\mathbf{x}^{(\ell)}$ has $2\ell+1$
+components and transforms as the $\ell$-th irrep.
+
+This decomposition is the equivariant network's lingua franca.
+
+### Step 3: spherical harmonics as the canonical basis
+
+The functions on the unit sphere $S^2 \subset \mathbb{R}^3$ form an
+infinite-dimensional vector space; how does $\mathrm{O}(3)$ act on
+it? A rotation $R$ takes a function $f$ to a function $R f$ defined
+by $(R f)(\hat{\mathbf{r}}) = f(R^{-1} \hat{\mathbf{r}})$ — pull back
+along the inverse.
+
+This action decomposes the space of sphere-functions into irreps,
+each labelled by $\ell$ and spanned by the *spherical harmonics*
+$Y_\ell^m(\hat{\mathbf{r}})$ for $m = -\ell, \dots, +\ell$. Explicitly,
+
+$$
+Y_0^0(\hat{\mathbf{r}}) = \frac{1}{\sqrt{4\pi}},
+$$
+
+$$
+Y_1^{-1} = \sqrt{\tfrac{3}{4\pi}}\, y/r,\quad
+Y_1^0 = \sqrt{\tfrac{3}{4\pi}}\, z/r,\quad
+Y_1^{+1} = -\sqrt{\tfrac{3}{4\pi}}\, x/r
+$$
+
+(in the real basis; complex bases differ by phase factors), and
+higher $\ell$'s follow from the standard atomic-physics formulae.
+Note that $Y_1^{m}$ are essentially the $x, y, z$ components of the
+unit vector $\hat{\mathbf{r}}$ — so the $\ell = 1$ spherical
+harmonics *are* the position-vector components, up to normalisation.
+
+Under rotation, the spherical harmonics transform within each $\ell$
+block:
+
+$$
+Y_\ell^m(R^{-1} \hat{\mathbf{r}}) = \sum_{m'} D^{(\ell)}_{m m'}(R)\,
+Y_\ell^{m'}(\hat{\mathbf{r}}),
+$$
+
+where $D^{(\ell)}(R)$ is the $(2\ell+1) \times (2\ell+1)$ *Wigner
+D-matrix*. The Wigner D-matrices are unitary and form a representation
+of $\mathrm{O}(3)$ on the $\ell$-irrep space.
+
+The takeaway: spherical harmonics are the *canonical orthonormal
+basis* for $\mathrm{O}(3)$-irrep spaces. Any function on the sphere
+can be expanded in them, and the expansion coefficients carry definite
+irrep labels.
+
+### Step 4: tensor products and Clebsch–Gordan
+
+The *tensor product* of two irreps, $\ell_1$ and $\ell_2$, lives in a
+$(2\ell_1 + 1)(2\ell_2 + 1)$-dimensional space. As a representation
+of $\mathrm{O}(3)$, this product is *not* irreducible — it decomposes
+into a direct sum of irreps:
+
+$$
+\ell_1 \otimes \ell_2 = (\ell_1 + \ell_2) \oplus (\ell_1 + \ell_2 - 1) \oplus
+   \cdots \oplus |\ell_1 - \ell_2|.
+$$
+
+The dimensions work out: $\sum_{\ell = |\ell_1 - \ell_2|}^{\ell_1 +
+\ell_2} (2\ell + 1) = (2\ell_1 + 1)(2\ell_2 + 1)$ by a standard
+identity.
+
+The *Clebsch–Gordan coefficients* $C^{\ell m}_{\ell_1 m_1; \ell_2 m_2}$
+are the basis change from the product basis $|m_1\rangle |m_2\rangle$
+to the irrep basis $|\ell, m\rangle$:
+
+$$
+|\ell, m\rangle = \sum_{m_1, m_2} C^{\ell m}_{\ell_1 m_1; \ell_2 m_2}
+   |m_1\rangle |m_2\rangle.
+$$
+
+They are non-zero only when $m = m_1 + m_2$ (azimuthal conservation)
+and $|\ell_1 - \ell_2| \leq \ell \leq \ell_1 + \ell_2$ (triangle
+inequality). Numerical values are tabulated in any atomic-physics text
+or computed by `sympy.physics.wigner.clebsch_gordan`.
+
+The Clebsch–Gordan tensor product is the *equivariant generalisation
+of multiplication*. Two scalars ($\ell = 0$) multiply to give a scalar
+($\ell = 0$). A scalar and a vector ($\ell = 1$) multiply to give a
+vector. Two vectors multiply to give a scalar (dot product, $\ell =
+0$), an axial vector (cross product, $\ell = 1$), or a symmetric
+traceless tensor ($\ell = 2$) — the standard "tensor product of
+vectors" you may remember from electromagnetism or fluid mechanics.
+
+### Step 5: showing the tensor product is equivariant
+
+We claim that combining two equivariant features with a Clebsch–Gordan
+contraction produces a new equivariant feature. Let
+$\mathbf{u}^{(\ell_1)}$ transform as the $\ell_1$ irrep and
+$\mathbf{v}^{(\ell_2)}$ as the $\ell_2$ irrep. Define
+
+$$
+w^{(\ell)}_m = \sum_{m_1, m_2} C^{\ell m}_{\ell_1 m_1; \ell_2 m_2}\,
+   u^{(\ell_1)}_{m_1}\, v^{(\ell_2)}_{m_2}.
+$$
+
+Under rotation, $u_{m_1} \mapsto \sum_{m_1'} D^{(\ell_1)}_{m_1 m_1'}
+u_{m_1'}$ and similarly for $v_{m_2}$. So
+
+$$
+w^{(\ell)}_m \mapsto \sum_{m_1, m_2, m_1', m_2'}
+   C^{\ell m}_{\ell_1 m_1; \ell_2 m_2}
+   D^{(\ell_1)}_{m_1 m_1'} D^{(\ell_2)}_{m_2 m_2'}
+   u_{m_1'} v_{m_2'}.
+$$
+
+A standard Clebsch–Gordan identity reorganises this to
+
+$$
+w^{(\ell)}_m \mapsto \sum_{m'} D^{(\ell)}_{m m'}\,
+   \big(\sum_{m_1', m_2'} C^{\ell m'}_{\ell_1 m_1'; \ell_2 m_2'}
+       u_{m_1'} v_{m_2'}\big)
+   = \sum_{m'} D^{(\ell)}_{m m'}\, w^{(\ell)}_{m'}.
+$$
+
+So $\mathbf{w}^{(\ell)}$ transforms as the $\ell$-irrep — exactly what
+we wanted. The Clebsch–Gordan contraction *preserves* equivariance,
+mapping inputs of irreps $\ell_1, \ell_2$ to outputs of irrep $\ell$
+in a rotation-covariant way.
+
+This is the algebraic engine of every equivariant neural network. The
+e3nn library (Geiger and Smidt, 2022) implements the tensor product
+efficiently as a sparse contraction; NequIP and MACE call it.
+
+### Step 6: the canonical "two-body message"
+
+The simplest equivariant message in an MLIP is
+
+$$
+\mathbf{m}_{j \to i}^{(\ell)} = R^{(\ell)}(r_{ij})\,
+   Y^{(\ell)}(\hat{\mathbf{r}}_{ij}),
+$$
+
+where $R^{(\ell)}(r_{ij})$ is a scalar-valued radial function
+($\ell = 0$, i.e. a scalar weight) and $Y^{(\ell)}(\hat{\mathbf{r}}_{ij})$
+is the $\ell$-th spherical harmonic of the unit vector
+$\hat{\mathbf{r}}_{ij}$. The product of a scalar and an $\ell$-irrep
+is an $\ell$-irrep, so the message transforms correctly.
+
+This message *encodes the direction from $j$ to $i$* in an
+equivariant way: rotate the configuration, the message rotates by the
+Wigner D-matrix, no information is lost. Compare with the invariant
+descriptor $r_{ij}$, which discards direction entirely.
+
+The summed message $\sum_j \mathbf{m}_{j \to i}$ is then an equivariant
+feature of atom $i$, which can be combined with the atom's existing
+features via further tensor products to build up the full network.
+
+This is the structure of every equivariant MLIP layer. The details
+differ — NequIP couples node features with edge spherical harmonics,
+MACE adds symmetric tensor products to raise body order — but the
+underlying operation is always the Clebsch–Gordan-contracted tensor
+product.
+
 ## 9.5.1 Why equivariance helps
 
 Recall the distinction. An *invariant* feature is a scalar: it does
@@ -241,6 +455,87 @@ equivariant message passing with the body-order machinery of ACE
 *high body-order* correlations within a single message-passing step,
 rather than relying on many layers of two-body messages.
 
+### MACE step by step
+
+Let us trace one forward pass of a MACE network on a small example to
+build intuition. Consider a single carbon atom $i$ with four hydrogen
+neighbours arranged in a tetrahedron (methane CH$_4$). We walk through
+the layers.
+
+**Initial features (layer 0).** Each atom carries a learnable embedding
+indexed by element: a vector $\mathbf{h}_i^{(\ell=0), t=0}$ in the
+$\ell = 0$ (scalar) channels, of dimension $C_0$ (typically 128). The
+embedding for carbon is initialised distinct from that for hydrogen.
+Higher-$\ell$ channels are zero at layer 0.
+
+**Build edge features.** For each neighbour $j$, compute:
+- Radial features: $R(r_{ij}) \in \mathbb{R}^{N_\mathrm{rad}}$, a basis
+  of $N_\mathrm{rad}$ Bessel or polynomial radial functions evaluated
+  at the scalar distance $r_{ij}$. This is rotation-invariant.
+- Angular features: $Y^{(\ell)}(\hat{\mathbf{r}}_{ij})$ for $\ell = 0,
+  \dots, \ell_\mathrm{max}$, the spherical harmonics of the unit
+  direction. The $\ell$-th block transforms as the $\ell$-irrep.
+
+**Construct two-body messages.** Combine the sender feature
+$\mathbf{h}_j$ with the angular spherical harmonic
+$Y(\hat{\mathbf{r}}_{ij})$ via a tensor product, weighted by a learned
+linear map of the radial features:
+
+$$
+\mathbf{m}_{j \to i}^{(\ell)}
+   = \sum_{\ell_1, \ell_2 \to \ell} W_{\ell_1 \ell_2}(R(r_{ij}))\,
+     \big(\mathbf{h}_j^{(\ell_1)} \otimes Y^{(\ell_2)}(\hat{\mathbf{r}}_{ij})\big)^{(\ell)}.
+$$
+
+For our methane example, with $\ell_\mathrm{max} = 1$ and only
+$\ell = 0$ channels in $\mathbf{h}_j$ at layer 0, the only allowed
+couplings produce $\ell = 0$ (from $0 \otimes 0$) or $\ell = 1$ (from
+$0 \otimes 1$). The output $\mathbf{m}_{j \to i}^{(\ell=0)}$ is a
+scalar; $\mathbf{m}_{j \to i}^{(\ell=1)}$ is a vector pointing along
+$\hat{\mathbf{r}}_{ij}$.
+
+**Aggregate over neighbours.** Sum:
+
+$$
+\mathbf{A}_i^{(\ell)} = \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{j \to i}^{(\ell)}.
+$$
+
+For methane, $\mathbf{A}_i^{(\ell=1)} = \sum_j R^{(1)}(r_{ij})
+\hat{\mathbf{r}}_{ij}$. The four unit vectors in a regular tetrahedron
+sum to zero by symmetry — so $\mathbf{A}_i^{(\ell=1)} = 0$ for a
+perfect tetrahedron. The $\ell = 1$ feature *encodes the asymmetry of
+the local environment*, vanishing for symmetric environments and
+non-zero for asymmetric ones. This is the kind of geometric
+sensitivity equivariant features provide.
+
+**Symmetric tensor product (the MACE-specific step).** Form products
+$\mathbf{A}_i^{(\ell)} \otimes \mathbf{A}_i^{(\ell)} \otimes \cdots$
+($\nu$ copies, symmetrised) and project onto each output irrep:
+
+$$
+\mathbf{B}_i^{(\nu, t)} = \big(\mathbf{A}_i^{(t)}\big)^{\otimes_\mathrm{sym} \nu}.
+$$
+
+With $\nu = 3$, this gives features sensitive to *triples* of
+neighbours simultaneously — four-body correlations within a single
+layer. By contrast, NequIP needs $\nu$ separate message-passing layers
+to reach the same body order, with the corresponding $\nu \times
+r_\mathrm{c}$ receptive field expansion.
+
+**Update.** Mix $\mathbf{B}_i^{(\nu)}$ for $\nu = 1, 2, 3$ via a
+learnable linear combination within each $\ell$ channel, apply a
+nonlinearity in the scalar channel, and add to the previous feature:
+
+$$
+\mathbf{h}_i^{(t+1)} = \mathbf{h}_i^{(t)} +
+   \mathrm{LinearMix}\big(\mathbf{B}_i^{(1)}, \mathbf{B}_i^{(2)}, \mathbf{B}_i^{(3)}\big).
+$$
+
+**Readout.** After $T$ layers (typically $T = 2$), pass the $\ell = 0$
+component of $\mathbf{h}_i^{(T)}$ through a small MLP to produce the
+atomic energy $E_i$. Sum over atoms: $U = \sum_i E_i$. Forces:
+autograd on $U$.
+
 ### Per-layer construction
 
 At layer $t$, MACE constructs two-body messages exactly as in NequIP:
@@ -295,6 +590,80 @@ A canonical MACE training configuration for an organic system might be:
 The total parameter count is typically $1$–$5 \times 10^5$ — small by
 modern neural-network standards but large enough to fit DFT energy
 surfaces to chemical accuracy on $\sim\!1000$ training configurations.
+
+### Body order vs depth — the key trade-off
+
+A useful way to see what MACE buys you is to count *correlations
+per layer*. In a standard message-passing network like SchNet or
+NequIP with two-body messages only, each layer increases the effective
+body order by one (atom $i$ + neighbour + neighbour-of-neighbour +
+...). To reach body order $\nu$, one needs $\nu - 1$ layers, each
+costing one cutoff-radius step in receptive field. Six-body
+correlations need five layers, an effective range of $5 r_\mathrm{c}$.
+
+In MACE, the in-layer symmetric tensor product raises the body order
+by $(\nu_\mathrm{layer} - 1)$ in a single layer. With
+$\nu_\mathrm{layer} = 3$, two layers reach body order
+$1 + 2 \cdot (3 - 1) = 5$, comfortably covering five-body
+correlations. The effective receptive field is only $2 r_\mathrm{c}$,
+which is a major advantage for parallel inference on large systems
+(short halo regions).
+
+Mathematically: the depth $T$ and the layer body order
+$\nu_\mathrm{layer}$ are *partially substitutable*. MACE trades depth
+for layer body order; NequIP trades layer body order for depth. The
+total expressive power at fixed body order is similar; the parallel
+efficiency and the receptive field structure differ.
+
+For most production work, two MACE layers with $\nu_\mathrm{layer}
+= 3$ outperform six NequIP layers in both accuracy per parameter and
+inference speed. This is the empirical lesson of the rMD17 and
+SPICE benchmarks.
+
+!!! note "Why this step? The body-order receptive field equation"
+    A message-passing layer with maximum in-layer correlation order
+    $\nu_\mathrm{layer}$ contributes $(\nu_\mathrm{layer} - 1)$ to the
+    body order of each atom's feature, *for each pass through the
+    layer*. After $T$ layers, the body order reached is
+
+    $$
+    \nu_\mathrm{total} = 1 + T \cdot (\nu_\mathrm{layer} - 1).
+    $$
+
+    For SchNet/NequIP (two-body messages, $\nu_\mathrm{layer} = 2$),
+    $\nu_\mathrm{total} = T + 1$ — body order grows linearly with
+    depth. For MACE ($\nu_\mathrm{layer} = 3$), $\nu_\mathrm{total}
+    = 2T + 1$ — body order grows twice as fast with depth.
+
+    This is the key formula to keep in mind when deciding network
+    depth. To reach body order 5 (which is typically sufficient for
+    even complex organic chemistry), NequIP needs $T = 4$ layers,
+    MACE needs $T = 2$ layers. Halving the depth at fixed expressive
+    power is the engineering pay-off.
+
+### MACE empirical benchmarks
+
+For concreteness, here are representative numbers from the MACE paper
+(Batatia et al., 2023) and follow-ups, on the rMD17 benchmark (10
+small organic molecules, force MAE in meV/Å, train size 1000):
+
+| Architecture | Aspirin | Ethanol | Naphthalene | Salicylic acid | Toluene |
+|---|---|---|---|---|---|
+| SchNet (2017) | 35 | 17 | 31 | 30 | 21 |
+| DimeNet (2020) | 16 | 8 | 13 | 14 | 9 |
+| NequIP $\ell=3$ (2022) | 5.7 | 2.3 | 3.6 | 5.4 | 2.4 |
+| MACE $\ell=3, \nu=3$ (2023) | 5.4 | 2.1 | 3.0 | 4.6 | 2.1 |
+
+The trend: each generation roughly halves the error per training
+example. MACE achieves rMD17 force MAE below $5\,\mathrm{meV}/\text{\AA}$
+with $1000$ configurations — typically only a $0.5\,\mathrm{meV}/\text{atom}$
+in energy and a few percent in DFT spectroscopic observables.
+
+To put the data efficiency in absolute terms: on the aspirin molecule,
+MACE reaches $5\,\mathrm{meV}/\text{\AA}$ force MAE with $\sim 300$
+configurations; SchNet requires $\sim 10\,000$ for the same accuracy.
+For DFT calculations costing $\sim 1\,\text{CPU-hour}$ each, this is
+the difference between a day and a month of compute.
 
 ### Locality and message passing
 
@@ -358,3 +727,107 @@ weaker. As you read the rapidly evolving literature, the question
 to ask of each new architecture is: *which symmetries does it
 respect exactly, which does it approximate, and what is the
 inductive bias for the rest?*
+
+## 9.5.7a NequIP versus MACE in one table
+
+| Property | NequIP | MACE |
+|---|---|---|
+| Per-layer body order | 2 (two-body messages only) | up to 4 (correlation $\nu=3$) |
+| Layers to reach body order 5 | 4 | 2 |
+| Receptive field at $r_\mathrm{c}=5$ Å | 20 Å | 10 Å |
+| rMD17 aspirin force MAE (1000 train) | 5.7 meV/Å | 5.4 meV/Å |
+| Parameters | $\sim 10^5$–$10^6$ | $\sim 10^5$–$10^6$ |
+| Inference per atom (RTX 4090) | $\sim 50\,\mu$s | $\sim 30\,\mu$s |
+| Implementation maturity | Reference: `nequip` | Reference: `mace-torch` |
+
+The architectures are more similar than different — both build on
+tensor products of equivariant features, both train via autograd on
+energy and force losses, both inherit the same Bessel/cosine radial
+basis. The differences are in the *internal scheduling of body
+order*: NequIP grows it through depth, MACE through per-layer
+correlation. For most practical purposes the answer is "either works";
+MACE has a small efficiency edge and is currently better documented.
+
+## 9.5.8 A small worked example of the tensor product
+
+To make the tensor-product machinery concrete, here is a worked
+example. Take two equivariant features: a vector $\mathbf{u}^{(1)} =
+(1, 0, 0)$ (an $\ell = 1$ irrep pointing along $\hat{x}$) and another
+vector $\mathbf{v}^{(1)} = (0, 1, 0)$ (along $\hat{y}$). We compute
+their tensor product and decompose it into irreps.
+
+In the complex spherical basis ($Y_1^{m}$ for $m = -1, 0, 1$), these
+vectors have components $u_{-1} = (1 + 0i)/\sqrt{2}$, $u_0 = 0$,
+$u_{+1} = (-1 + 0i)/\sqrt{2}$ for $\mathbf{u}$ (along $x$), and
+similar for $\mathbf{v}$. The tensor product is the 9-dimensional
+object $u_{m_1} v_{m_2}$.
+
+The decomposition $1 \otimes 1 = 0 \oplus 1 \oplus 2$ gives three
+output irreps. The $\ell = 0$ component is
+
+$$
+(\mathbf{u} \otimes \mathbf{v})^{(0)}_0 = \sum_{m_1 + m_2 = 0}
+C^{0 0}_{1 m_1; 1 m_2}\, u_{m_1} v_{m_2}
+= \frac{1}{\sqrt{3}}(u_{-1} v_{+1} - u_0 v_0 + u_{+1} v_{-1}).
+$$
+
+Plugging in: $u_{-1} v_{+1} = (1/\sqrt{2})(-1/\sqrt{2}) = -1/2$,
+$u_0 v_0 = 0$, $u_{+1} v_{-1} = (-1/\sqrt{2})(1/\sqrt{2}) = -1/2$.
+So $(\mathbf{u} \otimes \mathbf{v})^{(0)}_0 = (-1/2 - 0 - 1/2)/\sqrt{3}
+= -1/\sqrt{3}$.
+
+The conventional dot product $\mathbf{u} \cdot \mathbf{v} = 1 \times
+0 + 0 \times 1 + 0 \times 0 = 0$. The $\ell = 0$ tensor-product
+component is *proportional to the dot product* (up to a factor of
+$-1/\sqrt{3}$ from the Clebsch–Gordan convention), confirming the
+heuristic that "two vectors contracted to a scalar = dot product".
+
+The $\ell = 1$ component (axial vector) is proportional to the cross
+product $\mathbf{u} \times \mathbf{v} = (0, 0, 1)$, again up to
+normalisation. The $\ell = 2$ component is a symmetric traceless
+$3 \times 3$ tensor (the rank-2 part of $\mathbf{u} \otimes
+\mathbf{v}$).
+
+A modern implementation hides all this with a single call to
+`e3nn.o3.TensorProduct`, which takes the input irrep specifications
+and an output irrep specification and produces the tensor-product
+layer. Internally it consults a Clebsch–Gordan table and emits a
+sparse contraction; the user does not see the indices.
+
+But the *operational meaning* of the tensor product — dot product,
+cross product, symmetric tensor, all in one operation — is the same
+in atomistic equivariant networks as in classical electromagnetism.
+The notation is more abstract; the physics is identical.
+
+## 9.5.9 Building intuition: an equivariant feature catalogue
+
+It helps to enumerate what equivariant features of various irrep
+labels physically represent in the local atomic environment.
+
+- **$\ell = 0$ scalars.** Counts of neighbours, distances, energies,
+  partial charges. The standard descriptor outputs.
+- **$\ell = 1$ vectors.** The local *net displacement* of neighbours
+  (zero for symmetric environments, non-zero for asymmetric ones).
+  Local dipole moments. Per-atom force vectors are precisely $\ell = 1$
+  features of the energy network's output. Local velocity if the
+  network is run over a trajectory.
+- **$\ell = 2$ symmetric traceless tensors.** Local *quadrupole
+  moments*. Strain tensors. The asymmetry of a local environment
+  along principal axes (e.g. distinguishing a prolate from an oblate
+  arrangement of neighbours).
+- **$\ell = 3$ and higher.** Higher angular structure. Octupoles,
+  hexadecapoles. Most production work truncates at $\ell = 1$ or
+  $\ell = 2$ because the marginal returns of $\ell = 3$ are small for
+  typical chemistries.
+
+The pattern: each higher $\ell$ captures finer angular structure of
+the local environment. For systems with strong angular features
+(transition metals with $d$-orbital character, organic molecules with
+sp$^3$/sp$^2$ hybridisation distinctions, ionic systems with crystal
+field), higher $\ell$ pays off. For weakly anisotropic systems (noble
+gas crystals, simple liquids), $\ell = 1$ suffices.
+
+The MACE convention `hidden_irreps = "128x0e + 128x1o"` (128 channels
+of even scalars, 128 of odd vectors) is the right default for most
+condensed-matter problems. Adding `+ 128x2e` (even rank-2 tensors)
+extends to organic chemistry; extending further is rarely useful.
