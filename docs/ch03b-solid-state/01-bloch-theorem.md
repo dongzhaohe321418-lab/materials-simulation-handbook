@@ -2,7 +2,21 @@
 
 > *"In a crystal, the wavefunction does not have to be periodic; it has to be quasiperiodic."* — Felix Bloch's 1928 thesis, paraphrased
 
+!!! tip "Why does Bloch's theorem exist?"
+    **The problem before Bloch (1928):** physicists could solve the Schrödinger equation for a single atom (the hydrogen atom problem, done by 1926) and for free electrons in a box. But a real crystal is neither. It contains $\sim 10^{23}$ atoms, each with electrons interacting with all the others. By 1928 nobody knew how to even start writing down the answer for "what does an electron *do* in a piece of copper?". The Hilbert space was infinite-dimensional; the Hamiltonian had no obvious special structure to exploit.
+
+    **What Bloch noticed:** the crystal looks the *same* if you slide it by one lattice vector. This is an exact symmetry. Quantum mechanics says that whenever a Hamiltonian has a symmetry, the eigenstates can be labelled by the eigenvalues of the symmetry operator. So instead of asking "what does the electron's wavefunction look like everywhere in the crystal at once?" — an infinite-dimensional question — Bloch could ask "what does the wavefunction look like in *one* unit cell, with a fixed phase relation to the next cell?" — a finite-dimensional question, parametrised by a single vector $\mathbf k$.
+
+    **The picture to keep:** imagine driving down a long road with bumps spaced every $a$. Your car's suspension vibrates as you go. The *amplitude* of the vibration repeats with the bumps (it has lattice periodicity), but you can also be at any *phase* in your bouncing cycle as you pass each bump. The two pieces — a lattice-periodic envelope $u(\mathbf r)$ and a global phase $e^{i\mathbf k\cdot\mathbf r}$ — completely describe the state of the system. That is Bloch's theorem.
+
+    **What it buys us:** the infinite eigenvalue problem becomes a one-parameter family of finite problems, one per $\mathbf k$ in the BZ. Every modern DFT code in existence — VASP, Quantum ESPRESSO, ABINIT, CASTEP — is implementation of this single insight.
+
 The single most important theorem in solid state physics is Bloch's theorem. It is the reason the electronic structure of a crystal — an object containing $\sim 10^{23}$ electrons — is computable on a laptop. It reduces an infinite-dimensional eigenvalue problem to a one-parameter family of finite-dimensional eigenvalue problems indexed by a wavevector $\mathbf k$ that lives in a small, bounded region of reciprocal space called the first Brillouin zone. Every plane-wave DFT code in existence — VASP, Quantum ESPRESSO, ABINIT, CASTEP, GPAW, CP2K — is a careful, brutally optimised implementation of Bloch's theorem. So we had better understand it.
+
+!!! tip "Intuition: a wave longer than the bumps"
+    Before any equations, hold this picture in mind. Imagine a snake gliding over a corrugated sheet — the corrugation has period $a$, and the snake's body is a sinusoidal wave of wavelength $\lambda \gg a$. As the snake slithers forwards by one corrugation $a$, every bit of its body moves to a position previously occupied by a slightly different bit; the *shape* of the snake at that next instant looks almost the same as before, but rigidly translated by $a$ and additionally multiplied by a *phase*. That phase advance is the heart of Bloch's theorem: an electron wavefunction in a periodic potential need not be itself periodic — it is allowed to pick up a complex phase $e^{i\mathbf k\cdot\mathbf R}$ when translated by a lattice vector $\mathbf R$. The vector $\mathbf k$ labels how fast the phase winds, and is the *only* surviving label of translational symmetry in the eigenstate.
+
+    The picture also tells you why $\mathbf k$ lives in a bounded region of reciprocal space. If $\mathbf k$ is so large that the phase advance $\mathbf k\cdot\mathbf a$ exceeds $2\pi$, you cannot distinguish it from a smaller $\mathbf k'$ that gives the same phase modulo $2\pi$. The set of inequivalent $\mathbf k$ — the *Brillouin zone* — is a single primitive cell of the reciprocal lattice. Everything beyond that just folds back inside.
 
 ## 3b.1.1 The setting: a periodic Hamiltonian
 
@@ -31,6 +45,9 @@ This is a unitary operator (it preserves the norm: $\int |\psi(\mathbf r+\mathbf
 $$\hat T_\mathbf R \hat T_{\mathbf R'} = \hat T_{\mathbf R + \mathbf R'} = \hat T_{\mathbf R'} \hat T_\mathbf R. \tag{3b.1.5}$$
 
 So the set of lattice translations $\{\hat T_\mathbf R\}_{\mathbf R}$ forms an *abelian group*.
+
+!!! note "Why this step? — translations commute"
+    The commutativity in (3b.1.5) is not arbitrary; it follows from the fact that lattice translations live in $\mathbb R^3$ and addition of vectors is commutative. Compare this with *rotations* in 3D: rotating by $90^\circ$ about $\hat x$ and then $90^\circ$ about $\hat y$ is *not* the same as the reverse order. Rotations form a non-abelian group (SO(3)). For non-abelian symmetry groups the irreducible representations are higher-dimensional, and the labels of common eigenstates carry additional indices (think of orbital angular momentum $\ell$ and the magnetic quantum number $m$). The fact that lattice translations commute is precisely what makes the Bloch labels one-dimensional: a single complex phase per translation, parametrised by a single vector $\mathbf k$. If translations did not commute the labels would be matrices instead.
 
 ## 3b.1.3 $\hat T_\mathbf R$ commutes with $\hat{H}$
 
@@ -71,11 +88,17 @@ The only continuous functions of $\mathbf R$ that satisfy this functional equati
 
 **(ii) Unitarity.** Because $\hat T_\mathbf R$ is unitary, $|c(\mathbf R)| = 1$: it must be a phase.
 
+!!! note "Why this step? — eigenvalues of unitary operators"
+    Recall that if $\hat U$ is unitary, $\hat U^\dagger \hat U = \hat I$. For a normalised eigenstate $\hat U\psi = c\psi$ we therefore have $\langle\psi|\hat U^\dagger \hat U|\psi\rangle = |c|^2 \langle\psi|\psi\rangle = |c|^2 = 1$. The eigenvalue must lie on the unit circle. Combining with (3b.1.11), which forces an exponential, we are squeezed into precisely the family $c(\mathbf R) = e^{i\mathbf k\cdot\mathbf R}$ with $\mathbf k$ a *real* vector (any imaginary part of $\mathbf k$ would make $|c| \ne 1$). This is exactly the constraint we want: the label of irreducible representations of the lattice translation group is a real wavevector.
+
 Combining (i) and (ii) we may write
 
 $$c(\mathbf R) = e^{i\mathbf k \cdot \mathbf R} \tag{3b.1.12}$$
 
 for some real vector $\mathbf k$. The set of simultaneous eigenstates of $\{\hat T_\mathbf R\}$ is therefore labelled by $\mathbf k$.
+
+!!! note "Why must $\mathbf k$ be real?"
+    Strictly, (3b.1.11) and continuity together force $c(\mathbf R) = e^{i\mathbf k\cdot\mathbf R}$ with $\mathbf k$ possibly *complex*. The unitarity constraint $|c(\mathbf R)|=1$ then forces $\text{Im}(\mathbf k) = 0$ on an infinite, translationally invariant lattice. Allowing complex $\mathbf k$ — *evanescent* Bloch waves with $\text{Im}(\mathbf k) \ne 0$ — is, however, not nonsense; it is essential for describing electronic states inside a *band gap* (e.g. tunnelling through a barrier or surface states), where the wavefunction must decay rather than propagate. Real-$\mathbf k$ Bloch states are the bulk propagating states; complex-$\mathbf k$ Bloch states exist mathematically but are not normalisable on the infinite crystal. We restrict to real $\mathbf k$ throughout this chapter and return to evanescent waves in Ch 6 (surface states) and Ch 7 (tunnelling).
 
 **(iii) Born–von Kármán periodic boundary conditions.** A real crystal is finite, but to avoid awkward surface effects one imagines an infinite crystal and instead imposes *periodic* boundary conditions: pretend the crystal is a torus that closes after $N_1$ unit cells along $\mathbf a_1$, $N_2$ along $\mathbf a_2$, $N_3$ along $\mathbf a_3$. The total number of unit cells is $N = N_1 N_2 N_3$. Periodicity demands
 
@@ -91,12 +114,25 @@ There are exactly $N$ inequivalent values of $\mathbf k$ in one reciprocal unit 
 
 We are now ready to state and prove the theorem in its standard form.
 
-!!! example "Bloch's theorem"
+!!! abstract "Key idea — Bloch's theorem in one line"
+    *Periodic potential* $\Rightarrow$ *eigenstates are plane wave $\times$ lattice-periodic function* $\Rightarrow$ *band structure $E_n(\mathbf k)$ on the BZ*. The infinite crystal problem reduces to a unit-cell problem at each $\mathbf k$. Everything else in this section unpacks this single sentence.
+
+!!! example "Theorem 3b.1.1 (Bloch)"
     Let $\hat{H}$ be a single-particle Hamiltonian with a lattice-periodic potential $V(\mathbf r + \mathbf R) = V(\mathbf r)$ and Born–von Kármán boundary conditions. Then there is an orthonormal basis of eigenstates of the form
     $$\boxed{\; \psi_{n\mathbf k}(\mathbf r) = e^{i\mathbf k\cdot\mathbf r}\, u_{n\mathbf k}(\mathbf r), \qquad u_{n\mathbf k}(\mathbf r + \mathbf R) = u_{n\mathbf k}(\mathbf r). \;} \tag{3b.1.15}$$
     The label $\mathbf k$ runs over the first Brillouin zone; $n$ is a discrete band index.
 
-**Proof.** We have shown that the simultaneous eigenstates of $\{\hat T_\mathbf R\}$ are labelled by a vector $\mathbf k$ such that
+**Proof, step by step.** Let us walk through this slowly so that no part of the logic is obscured.
+
+1. **Translations commute amongst themselves.** Equation (3b.1.5) — derived from the vector-addition structure of the Bravais lattice.
+
+2. **Translations commute with the Hamiltonian.** Equation (3b.1.8) — a consequence of the kinetic operator being translation-invariant and the potential being lattice-periodic.
+
+3. **Common eigenbasis exists.** A set of mutually commuting normal operators admits a common eigenbasis. (For a single pair $[A,B]=0$ with both Hermitian, this is the standard simultaneous diagonalisation theorem; for the more general case of an abelian group of normal operators, the same conclusion holds and is sometimes called the *spectral theorem for abelian C\*-algebras*.) Apply this to the family $\{\hat H\} \cup \{\hat T_\mathbf R\}_\mathbf R$ to conclude: there exists an orthonormal basis $\{\psi_\alpha\}$ in which every $\hat T_\mathbf R$ and $\hat H$ is diagonal.
+
+4. **Translation eigenvalues are phases parametrised by $\mathbf k$.** Steps (i)–(iii) above forced $c(\mathbf R) = e^{i\mathbf k\cdot\mathbf R}$ for some real $\mathbf k$. The basis element $\psi_\alpha$ therefore satisfies $\hat T_\mathbf R \psi_\alpha = e^{i\mathbf k_\alpha\cdot\mathbf R}\psi_\alpha$; we re-label $\alpha$ by the pair $(n,\mathbf k)$ where $\mathbf k$ records the translation phase and $n$ enumerates eigenstates inside the same translation-eigenvalue sector.
+
+5. **Translation eigenstates have the Bloch form.** This is the calculation (3b.1.16)–(3b.1.19), repeated here for clarity. We have shown that the simultaneous eigenstates of $\{\hat T_\mathbf R\}$ are labelled by a vector $\mathbf k$ such that
 
 $$\psi(\mathbf r + \mathbf R) = e^{i\mathbf k \cdot \mathbf R}\, \psi(\mathbf r). \tag{3b.1.16}$$
 
@@ -137,6 +173,38 @@ For each $\mathbf k$ there are countably many eigenvalues $E_{1\mathbf k} \le E_
     $$u_{n\mathbf k}(\mathbf r) = \sum_\mathbf G c_{n\mathbf k}(\mathbf G)\, e^{i\mathbf G\cdot\mathbf r},$$
     where $\mathbf G$ runs over reciprocal lattice vectors. The cutoff $|\mathbf G|^2 \le E_\text{cut}\cdot 2m/\hbar^2$ controls the basis-set size — this is the `ENCUT` parameter in VASP and `ecutwfc` in Quantum ESPRESSO. Convergence with respect to it is the second universal DFT chore, after $\mathbf k$-point convergence.
 
+!!! example "Sanity check: estimating basis-set size"
+    Suppose you set `ENCUT = 400` eV. The maximum $|\mathbf G|^2$ included is
+    $$|\mathbf G|_\text{max}^2 = \frac{2 m_e\cdot 400 \text{ eV}}{\hbar^2} = \frac{2\cdot 9.109\times 10^{-31}\cdot 6.41\times 10^{-17}}{(1.055\times 10^{-34})^2} \approx 1.05\times 10^{21} \text{ m}^{-2},$$
+    so $|\mathbf G|_\text{max} \approx 32.4$ nm$^{-1} = 3.24$ Å$^{-1}$. For a cubic unit cell of side $a = 4$ Å, the reciprocal lattice spacing is $2\pi/a \approx 1.57$ Å$^{-1}$, so the cutoff encloses roughly a sphere of radius $\sim 2$ in units of $2\pi/a$. The number of reciprocal lattice vectors inside is $\sim (4/3)\pi\cdot 2^3 \approx 33$ in each direction — about $33$ plane waves per cubic unit cell, modest. Doubling `ENCUT` increases this to $\sim 100$ plane waves. For a transition-metal oxide with pseudopotentials that need higher cutoff (often 500–700 eV), the basis goes into the hundreds, and that is the typical regime of production DFT calculations.
+
+## 3b.1.6a Crystal momentum vs real momentum
+
+A persistent source of confusion: the wavevector $\mathbf k$ in Bloch's theorem is *not* the momentum eigenvalue of $\hat{\mathbf p} = -i\hbar\nabla$. We call $\hbar\mathbf k$ the **crystal momentum** to flag this distinction. Let us see why explicitly.
+
+Apply the real-space momentum operator to a Bloch state:
+
+$$\hat{\mathbf p}\, \psi_{n\mathbf k}(\mathbf r) = -i\hbar\nabla \left[ e^{i\mathbf k\cdot\mathbf r} u_{n\mathbf k}(\mathbf r) \right] = \hbar\mathbf k\, \psi_{n\mathbf k}(\mathbf r) - i\hbar\, e^{i\mathbf k\cdot\mathbf r}\, \nabla u_{n\mathbf k}(\mathbf r). \tag{3b.1.\text{$p$1}}$$
+
+The first term is what you would naively expect — but the second term is *not* in general proportional to $\psi_{n\mathbf k}$, because the cell-periodic factor $u_{n\mathbf k}(\mathbf r)$ has its own spatial dependence. Hence
+
+$$\hat{\mathbf p}\,\psi_{n\mathbf k} \ne \hbar\mathbf k\, \psi_{n\mathbf k} \quad\text{in general.} \tag{3b.1.\text{$p$2}}$$
+
+A Bloch state is *not* an eigenstate of $\hat{\mathbf p}$, only of the translation operator $\hat T_\mathbf R$. The two coincide only in the empty-lattice limit $V=0$, where $u_{n\mathbf k}$ is constant.
+
+So what *is* $\hbar\mathbf k$? Three useful interpretations:
+
+1. **Quantum number for translation symmetry.** $\hbar\mathbf k$ labels how the wavefunction transforms under a lattice translation; nothing more, nothing less. It plays exactly the role that ordinary momentum plays for a continuous translation symmetry.
+
+2. **Conserved quantity modulo $\hbar\mathbf G$.** In a perfect crystal, scattering processes conserve crystal momentum up to a reciprocal lattice vector: $\mathbf k_\text{in} + \mathbf k_\text{phonon} = \mathbf k_\text{out} + \mathbf G$, where $\mathbf G$ is a reciprocal lattice vector ("Umklapp"). This is the lattice analogue of momentum conservation.
+
+3. **Group velocity.** The expectation value $\langle\hat{\mathbf p}\rangle$ in a Bloch state, divided by mass, gives the *group velocity* of a wavepacket centred on $\mathbf k$:
+   $$\mathbf v_{n\mathbf k} = \frac{1}{\hbar} \nabla_\mathbf k E_{n\mathbf k}. \tag{3b.1.\text{$p$3}}$$
+   It is the velocity at which a localised electron *actually* moves through the crystal. This is the quantity that enters the Boltzmann transport equation and the Drude conductivity.
+
+!!! warning "Common student trap"
+    A pure Bloch state $\psi_{n\mathbf k}$ is a *standing-wave-like* extended state with definite crystal momentum $\hbar\mathbf k$ but indefinite real momentum. It does *not* describe a moving electron at definite velocity. To describe a propagating electron one must construct a wavepacket — a superposition of Bloch states with $\mathbf k$ values in a small window around $\mathbf k_0$. The wavepacket then has group velocity (3b.1.$p$3) and finite spatial extent. This is the standard semiclassical picture used in transport theory.
+
 ## 3b.1.7 Crystal momentum and the first Brillouin zone
 
 The wavevector $\mathbf k$ entered through (3b.1.12) as a label for translation eigenvalues, *not* as a momentum. The quantity $\hbar\mathbf k$ is called **crystal momentum**; it is conserved (modulo a reciprocal lattice vector) in scattering processes, but it is not the expectation value of $-i\hbar\nabla$. To see why $\mathbf k$ is only defined modulo a reciprocal lattice vector $\mathbf G$, examine the translation eigenvalue:
@@ -146,6 +214,18 @@ $$e^{i(\mathbf k + \mathbf G)\cdot \mathbf R} = e^{i\mathbf k\cdot\mathbf R}\, e
 because by definition of the reciprocal lattice $\mathbf G\cdot\mathbf R \in 2\pi\mathbb Z$. So $\mathbf k$ and $\mathbf k + \mathbf G$ give the same eigenvalue, hence the same translation symmetry sector. We can restrict $\mathbf k$ to lie in any single primitive cell of the reciprocal lattice. The most symmetric choice — the *Wigner–Seitz cell of the reciprocal lattice* — is the **first Brillouin zone** (BZ). For the simple cubic lattice it is a cube of side $2\pi/a$; for the face-centred cubic lattice it is the famous truncated octahedron with high-symmetry points $\Gamma, X, L, K, W$; for the hexagonal lattice it is a hexagonal prism with $\Gamma, M, K, A, H$.
 
 When we plot a band structure $E_n(\mathbf k)$ we trace a path inside the BZ that connects these high-symmetry points. The total number of allowed $\mathbf k$ in the BZ is exactly $N$ (the number of unit cells), distributed uniformly with density $V_\text{crystal}/(2\pi)^3$.
+
+### Reduced, extended, and repeated zone schemes
+
+Three ways to draw a band structure are in common use, and they often confuse students. They contain *exactly* the same information.
+
+- **Reduced zone scheme.** Plot $E_{n\mathbf k}$ with $\mathbf k$ restricted to the first BZ. Different bands $n$ are different curves. This is what every textbook and DFT plot uses. The advantage is that the plot is compact; the disadvantage is that you lose a sense of which "free-electron parabola" each band fragment came from.
+
+- **Extended zone scheme.** Allow $\mathbf k$ to range over all of reciprocal space; each band lives in a different region (the $n$-th band in the $n$-th BZ). The advantage is that, for an empty lattice, each band is a single smooth parabola; the disadvantage is that the plot extends infinitely.
+
+- **Repeated zone scheme.** Periodically repeat the band structure over reciprocal space: $E_{n,\mathbf k+\mathbf G} = E_{n,\mathbf k}$. This is useful when discussing Fermi surfaces that straddle BZ boundaries — they look smooth in the repeated scheme.
+
+The choice is purely cosmetic. Modern DFT codes output the reduced zone; you should be comfortable mentally translating between them.
 
 ## 3b.1.8 The band index and the meaning of "bands"
 
@@ -173,6 +253,39 @@ Each reciprocal lattice vector $\mathbf G_n$ generates a band. Plotting $E_n(\ma
 !!! note "Sanity check: degeneracies at zone boundaries"
     At a BZ boundary $\mathbf k$ satisfying $|\mathbf k|^2 = |\mathbf k + \mathbf G|^2$ (the Bragg condition) two empty-lattice bands cross. Adding any nonzero $V_\mathbf G$ lifts that degeneracy — that is the origin of the band gap, and it is the cleanest illustration of why translational symmetry alone is not enough; the *strength* of $V$ shows up only as gap sizes, not as the qualitative structure of bands.
 
+!!! example "Worked example: two explicit Bloch states in 1D"
+    Let the lattice constant be $a = 4.0$ Å and pick the Bloch wavevector $k = \pi/(2a)$ (the midpoint of the BZ from $\Gamma$ to the zone boundary). Suppose the unit-cell potential is approximated as a single attractive Gaussian well centred at the origin, so the lowest cell-periodic function $u_1(x)$ is well-localised on the ion. Then two band states near this $k$ are:
+
+    - **Lowest band ($n=1$):**
+      $$\psi_{1,k}(x) = e^{i\pi x/(2a)}\, u_1(x), \qquad u_1(x+a) = u_1(x).$$
+      Translating by one lattice constant: $\psi_{1,k}(x+a) = e^{i\pi/2}\psi_{1,k}(x) = i\,\psi_{1,k}(x)$. The wavefunction picks up a phase of $i$ — a quarter rotation — as we step from one cell to the next. After four steps it has rotated by $e^{i 2\pi} = 1$, recovering the original value: the "wavelength of the envelope" is $4a$.
+    - **Second band ($n=2$):**
+      $$\psi_{2,k}(x) = e^{i\pi x/(2a)}\, u_2(x),$$
+      where $u_2$ is a higher cell-periodic eigenfunction (with one node inside the cell). Same translation phase $i$ — what distinguishes the two states is the *interior* of the unit cell, not the inter-cell phase.
+
+    The number $k = \pi/(2a)$ corresponds to a *crystal momentum* of $\hbar k \approx 0.082\, \hbar/\text{Å} \approx 8.7 \times 10^{-26}$ kg m/s. This is *not* the momentum expectation value of either state — that would be obtained by computing $\langle\psi|\hat{\mathbf p}|\psi\rangle$ and depends on the detailed shape of $u_n(x)$.
+
+## 3b.1.9a Time-reversal symmetry and $E(\mathbf k) = E(-\mathbf k)$
+
+A subtle but important consequence of time-reversal symmetry: in a non-magnetic crystal with no external magnetic field, the band energies satisfy
+
+$$\boxed{\; E_n(\mathbf k) = E_n(-\mathbf k). \;} \tag{3b.1.tr}$$
+
+This identity is responsible for many practical conveniences — most importantly, you only need to compute the band structure on *half* the Brillouin zone, since the other half is determined by symmetry.
+
+**Argument.** The time-reversal operator $\hat\Theta$ acts on a spinless wavefunction by complex conjugation: $\hat\Theta\psi(\mathbf r) = \psi^*(\mathbf r)$. Because the Hamiltonian $\hat H = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r)$ with real $V(\mathbf r)$ contains only real-coefficient operators (the kinetic term has only real coefficients when written in real space; the Laplacian is real), $\hat\Theta$ commutes with $\hat H$:
+
+$$[\hat H, \hat\Theta] = 0. \tag{3b.1.tr2}$$
+
+Now apply $\hat\Theta$ to a Bloch eigenstate $\psi_{n\mathbf k}(\mathbf r) = e^{i\mathbf k\cdot\mathbf r}u_{n\mathbf k}(\mathbf r)$ with energy $E_{n\mathbf k}$:
+
+$$\hat\Theta \psi_{n\mathbf k}(\mathbf r) = \psi_{n\mathbf k}^*(\mathbf r) = e^{-i\mathbf k\cdot\mathbf r}\, u_{n\mathbf k}^*(\mathbf r). \tag{3b.1.tr3}$$
+
+The right-hand side is itself a Bloch state, with cell-periodic part $u_{n\mathbf k}^*$ and wavevector $-\mathbf k$. Since $\hat\Theta$ commutes with $\hat H$, the result is also an eigenstate of $\hat H$ with the *same* energy $E_{n\mathbf k}$. But this same energy is, by construction, an energy of a Bloch state with wavevector $-\mathbf k$, hence equal to $E_n(-\mathbf k)$. Therefore $E_n(\mathbf k) = E_n(-\mathbf k)$.
+
+!!! note "When this fails"
+    Time-reversal symmetry is broken by (i) an external magnetic field, which adds an imaginary vector potential term to $\hat H$; (ii) ferromagnetic order, which introduces a spontaneous magnetisation; and (iii) intrinsic angular momentum (spin) coupled to a magnetic background. In each case $E_n(\mathbf k) \ne E_n(-\mathbf k)$ is allowed, and is the microscopic origin of the *anomalous Hall effect* and *Berry curvature dipoles*. Topological insulators with spin–orbit coupling have $E_n(\mathbf k) = E_n(-\mathbf k)$ only after combining time reversal with a spin flip (Kramers degeneracy). All of these refinements are addressed in advanced solid-state courses; for our purposes (3b.1.tr) holds throughout this chapter.
+
 ## 3b.1.10 Why this matters for the rest of the book
 
 You will encounter Bloch's theorem in *every* electronic structure calculation in the remainder of the book. A short forward catalogue:
@@ -186,6 +299,44 @@ You will encounter Bloch's theorem in *every* electronic structure calculation i
 - **Chapter 9 (MLIPs).** The descriptors used by SchNet, NequIP, and MACE are built from *local* atomic environments. Their effectiveness rests on the fact that, by Bloch's theorem, the electronic structure of an infinite crystal is determined by the unit cell — local descriptors capture the local part exactly. Equivariance with respect to lattice translations is the analogue of crystal-momentum conservation.
 
 - **Chapter 10 (GNNs).** Message-passing on a crystal graph respects translational symmetry because the graph is defined modulo the lattice. The Brillouin zone never explicitly appears, but its existence is what makes the descriptor space finite-dimensional.
+
+## 3b.1.11 Common pitfalls and how to avoid them
+
+A short list of misunderstandings that appear in every cohort of students and that you should bullet-proof yourself against:
+
+1. **"$\mathbf k$ is the momentum of the electron."** No. $\hbar\mathbf k$ is the *crystal momentum*, a label for translation-symmetry eigenvalues. The true momentum expectation value differs by terms involving $\nabla u_{n\mathbf k}$ — see §3b.1.6a.
+
+2. **"Bloch's theorem says the wavefunction is periodic."** No. Bloch's theorem says the wavefunction has the form $e^{i\mathbf k\cdot\mathbf r}\, u_{n\mathbf k}(\mathbf r)$ where *only the cell-periodic part* $u_{n\mathbf k}$ is periodic. The wavefunction itself picks up a phase under lattice translation.
+
+3. **"$\mathbf k$ values are continuous."** Only in the thermodynamic limit. For a finite crystal of $N$ unit cells, exactly $N$ inequivalent $\mathbf k$ values are allowed, spaced by $\sim 1/N$ across the BZ. This discreteness matters when choosing $\mathbf k$-meshes in DFT.
+
+4. **"Band gaps require a strong potential."** No, even an arbitrarily weak periodic potential opens gaps at Bragg planes (§3b.2). What requires a strong potential is *large* gaps. The qualitative existence of gaps is generic.
+
+5. **"There is only one band."** There are infinitely many — one for each eigenvalue of the cell-periodic problem. In practice we plot the few near the Fermi level, but every plane-wave DFT code computes hundreds of them under the hood.
+
+6. **"The BZ is unique."** Any primitive cell of the reciprocal lattice is a valid choice. The Wigner-Seitz cell of the reciprocal lattice (the "first Brillouin zone") is the most symmetric, but parallelepipeds spanned by reciprocal lattice vectors are also valid and sometimes computationally convenient.
+
+7. **"Different bands at the same $\mathbf k$ are degenerate."** Only if forced by some additional symmetry (e.g. spatial group symmetry, or a hidden gauge symmetry like the chiral symmetry of graphene at $K$). Generically, bands are non-degenerate at a generic $\mathbf k$.
+
+Keep these in mind as you read the remainder of Chapter 3b. They will recur.
+
+## 3b.1.12 What to remember in 3 months
+
+If you forget every equation in this section, hold on to these:
+
+1. **The wavefunction in a crystal has the form $\psi = e^{i\mathbf k\cdot\mathbf r}\, u(\mathbf r)$** with $u$ lattice-periodic. The $e^{i\mathbf k\cdot\mathbf r}$ is the *envelope phase*; the $u$ is the *cell pattern*.
+
+2. **$\mathbf k$ lives in the first Brillouin zone**, a bounded region of reciprocal space. There are exactly $N$ allowed $\mathbf k$ values (one per unit cell of a finite crystal of $N$ cells).
+
+3. **Each $\mathbf k$ gives a discrete ladder of energies $E_{n\mathbf k}$, called bands.** Plotting $E_n$ along a BZ path is the *band structure*.
+
+4. **Crystal momentum $\hbar\mathbf k$ is not the same as the momentum expectation value.** It is a label for translation-symmetry quantum numbers, conserved modulo $\hbar\mathbf G$ in scattering.
+
+5. **The infinite crystal problem reduces to a unit-cell problem at each $\mathbf k$.** This is why DFT calculations on a laptop are even possible.
+
+6. **Time reversal forces $E_n(\mathbf k) = E_n(-\mathbf k)$** in non-magnetic crystals — half the BZ is enough.
+
+Three months from now, if someone asks "what is Bloch's theorem?", say: "*The electron wavefunction in a crystal can be written as a plane wave times a lattice-periodic function. This is a consequence of the lattice translation symmetry and reduces an infinite-domain problem to a unit-cell problem labelled by $\mathbf k$.*"
 
 ## Where this is used later
 
