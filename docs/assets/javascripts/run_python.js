@@ -2,6 +2,12 @@
 // Adds an inline "Run" button to every Python code block on the page.
 // Uses Pyodide (WebAssembly Python) to execute in the browser, no server.
 //
+// MkDocs Material + pymdownx.highlight emits this structure:
+//   <div class="language-python highlight">
+//     <pre><span></span><code>...code with line anchors...</code></pre>
+//   </div>
+// So we hook onto the outer .language-python container.
+//
 // Heavy packages (torch, mace, ase, pymatgen, torch_geometric) are not
 // available in Pyodide. For code that imports those, the button shows a
 // link pointing the reader to Google Colab instead.
@@ -54,28 +60,30 @@ function usesHeavyPackage(code) {
   return null;
 }
 
-function attachRunButton(preEl) {
-  if (preEl.dataset.runAttached === "1") return;
-  preEl.dataset.runAttached = "1";
+function attachRunButton(blockEl) {
+  // blockEl is the <div class="language-python ..."> wrapper.
+  if (blockEl.dataset.runAttached === "1") return;
+  blockEl.dataset.runAttached = "1";
 
-  const codeEl = preEl.querySelector("code");
+  const codeEl = blockEl.querySelector("pre > code");
   if (!codeEl) return;
 
-  const wrap = document.createElement("div");
-  wrap.className = "pyodide-wrap";
-  preEl.parentNode.insertBefore(wrap, preEl);
-  wrap.appendChild(preEl);
+  // Ensure positioning context for absolute button
+  blockEl.style.position = "relative";
+  blockEl.classList.add("pyodide-host");
 
+  // Run button — anchored to top-right of the code block
   const btn = document.createElement("button");
   btn.className = "pyodide-run-btn";
   btn.type = "button";
   btn.innerHTML = "<span class='pyodide-icon'>▶</span> Run";
-  wrap.appendChild(btn);
+  blockEl.appendChild(btn);
 
+  // Output panel inserted AFTER the code block, sibling-wise
   const output = document.createElement("div");
   output.className = "pyodide-output";
   output.style.display = "none";
-  wrap.appendChild(output);
+  blockEl.parentNode.insertBefore(output, blockEl.nextSibling);
 
   btn.addEventListener("click", async () => {
     const code = codeEl.textContent;
@@ -86,7 +94,7 @@ function attachRunButton(preEl) {
         "<div class='pyodide-note'>This snippet imports <code>" +
         heavy +
         "</code>, which is too heavy for in-browser Python.<br>" +
-        "Open the full chapter in <a href='https://colab.research.google.com/' target='_blank' rel='noopener'>Google Colab</a> to run it with the full scientific stack (torch / ase / pymatgen / mace).</div>";
+        "Open the corresponding chapter in <a href='https://colab.research.google.com/' target='_blank' rel='noopener'>Google Colab</a> to run it with the full scientific stack (torch / ase / pymatgen / mace).</div>";
       return;
     }
 
@@ -94,7 +102,7 @@ function attachRunButton(preEl) {
     btn.innerHTML = "<span class='pyodide-icon'>⏳</span> Loading…";
     output.style.display = "block";
     output.innerHTML =
-      "<div class='pyodide-note'>Loading Python runtime in your browser. First run takes ~10 s while NumPy/SciPy/matplotlib are fetched and cached. Subsequent runs are instant.</div>";
+      "<div class='pyodide-note'>Loading Python runtime in your browser. First run takes ~10 s while NumPy / SciPy / matplotlib are fetched and cached. Subsequent runs are instant.</div>";
 
     try {
       const py = await loadPyodideOnce();
@@ -136,9 +144,27 @@ function attachRunButton(preEl) {
 }
 
 function initRunButtons() {
-  document
-    .querySelectorAll("pre > code.language-python, pre > code.python")
-    .forEach((c) => attachRunButton(c.parentElement));
+  // pymdownx.highlight emits <div class="language-python highlight"><pre><code>...
+  // Fallback for plain pandoc-style <pre><code class="language-python">.
+  const containers = document.querySelectorAll(
+    "div[class*='language-python'], pre > code.language-python, pre > code.python"
+  );
+  containers.forEach((el) => {
+    if (el.tagName === "DIV") {
+      attachRunButton(el);
+    } else {
+      // <code> element — promote to its <pre>'s parent (or the pre itself if no wrapper)
+      const pre = el.closest("pre");
+      if (pre) {
+        const parent = pre.parentElement;
+        if (parent && parent.classList && parent.classList.contains("language-python")) {
+          attachRunButton(parent);
+        } else {
+          attachRunButton(pre);
+        }
+      }
+    }
+  });
 }
 
 if (document.readyState !== "loading") {
