@@ -1,0 +1,47 @@
+/* Tighter line height for body text */
+.md-typeset {
+  line-height: 1.65;
+}
+
+/* Better display equations */
+.md-typeset .arithmatex {
+  overflow-x: auto;
+}
+
+/* Subtle figure captions */
+.md-typeset figure figcaption {
+  font-size: 0.85em;
+  color: var(--md-default-fg-color--light);
+  text-align: center;
+  margin-top: 0.5em;
+}
+
+/* Chapter-opening hero */
+.chapter-hero {
+  background: linear-gradient(135deg, #5e35b1 0%, #3949ab 100%);
+  color: white;
+  padding: 2rem 1.5rem;
+  border-radius: 8px;
+  margin: 1rem 0 2rem 0;
+}
+.chapter-hero h1 { color: white; margin-top: 0; }
+
+/* Difficulty badges for exercises */
+.diff-easy, .diff-med, .diff-hard {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-right: 0.5em;
+}
+.diff-easy { background: #c8e6c9; color: #1b5e20; }
+.diff-med  { background: #fff9c4; color: #6d4c00; }
+.diff-hard { background: #ffcdd2; color: #b71c1c; }
+
+/* Print styles */
+@media print {
+  .md-header, .md-tabs, .md-sidebar, .md-footer { display: none !important; }
+  .md-main__inner { margin: 0; }
+  .md-content { max-width: 100%; }
+}

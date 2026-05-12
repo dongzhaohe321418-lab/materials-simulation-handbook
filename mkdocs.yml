@@ -1,0 +1,271 @@
+site_name: Materials Simulation Handbook
+site_description: A zero-foundation, textbook-grade open handbook on computational materials science — from algebra to foundation models.
+site_author: Zhaohe Dong
+site_url: https://dongzhaohe321418-lab.github.io/materials-simulation-handbook/
+repo_url: https://github.com/dongzhaohe321418-lab/materials-simulation-handbook
+repo_name: dongzhaohe321418-lab/materials-simulation-handbook
+edit_uri: edit/main/docs/
+
+copyright: |
+  Text licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>;
+  code under <a href="https://opensource.org/licenses/MIT">MIT</a>.
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.prune
+    - navigation.path
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - header.autohide
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.code.select
+    - content.tabs.link
+    - content.action.edit
+    - content.action.view
+    - content.tooltips
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra_javascript:
+  - assets/javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - tags
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dongzhaohe321418-lab
+  generator: false
+
+nav:
+  - Home: index.md
+  - How to use this book: how-to-use.md
+  - Learning Path: learning-path.md
+  - Prerequisites Check: prerequisites-checker.md
+  - Known Limitations: known-limitations.md
+  - Part I — Prerequisites:
+      - Chapter 0 · Mathematics from Scratch:
+          - Overview: ch00-math/index.md
+          - 0.1 Numbers, sets, functions: ch00-math/01-numbers.md
+          - 0.2 Linear algebra you actually need: ch00-math/02-linear-algebra.md
+          - 0.3 Calculus, gradients, and a bit of variational thinking: ch00-math/03-calculus.md
+          - 0.4 Complex numbers and Fourier intuition: ch00-math/04-complex-fourier.md
+          - 0.5 Probability and statistics in one page: ch00-math/05-probability.md
+          - Exercises: ch00-math/exercises.md
+      - Chapter 1 · Python and Scientific Computing:
+          - Overview: ch01-python/index.md
+          - 1.1 Installing Python the right way: ch01-python/01-install.md
+          - 1.2 NumPy in 30 minutes: ch01-python/02-numpy.md
+          - 1.3 Plotting with Matplotlib: ch01-python/03-matplotlib.md
+          - 1.4 Reproducibility, environments, version control: ch01-python/04-reproducibility.md
+          - Exercises: ch01-python/exercises.md
+  - Part II — The Big Picture:
+      - Chapter 2 · What is Materials Simulation?:
+          - Overview: ch02-foundations/index.md
+          - 2.1 The scale ladder: ch02-foundations/01-scales.md
+          - 2.2 What simulation can and cannot do: ch02-foundations/02-capabilities.md
+          - 2.3 Three diagrams every materials scientist reads: ch02-foundations/03-three-diagrams.md
+          - 2.4 The software ecosystem: ch02-foundations/04-ecosystem.md
+          - Exercises: ch02-foundations/exercises.md
+      - Chapter 3 · Atoms, Bonds, and Solids:
+          - Overview: ch03-atoms/index.md
+          - 3.1 The atom — what we keep and what we throw away: ch03-atoms/01-atom.md
+          - 3.2 Bonding types and what they predict: ch03-atoms/02-bonding.md
+          - 3.3 Crystals and lattices: ch03-atoms/03-crystals.md
+          - 3.4 Reciprocal space without tears: ch03-atoms/04-reciprocal.md
+          - Exercises: ch03-atoms/exercises.md
+      - Chapter 3.5 · Solid State Physics Prerequisites:
+          - Overview: ch03b-solid-state/index.md
+          - 3.5.1 Bloch's theorem: ch03b-solid-state/01-bloch-theorem.md
+          - 3.5.2 Nearly-free-electron model: ch03b-solid-state/02-nearly-free-electron.md
+          - 3.5.3 Tight-binding model: ch03b-solid-state/03-tight-binding.md
+          - 3.5.4 Free-electron and Sommerfeld theory: ch03b-solid-state/04-free-electron-sommerfeld.md
+          - 3.5.5 Phonons: ch03b-solid-state/05-phonons.md
+          - 3.5.6 Thermal models — Einstein and Debye: ch03b-solid-state/06-thermal-models.md
+          - 3.5.7 Defects and band engineering: ch03b-solid-state/07-defects-and-band-engineering.md
+          - Exercises: ch03b-solid-state/exercises.md
+  - Part III — Electrons:
+      - Chapter 4 · Quantum Mechanics for Materials:
+          - Overview: ch04-quantum/index.md
+          - 4.1 Why we need quantum mechanics: ch04-quantum/01-why.md
+          - 4.2 The Schrödinger equation: ch04-quantum/02-schrodinger.md
+          - 4.3 Solving it numerically — particle in a box: ch04-quantum/03-particle-in-box.md
+          - 4.4 The harmonic oscillator: ch04-quantum/04-harmonic-oscillator.md
+          - 4.5 Many electrons and the exponential wall: ch04-quantum/05-many-electrons.md
+          - 4.6 Born–Oppenheimer separation: ch04-quantum/06-born-oppenheimer.md
+          - 4.7 Hartree–Fock, briefly: ch04-quantum/07-hartree-fock.md
+          - Exercises: ch04-quantum/exercises.md
+      - Chapter 5 · Density Functional Theory:
+          - Overview: ch05-dft/index.md
+          - 5.1 The Thomas–Fermi idea: ch05-dft/01-thomas-fermi.md
+          - 5.2 Hohenberg–Kohn theorems: ch05-dft/02-hohenberg-kohn.md
+          - 5.3 The Kohn–Sham construction: ch05-dft/03-kohn-sham.md
+          - 5.4 Exchange–correlation functionals: ch05-dft/04-xc-functionals.md
+          - 5.5 The self-consistent field loop: ch05-dft/05-scf.md
+          - 5.6 Where DFT fails: ch05-dft/06-failures.md
+          - Exercises: ch05-dft/exercises.md
+      - Chapter 6 · Running DFT in Practice:
+          - Overview: ch06-running-dft/index.md
+          - 6.1 Pseudopotentials and basis sets: ch06-running-dft/01-pseudo-basis.md
+          - 6.2 Your first Quantum ESPRESSO calculation: ch06-running-dft/02-first-qe.md
+          - 6.3 Convergence testing: ch06-running-dft/03-convergence.md
+          - 6.4 Band structures and density of states: ch06-running-dft/04-bands-dos.md
+          - 6.5 Defects and formation energies: ch06-running-dft/05-defects.md
+          - Exercises: ch06-running-dft/exercises.md
+  - Part IV — Atoms in Motion:
+      - Chapter 7 · Molecular Dynamics:
+          - Overview: ch07-md/index.md
+          - 7.1 Newton, Verlet, and time integration: ch07-md/01-integration.md
+          - 7.2 Periodic boundary conditions: ch07-md/02-pbc.md
+          - 7.3 Thermostats and barostats: ch07-md/03-thermostats.md
+          - 7.4 Force fields: ch07-md/04-force-fields.md
+          - 7.5 LAMMPS workflows: ch07-md/05-lammps.md
+          - 7.6 Analysing trajectories: ch07-md/06-analysis.md
+          - Exercises: ch07-md/exercises.md
+      - Chapter 8 · Statistical Mechanics from Simulations:
+          - Overview: ch08-statmech/index.md
+          - 8.1 Ensembles and partition functions: ch08-statmech/01-ensembles.md
+          - 8.2 Free energy methods: ch08-statmech/02-free-energy.md
+          - 8.3 Transport and the fluctuation–dissipation theorem: ch08-statmech/03-transport.md
+          - 8.4 Phase diagrams from simulation: ch08-statmech/04-phase-diagrams.md
+          - Exercises: ch08-statmech/exercises.md
+  - Part V — Modern Machine Learning:
+      - Chapter 9 · Machine Learning Interatomic Potentials:
+          - Overview: ch09-mlip/index.md
+          - 9.1 Why MLIPs — the accuracy–cost gap: ch09-mlip/01-why.md
+          - 9.2 Required symmetries: ch09-mlip/02-symmetries.md
+          - 9.3 Descriptors — SOAP, ACE: ch09-mlip/03-descriptors.md
+          - 9.4 Behler–Parrinello and GAP: ch09-mlip/04-bp-gap.md
+          - 9.5 Equivariant networks — NequIP and MACE: ch09-mlip/05-equivariant.md
+          - 9.6 Training a MACE potential: ch09-mlip/06-training-mace.md
+          - Exercises: ch09-mlip/exercises.md
+      - Chapter 10 · Graph Neural Networks for Materials:
+          - Overview: ch10-gnn/index.md
+          - 10.1 Crystals as graphs: ch10-gnn/01-graphs.md
+          - 10.2 Message passing: ch10-gnn/02-message-passing.md
+          - 10.3 CGCNN from scratch: ch10-gnn/03-cgcnn.md
+          - 10.4 MEGNet, ALIGNN, M3GNet: ch10-gnn/04-evolution.md
+          - 10.5 Materials Project pipeline: ch10-gnn/05-mp-pipeline.md
+          - Exercises: ch10-gnn/exercises.md
+      - Chapter 11 · Active Learning and Bayesian Optimisation:
+          - Overview: ch11-active/index.md
+          - 11.1 The exploration–exploitation trade-off: ch11-active/01-tradeoff.md
+          - 11.2 Gaussian processes: ch11-active/02-gp.md
+          - 11.3 Acquisition functions: ch11-active/03-acquisition.md
+          - 11.4 BO for materials discovery: ch11-active/04-materials-bo.md
+          - Exercises: ch11-active/exercises.md
+      - Chapter 12 · Foundation Models for Materials:
+          - Overview: ch12-foundation/index.md
+          - 12.1 The foundation-model paradigm: ch12-foundation/01-paradigm.md
+          - 12.2 MACE-MP-0 and universal MLIPs: ch12-foundation/02-mace-mp0.md
+          - 12.3 Generative models — MatterGen and friends: ch12-foundation/03-generative.md
+          - 12.4 What comes next: ch12-foundation/04-frontiers.md
+          - Exercises: ch12-foundation/exercises.md
+  - Part VI — Beyond a Single Scale:
+      - Chapter 13 · Multiscale Methods:
+          - Overview: ch13-multiscale/index.md
+          - 13.1 Coupling schemes: ch13-multiscale/01-coupling-schemes.md
+          - 13.2 QM/MM: ch13-multiscale/02-qm-mm.md
+          - 13.3 Coarse-graining: ch13-multiscale/03-coarse-graining.md
+          - 13.4 Kinetic Monte Carlo and phase-field: ch13-multiscale/04-kmc-phase-field.md
+          - 13.5 The finite-element bridge: ch13-multiscale/05-finite-element-bridge.md
+          - Exercises: ch13-multiscale/exercises.md
+      - Chapter 14 · Designing Your Own Project:
+          - Overview: ch14-capstone/index.md
+          - 14.1 How research actually works: ch14-capstone/01-how-research-works.md
+          - 14.2 Choosing a problem: ch14-capstone/02-choosing-a-problem.md
+          - 14.3 Literature search: ch14-capstone/03-literature-search.md
+          - 14.4 Convergence and validation: ch14-capstone/04-convergence-and-validation.md
+          - 14.5 Common pitfalls: ch14-capstone/05-common-pitfalls.md
+          - 14.6 Writing up: ch14-capstone/06-writing-up.md
+          - 14.7 The five projects: ch14-capstone/07-the-five-projects.md
+          - Exercises: ch14-capstone/exercises.md
+  - Capstone Projects:
+      - Project 1 · Defect Formation Energy: projects/01-defect-formation-energy/README.md
+      - Project 2 · Melting Point from an MLIP: projects/02-melting-point-mlip/README.md
+      - Project 3 · Band-Gap Screening: projects/03-band-gap-screening/README.md
+      - Project 4 · MLIP from Scratch: projects/04-mlip-from-scratch/README.md
+      - Project 5 · Bayesian Catalyst Search: projects/05-bayesian-catalyst-search/README.md
+  - Appendix:
+      - A · Quick maths reference: appendix/A-math-reference.md
+      - B · HPC and SLURM basics: appendix/B-hpc.md
+      - C · Glossary: appendix/C-glossary.md
+      - D · Further reading: appendix/D-reading.md
+      - E · Bibliography: appendix/E-bibliography.md
