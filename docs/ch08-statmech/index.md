@@ -1,5 +1,7 @@
 # Chapter 8 — Statistical Mechanics from Simulations
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch08-statmech.ipynb){ .md-button .md-button--primary }
+
 In [Chapter 7](../ch07-md/index.md) we ran molecular dynamics simulations and pulled observable quantities — energies, pressures, mean squared displacements, radial distribution functions — out of trajectories. What we did not do was step back and ask what those quantities are estimators **of**. A pressure averaged over 100 ps of LAMMPS output is a sample mean. What population mean is it estimating? Under what conditions does the sample mean converge to the population mean? What if we want a free energy — a quantity that, unlike energy or pressure, has no instantaneous-snapshot value?
 
 This chapter is about the statistical mechanics that gives those questions sharp answers. Most of it you will already have met in a physics undergraduate degree. The point here is not to teach statistical mechanics from scratch but to connect each piece of it explicitly to what MD does. We will go through ensembles (which one does each LAMMPS `fix` actually sample?), partition functions (how do we extract them from samples?), free energies (the methods that built modern computational drug discovery and computational materials design), transport coefficients (the Green-Kubo relations), and phase diagrams from simulation.

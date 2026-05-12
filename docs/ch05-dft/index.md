@@ -1,5 +1,7 @@
 # Chapter 5 — Density Functional Theory
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch05-dft.ipynb){ .md-button .md-button--primary }
+
 In Chapter 4 we faced an uncomfortable truth. The non-relativistic, Born–Oppenheimer many-electron Hamiltonian
 
 $$

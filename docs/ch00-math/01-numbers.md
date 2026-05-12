@@ -285,13 +285,13 @@ These two pieces together imply $P(n)$ for all $n \ge n_0$, by a sort of mathema
 
     The geometric series is the simplest non-trivial infinite sum and underlies the radius of convergence of every power series we will encounter — including the exponential, sine, and cosine series.
 
-We will use induction sparingly — once to establish the binomial theorem, once when discussing recursion in Chapter 1, and never again in any serious way. But the *mode of reasoning* — establishing a base case and a step — recurs constantly in numerical methods, where you analyse the error per step and then propagate it. Convergence proofs for time-integration schemes (Chapter 7) and for stochastic gradient descent (Chapter 9) are recognisably inductive in spirit.
+We will use induction sparingly — but the *mode of reasoning* — establishing a base case and a step — recurs constantly in numerical methods, where you analyse the error per step and then propagate it. Convergence proofs for time-integration schemes (Chapter 7) and for stochastic gradient descent (briefly in Chapter 9) are recognisably inductive in spirit.
 
 ## Asymptotic notation
 
 Throughout this book we describe how quantities scale with system size or precision using **big-$O$ notation**. We write $f(n) = O(g(n))$ as $n \to \infty$ if there exist constants $C$ and $n_0$ such that $|f(n)| \le C |g(n)|$ for all $n \ge n_0$. Informally: $f$ grows no faster than $g$ up to a constant factor.
 
-The notation lets us compare algorithms without committing to constants that depend on hardware. Computing the Fourier transform of $N$ samples by the definition is $O(N^2)$; the FFT is $O(N \log N)$. For $N = 10^6$, this is the difference between $10^{12}$ operations (hours) and $10^7 \cdot 20 = 2 \times 10^8$ (seconds). In Chapter 1 we will see DFT scaling as $O(N^3)$ in the number of bands and Monte Carlo error scaling as $O(1/\sqrt{M})$ in the number of samples — both consequences of the same big-$O$ language.
+The notation lets us compare algorithms without committing to constants that depend on hardware. Computing the Fourier transform of $N$ samples by the definition is $O(N^2)$; the FFT is $O(N \log N)$. For $N = 10^6$, this is the difference between $10^{12}$ operations (hours) and $10^7 \cdot 20 = 2 \times 10^8$ (seconds). Later in the book we will meet DFT scaling as $O(N^3)$ in the number of bands (Chapter 5) and Monte Carlo error scaling as $O(1/\sqrt{M})$ in the number of samples (Chapter 8) — both expressed in the same big-$O$ language.
 
 A close relative is little-$o$: $f(n) = o(g(n))$ if $f(n)/g(n) \to 0$. This says $f$ grows *strictly slower* than $g$. We will see this in the Taylor-series remainders of Section 0.3.
 

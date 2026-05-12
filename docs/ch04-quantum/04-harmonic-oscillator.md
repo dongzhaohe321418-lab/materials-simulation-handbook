@@ -262,6 +262,68 @@ The numerical levels are *evenly spaced* by $\hbar\omega$, just as (4.4.8) predi
 !!! warning "Grid extent matters"
     For the SHO the wavefunctions decay as $\exp(-x^2/2\ell^2)$, where $\ell$ is the oscillator length. The simulation box must be many oscillator lengths wide, or the artificial walls at the box edges will spuriously confine the wavefunction and shift the energies upward. For the parameters above, $\ell = \sqrt{\hbar/m_e\omega} \approx 1.06$ nm, so a half-width of 4 nm ($\approx 4\ell$) gives Gaussian tails of $e^{-8} \approx 3 \times 10^{-4}$ at the wall — small enough not to matter. If you increase $\omega$, decrease the box width proportionally.
 
+!!! example "Try it interactively"
+    Drag the sliders to vary the angular frequency $\omega$ and the number of eigenstates plotted. The widget rebuilds the finite-difference Hamiltonian on a symmetric grid wide enough to contain the Gaussian tails, diagonalises it, and overlays the lowest $n_\text{max}$ eigenfunctions offset by their energies. Watch how stiffer springs (larger $\omega$) compress the wavefunctions and widen the level spacing.
+
+    ```yaml
+    # widget-config
+    sliders:
+      omega: {min: 1.0e13, max: 1.0e14, step: 1.0e12, default: 5.0e13, label: "Angular frequency ω (rad/s)"}
+      n_max: {min: 1,      max: 6,      step: 1,      default: 4,      label: "States to show n_max"}
+    ```
+
+    ```python
+    # widget — harmonic-oscillator eigenfunctions on a finite-difference grid
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    HBAR = 1.054_571_817e-34
+    M_E  = 9.109_383_7e-31
+    EV   = 1.602_176_634e-19
+
+    w = float(omega)
+    nmax = int(n_max)
+
+    # Oscillator length sets a sensible grid half-width.
+    ell = np.sqrt(HBAR / (M_E * w))
+    half = 5.0 * ell
+    N = 400
+    x = np.linspace(-half, half, N)
+    h = x[1] - x[0]
+
+    pref = HBAR ** 2 / (2.0 * M_E * h ** 2)
+    V = 0.5 * M_E * w ** 2 * x ** 2
+    H = (np.diag(2.0 * pref * np.ones(N) + V)
+         + np.diag(-pref * np.ones(N - 1), 1)
+         + np.diag(-pref * np.ones(N - 1), -1))
+
+    eigvals, eigvecs = np.linalg.eigh(H)
+    eigvecs = eigvecs / np.sqrt(h)
+
+    print(f"omega = {w:.3e} rad/s   ħω = {HBAR * w / EV:.4f} eV")
+    print(" n |    E (eV)")
+    print("---+-----------")
+    for ni in range(nmax):
+        print(f"{ni:2d} | {eigvals[ni] / EV:9.4f}")
+
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    scale = 0.7 * HBAR * w / EV  # so wavefunctions sit nicely on energy axis
+    ax.plot(x * 1e9, V / EV, "k-", lw=1.2, label="V(x)")
+    for ni in range(nmax):
+        psi = eigvecs[:, ni]
+        E_eV = eigvals[ni] / EV
+        ax.hlines(E_eV, x[0] * 1e9, x[-1] * 1e9, color="grey", lw=0.5, alpha=0.6)
+        ax.plot(x * 1e9, scale * psi / np.max(np.abs(psi)) + E_eV,
+                lw=1.3, label=f"n={ni}")
+    ax.set_xlabel("x (nm)")
+    ax.set_ylabel("Energy (eV)")
+    ax.set_ylim(0, eigvals[nmax - 1] / EV + scale * 1.5)
+    ax.set_title(f"SHO eigenstates, ω = {w:.2e} rad/s")
+    ax.legend(loc="upper right", fontsize=8)
+    fig.tight_layout()
+    plt.show()
+    ```
+
 ## 4.4.5 From oscillators to phonons
 
 The oscillator equation (4.4.4) is a model for a single degree of freedom. Real materials have $3N$ atomic degrees of freedom (with $N \sim 10^{23}$). The harmonic approximation, however, *factorises* this enormous problem.

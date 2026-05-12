@@ -1,0 +1,21 @@
+{
+  "jupyter-lite-schema-version": 0,
+  "jupyter-config-data": {
+    "appName": "Materials Simulation Handbook — Live",
+    "appUrl": "./lab",
+    "faviconUrl": "./lab/favicon.ico",
+    "fullLabextensionsUrl": "./extensions",
+    "fullStaticUrl": "./build",
+    "settingsUrl": "./build/schemas",
+    "themesUrl": "./build/themes",
+    "disabledExtensions": [],
+    "litePluginSettings": {
+      "@jupyterlite/pyodide-kernel-extension:kernel": {
+        "pipliteUrls": [],
+        "loadPyodideOptions": {
+          "packages": ["numpy", "scipy", "matplotlib", "ipywidgets"]
+        }
+      }
+    }
+  }
+}

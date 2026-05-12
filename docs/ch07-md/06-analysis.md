@@ -8,8 +8,8 @@
 **Definition 7.6.1 (Trajectory).** A *trajectory* is a sequence $\{(\mathbf{r}^n_i,\mathbf{v}^n_i)\}_{n=0}^{N_t-1}$ for $i=1,\ldots,N$ atoms, sampled at times $t_n = n\Delta t_\mathrm{save}$ with frame interval $\Delta t_\mathrm{save}$ a multiple of the MD timestep.
 
 <figure markdown>
-![g(r) for crystal, liquid, gas](../assets/figures/ch07/fig_rdf_phases.png){ width="700" }
-<figcaption>Figure 7.6.1. Radial distribution function \(g(r)\) for the three phases. Sharp, persistent peaks at well-defined neighbour shells signal a crystal; one or two broad peaks decaying to \(g(r) \to 1\) signal a liquid; a near-featureless approach to 1 signals a gas. (Synthetic curves for illustration.)</figcaption>
+![g(r) for crystal, liquid, gas](../assets/figures/ch07/fig_rdf_real.png){ width="700" }
+<figcaption>Figure 7.6.1. Radial distribution function \(g(r)\) for the three phases. Sharp, persistent peaks at well-defined neighbour shells signal a crystal; one or two broad peaks decaying to \(g(r) \to 1\) signal a liquid; a near-featureless approach to 1 signals a gas. Computed from a real LJ-MD simulation of 500 argon atoms (\(\sigma = 3.405\) Å, \(\varepsilon/k_B = 119.8\) K) at three temperatures (50 K, 150 K, 600 K) via velocity-Verlet integration with Berendsen-style equilibration — see <code>scripts/figures/fig_rdf_real.py</code>. A simpler analytic-curve illustration is in <code>scripts/figures/fig_rdf_phases.py</code>.</figcaption>
 </figure>
 
 <figure markdown>

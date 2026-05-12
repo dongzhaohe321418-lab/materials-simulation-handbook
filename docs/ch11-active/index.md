@@ -1,5 +1,7 @@
 # Chapter 11 — Active Learning and Bayesian Optimisation
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch11-active.ipynb){ .md-button .md-button--primary }
+
 ```mermaid
 flowchart LR
     D["Labelled data D_t<br/>{(xᵢ, yᵢ)}"]

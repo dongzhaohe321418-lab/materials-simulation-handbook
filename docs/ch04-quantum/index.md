@@ -1,5 +1,7 @@
 # Chapter 4 — Quantum Mechanics for Materials
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch04-quantum.ipynb){ .md-button .md-button--primary }
+
 ```mermaid
 flowchart TD
     P["Postulates of QM<br/>(wavefunction, operators,<br/>Born rule, measurement)"]

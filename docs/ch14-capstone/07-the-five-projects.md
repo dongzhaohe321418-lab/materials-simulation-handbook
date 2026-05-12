@@ -22,7 +22,7 @@ Pick *one* project. Do it well. Do not try two.
 
 ## Project 1: Defect Formation Energy in Silicon
 
-**Project folder:** [`projects/01-silicon-defects/README.md`](https://github.com/)
+**Project folder:** [`projects/01-defect-formation-energy/`](../projects/01-defect-formation-energy/README.md)
 **Duration:** ~6 weeks
 **Difficulty:** Foundational (you have all the prerequisites)
 **Methods used:** DFT only
@@ -74,7 +74,7 @@ defects only — they are perfectly thesis-worthy.
 
 ## Project 2: Melting Point of Copper via MLIP-Driven MD
 
-**Project folder:** [`projects/02-copper-melting/README.md`](https://github.com/)
+**Project folder:** [`projects/02-melting-point-mlip/`](../projects/02-melting-point-mlip/README.md)
 **Duration:** ~8 weeks
 **Difficulty:** Intermediate
 **Methods used:** MD + pre-trained MLIP (or classical EAM as fallback)
@@ -126,7 +126,7 @@ the dominant time cost. Be patient and run multiple long trajectories.
 
 ## Project 3: High-Throughput Band Gap Screening
 
-**Project folder:** [`projects/03-bandgap-screening/README.md`](https://github.com/)
+**Project folder:** [`projects/03-band-gap-screening/`](../projects/03-band-gap-screening/README.md)
 **Duration:** ~8 weeks
 **Difficulty:** Intermediate
 **Methods used:** Database query + GNN inference + DFT validation
@@ -180,7 +180,7 @@ hybrid functional (which adds cost). Choose your story before launching.
 
 ## Project 4: Training an MLIP From Scratch on a Novel System
 
-**Project folder:** [`projects/04-mlip-from-scratch/README.md`](https://github.com/)
+**Project folder:** [`projects/04-mlip-from-scratch/`](../projects/04-mlip-from-scratch/README.md)
 **Duration:** ~10 weeks
 **Difficulty:** Advanced
 **Methods used:** DFT (data generation) + MLIP training + MD validation
@@ -235,7 +235,7 @@ the regime of validity.
 
 ## Project 5: Bayesian Optimisation for Catalyst Composition
 
-**Project folder:** [`projects/05-bayes-opt-catalyst/README.md`](https://github.com/)
+**Project folder:** [`projects/05-bayesian-catalyst-search/`](../projects/05-bayesian-catalyst-search/README.md)
 **Duration:** ~6 weeks
 **Difficulty:** Intermediate
 **Methods used:** Bayesian optimisation + GNN oracle (or DFT)

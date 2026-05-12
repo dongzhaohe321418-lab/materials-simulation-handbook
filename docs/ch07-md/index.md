@@ -1,5 +1,7 @@
 # Chapter 7 — Molecular Dynamics
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch07-md.ipynb){ .md-button .md-button--primary }
+
 In [Chapter 6](../ch06-running-dft/index.md) we computed forces on atoms from DFT and stopped there. A force on a nucleus is the gradient of the Born-Oppenheimer energy surface; at a stationary point those forces are zero, and that is what a relaxation calculation hunts for. Everything we did in Chapters 5 and 6 was static. Time did not appear.
 
 Real materials are not static. Atoms in a copper crystal at 300 K oscillate around their lattice sites at frequencies of a few THz, each carrying about $\tfrac{3}{2}k_B T \approx 39$ meV of kinetic energy. Hydrogen in palladium hops between octahedral sites every nanosecond or so. Water molecules in a biological pocket rearrange their hydrogen-bond network on timescales of picoseconds. None of this can be read off a single zero-temperature potential energy surface; it requires integrating Newton's equations.

@@ -143,3 +143,95 @@
 [data-md-color-scheme="slate"] .pyodide-plot {
   background: #1e1e2a;
 }
+
+/* ----- Interactive slider widgets ----- */
+
+.pyodide-widget-panel {
+  margin: 1em 0 0 0;
+  padding: 0.6em 0.9em 0.7em 0.9em;
+  background: linear-gradient(135deg, rgba(94, 53, 177, 0.08) 0%, rgba(57, 73, 171, 0.08) 100%);
+  border: 1px solid rgba(94, 53, 177, 0.35);
+  border-radius: 6px 6px 0 0;
+  border-bottom: none;
+  font-size: 0.85em;
+}
+
+[data-md-color-scheme="slate"] .pyodide-widget-panel {
+  background: linear-gradient(135deg, rgba(94, 53, 177, 0.18) 0%, rgba(57, 73, 171, 0.18) 100%);
+  border-color: rgba(149, 117, 205, 0.5);
+}
+
+.pyodide-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.4em;
+  font-size: 0.9em;
+}
+
+.pyodide-widget-title {
+  font-weight: 600;
+  color: #5e35b1;
+  letter-spacing: 0.02em;
+}
+
+[data-md-color-scheme="slate"] .pyodide-widget-title {
+  color: #b39ddb;
+}
+
+.pyodide-widget-status {
+  font-size: 0.85em;
+  color: var(--md-default-fg-color--light, #666);
+  font-style: italic;
+}
+
+.pyodide-slider-row {
+  display: grid;
+  grid-template-columns: minmax(8em, 14em) 1fr 4em;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.18em 0;
+}
+
+.pyodide-slider-label {
+  font-weight: 500;
+  color: var(--md-default-fg-color, #1a1a1a);
+}
+
+.pyodide-slider {
+  width: 100%;
+  accent-color: #5e35b1;
+  cursor: pointer;
+}
+
+.pyodide-slider-value {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: 0.9em;
+  color: #5e35b1;
+  text-align: right;
+}
+
+[data-md-color-scheme="slate"] .pyodide-slider-value {
+  color: #b39ddb;
+}
+
+/* When a widget is active, square off the top of the code block so the
+   slider panel and the code visually belong together. */
+.pyodide-widget-panel + div[class*="language-python"] > pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.pyodide-widget-output {
+  margin-top: 0.5em;
+}
+
+@media (max-width: 600px) {
+  .pyodide-slider-row {
+    grid-template-columns: 1fr;
+    gap: 0.15em;
+  }
+  .pyodide-slider-value {
+    text-align: left;
+  }
+}

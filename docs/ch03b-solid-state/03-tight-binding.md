@@ -255,9 +255,15 @@ $$f(\mathbf K + \mathbf q) \approx -t\sum_i i (\boldsymbol\delta_i \cdot \mathbf
 
 Evaluating the phase factors $e^{i\mathbf K\cdot\boldsymbol\delta_i}$ at the Dirac point $\mathbf K = (2\pi/(3a),\, 2\pi/(3a\sqrt 3))$ with the three nearest-neighbour vectors $\boldsymbol\delta_1 = a(1,0)$, $\boldsymbol\delta_2 = a(-1/2, \sqrt 3/2)$, $\boldsymbol\delta_3 = a(-1/2, -\sqrt 3/2)$:
 
-$$\mathbf K\cdot\boldsymbol\delta_1 = \frac{2\pi}{3}, \quad \mathbf K\cdot\boldsymbol\delta_2 = -\frac{\pi}{3} + \frac{\pi}{3} = 0,\quad \text{wait, let me redo:}$$
+Computing the three phase factors explicitly:
 
-Actually, $\mathbf K\cdot\boldsymbol\delta_1 = (2\pi/(3a))\cdot a + (2\pi/(3a\sqrt 3))\cdot 0 = 2\pi/3$. For $\boldsymbol\delta_2$: $\mathbf K\cdot\boldsymbol\delta_2 = (2\pi/(3a))(-a/2) + (2\pi/(3a\sqrt 3))(a\sqrt 3/2) = -\pi/3 + \pi/3 = 0$. For $\boldsymbol\delta_3$: similar with the sign of the second term flipped: $-\pi/3 - \pi/3 = -2\pi/3$. So the three phase factors are $e^{i2\pi/3}, 1, e^{-i2\pi/3}$ — the three cube roots of unity.
+$$\mathbf K\cdot\boldsymbol\delta_1 = \frac{2\pi}{3a}\cdot a + \frac{2\pi}{3a\sqrt{3}}\cdot 0 = \frac{2\pi}{3},$$
+
+$$\mathbf K\cdot\boldsymbol\delta_2 = \frac{2\pi}{3a}\cdot\!\left(-\frac{a}{2}\right) + \frac{2\pi}{3a\sqrt{3}}\cdot\frac{a\sqrt{3}}{2} = -\frac{\pi}{3} + \frac{\pi}{3} = 0,$$
+
+$$\mathbf K\cdot\boldsymbol\delta_3 = \frac{2\pi}{3a}\cdot\!\left(-\frac{a}{2}\right) + \frac{2\pi}{3a\sqrt{3}}\cdot\!\left(-\frac{a\sqrt{3}}{2}\right) = -\frac{\pi}{3} - \frac{\pi}{3} = -\frac{2\pi}{3}.$$
+
+So the three phase factors are $e^{i2\pi/3}$, $1$, $e^{-i2\pi/3}$ — the three cube roots of unity, which sum to zero and confirm $f(\mathbf K) = 0$.
 
 Carrying through the algebra (the standard exercise — see §3b.8) one finds
 
@@ -392,6 +398,43 @@ Running this script produces the famous graphene band structure: a $\pi$-band ru
 
 !!! note "Extending the script"
     Two natural extensions you will be asked to make in §3b.8: (i) add a second-nearest-neighbour hopping $t'\approx -0.2$ eV that breaks the sublattice symmetry and shifts the Dirac point off zero, and (ii) add a small staggered on-site energy $\pm m$ on A/B sublattices to gap out the Dirac point (the model for hexagonal boron nitride). Both modifications change only the matrix construction; the diagonalisation loop is identical.
+
+!!! example "Try it interactively"
+    Slide the hopping integral $t$ to rescale the bandwidth of the 1D monatomic chain. The dispersion is $E(k) = -2t\cos(ka)$, so positive and negative $t$ swap the band minimum and maximum. The bandwidth $W = 4|t|$ is annotated, and the dashed lines mark the band edges at $\pm 2t$.
+
+    ```yaml
+    # widget-config
+    sliders:
+      t: {min: -2.0, max: 2.0, step: 0.05, default: 1.0, label: "Hopping t (eV)"}
+    ```
+
+    ```python
+    # widget — 1D tight-binding chain dispersion E(k) = -2 t cos(k a)
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    t_val = float(t)
+    a = 1.0
+    k = np.linspace(-np.pi / a, np.pi / a, 401)
+    E = -2.0 * t_val * np.cos(k * a)
+
+    print(f"t = {t_val:+.3f} eV")
+    print(f"bandwidth W = 4|t| = {4.0 * abs(t_val):.3f} eV")
+    print(f"E(k=0)     = {-2.0 * t_val:+.3f} eV")
+    print(f"E(k=π/a)   = {+2.0 * t_val:+.3f} eV")
+
+    fig, ax = plt.subplots(figsize=(6.0, 3.8))
+    ax.plot(k * a / np.pi, E, color="#5e35b1", lw=1.8)
+    ax.axhline(+2.0 * t_val, color="grey", ls="--", lw=0.7)
+    ax.axhline(-2.0 * t_val, color="grey", ls="--", lw=0.7)
+    ax.axhline(0, color="k", lw=0.5)
+    ax.set_xlabel("k a / π")
+    ax.set_ylabel("E(k) (eV)")
+    ax.set_ylim(-2.5, 2.5)
+    ax.set_title(f"1D tight-binding chain, t = {t_val:+.2f} eV")
+    fig.tight_layout()
+    plt.show()
+    ```
 
 ## 3b.3.7a Extensions: second-nearest-neighbour hopping and the staggered mass
 

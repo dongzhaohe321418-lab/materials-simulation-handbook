@@ -1,5 +1,7 @@
 # Chapter 0 — Mathematics from Scratch
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch00-math.ipynb){ .md-button .md-button--primary }
+
 Computational materials science sits at the intersection of physics, chemistry, computer science, and applied mathematics. Every workflow you will encounter in this handbook — from a simple Lennard-Jones molecular-dynamics run, through density functional theory, to graph neural networks trained on the Materials Project — rests on a small core of mathematical machinery. If that machinery is unfamiliar, the rest of the book will read like a foreign language. This chapter exists so that nobody is shut out for want of a calculus refresher.
 
 We assume only high-school algebra. By the end of the chapter you will be able to manipulate vectors and matrices with confidence, take derivatives and gradients of multivariable functions, recognise where Fourier transforms appear in solid-state physics, and reason probabilistically about thermal ensembles and Bayesian models. None of this is presented as pure mathematics; every concept is grounded in an example you will meet later — the Arrhenius rate law, Hamiltonian diagonalisation, reciprocal-space lattices, Gaussian process regression for materials discovery.

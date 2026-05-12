@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Materials Simulation Handbook favicon -->
+  <!-- A simple sp3-like tetrahedral atom cluster on indigo background -->
+  <rect width="64" height="64" rx="12" fill="#5e35b1"/>
+
+  <!-- Bonds (drawn first so they sit behind atoms) -->
+  <g stroke="#e8eaf6" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85">
+    <line x1="32" y1="32" x2="16" y2="20"/>
+    <line x1="32" y1="32" x2="48" y2="20"/>
+    <line x1="32" y1="32" x2="16" y2="48"/>
+    <line x1="32" y1="32" x2="48" y2="48"/>
+  </g>
+
+  <!-- Central atom -->
+  <circle cx="32" cy="32" r="6" fill="#ffeb3b" stroke="#fff" stroke-width="1.5"/>
+
+  <!-- Outer atoms -->
+  <circle cx="16" cy="20" r="4.5" fill="#fff"/>
+  <circle cx="48" cy="20" r="4.5" fill="#fff"/>
+  <circle cx="16" cy="48" r="4.5" fill="#fff"/>
+  <circle cx="48" cy="48" r="4.5" fill="#fff"/>
+</svg>

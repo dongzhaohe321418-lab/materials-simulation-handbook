@@ -6,11 +6,11 @@ hide:
 
 # Materials Simulation Handbook
 
-> A zero-foundation, textbook-grade open handbook on computational materials science — from high-school algebra all the way to foundation models such as MACE-MP-0.
+> A three-tier, textbook-grade open handbook on computational materials science — from the maths you need, through DFT and MD, all the way to foundation models such as MACE-MP-0.
 
 This book is for anyone who wants to understand **how we simulate matter on a computer** — the electrons inside silicon, the atoms diffusing in a battery, the alloys we have not yet discovered — and who wants to do it themselves, with real code, on a real laptop.
 
-You do **not** need a physics or chemistry degree to start. You need curiosity, patience, and a willingness to read a derivation twice.
+You do **not** need a physics or chemistry degree to start, but you do need A-level (or equivalent first-year university) mathematics and physics: you should be comfortable differentiating and integrating, you should have met matrices and vectors, and you should at least have heard of the Schrödinger equation. If any of that sounds shaky, take the [prerequisites self-test](prerequisites-checker.md) — it diagnoses in 20 questions whether you should start at Chapter 0 or skip ahead.
 
 ---
 

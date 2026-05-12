@@ -1,0 +1,9 @@
+{
+  "LiteBuildConfig": {
+    "contents": ["notebooks"],
+    "output_dir": "_output/lite",
+    "apps": ["lab", "retro", "tree"],
+    "no_sourcemaps": true,
+    "no_unused_shared_packages": true
+  }
+}

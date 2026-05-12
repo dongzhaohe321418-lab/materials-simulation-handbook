@@ -1,10 +1,12 @@
 # Chapter 3b — Solid State Physics Prerequisites
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch03b-solid-state.ipynb){ .md-button .md-button--primary }
+
 > *"A solid is the densest, most boring, and most useful state of matter."* — anonymous condensed matter lecturer
 
 Chapter 3 took you from isolated atoms to bonded crystals: you learnt what a unit cell is, drew a few Bravais lattices, met reciprocal space, and computed a structure factor. Chapter 4 then taught you quantum mechanics in finite systems — a particle in a box, a harmonic oscillator, the many-electron problem and the exponential wall. What is glaringly absent is the bridge between the two: *how does quantum mechanics behave in an infinite periodic potential?* That bridge is solid state physics, and without it nothing in the rest of the book makes sense. You cannot read a DFT output, configure a `k`-point grid, interpret a band gap, fit a machine-learning potential to a phonon spectrum, or design a graph neural network that respects translational symmetry, unless you know the four or five ideas that this chapter installs.
 
-We are deliberately inserting this material *between* Chapter 3 (descriptive crystallography) and Chapter 4 (quantum mechanics in a box) in spirit, but you should read it *after* Chapter 4, because we will use $\hat{H}$, eigenstates, and degenerate perturbation theory throughout. The label `3b` records that intent: it is an expansion of Chapter 3, but its content is quantum.
+A note on reading order. This chapter is labelled `3b` because conceptually it expands Chapter 3 (descriptive crystallography) into its quantum counterpart, but it does use a small amount of Chapter 4 material — chiefly the time-independent Schrödinger equation, eigenvalues of Hermitian operators, and bra–ket notation. If you are following the linear path (Path A of the [learning path](../learning-path.md)), the recommended order is **Ch 3 → Ch 4 → Ch 3.5 → Ch 5**: this is the order that uses the least forward-referenced material. If you prefer the original "geometry first" ordering Ch 3 → Ch 3.5 → Ch 4, the bits of Ch 4 we lean on are brief enough that you can skim the relevant single-particle Schrödinger sections (4.2 and 4.3) and come back; nothing in this chapter requires the many-electron material from Chapter 4.5 onwards.
 
 ## Why a working materials simulator needs this chapter
 

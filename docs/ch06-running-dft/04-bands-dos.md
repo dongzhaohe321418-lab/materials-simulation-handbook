@@ -16,8 +16,8 @@ flowchart LR
 *The bands-and-DOS pipeline in Quantum ESPRESSO. Each arrow carries a concrete file artifact; `scf` converges the density, `nscf` evaluates eigenvalues on the desired grid/path, then `bands.x` or `dos.x` post-process for plotting.*
 
 <figure markdown>
-![Schematic silicon band structure](../assets/figures/ch06/fig_si_band_structure.png){ width="700" }
-<figcaption>Figure 6.4.1. Schematic band structure of silicon. The valence-band maximum sits at \(\Gamma\) while the conduction-band minimum lies near X, giving an indirect fundamental gap (\(\approx 1.17\) eV) — silicon's defining electronic feature. The smallest direct transition at \(\Gamma\) is much larger (\(\approx 3.4\) eV). (Schematic: real DFT bands have more structure and tend to underestimate gaps.)</figcaption>
+![Silicon band structure from sp3d5s* tight binding](../assets/figures/ch06/fig_si_bands_real.png){ width="700" }
+<figcaption>Figure 6.4.1. Band structure of silicon. The valence-band maximum sits at \(\Gamma\) while the conduction-band minimum lies about 85% of the way along \(\Gamma\to X\), giving an indirect fundamental gap (\(\approx 1.17\) eV) — silicon's defining electronic feature. The smallest direct transition at \(\Gamma\) is much larger (\(\approx 3.4\) eV). Computed from a real sp\(^3\)d\(^5\)s\(^*\) tight-binding calculation with the Slater-Koster parameters of Jancu, Scholz, Beltram and Bassani, <em>PRB</em> 57, 6493 (1998), diagonalising the 20×20 Bloch Hamiltonian along the canonical FCC k-path — see <code>scripts/figures/fig_si_bands_real.py</code>.</figcaption>
 </figure>
 
 !!! tip "Why band structures matter"

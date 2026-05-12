@@ -60,6 +60,49 @@ $$\tilde\nu = \frac{1}{2\pi c}\sqrt{\frac{2k}{m}} \approx 60\,\mathrm{cm}^{-1}.$
 
 *Discussion.* Compared to experimental low-temperature inelastic neutron scattering on solid Ar (peak around 60-70 cm$^{-1}$), the LJ prediction is within 10%. This is why LJ is the right model for argon: a single pair of parameters captures both the lattice constant and the vibrational frequency.
 
+!!! example "Try it interactively"
+    Drag the well depth $\epsilon$ and the length scale $\sigma$ to reshape the LJ potential $V(r)$ in real time. The dashed lines mark $r_\text{eq} = 2^{1/6}\sigma$ and the well depth $-\epsilon$, so you can read off the equilibrium spacing visually as either slider moves.
+
+    ```yaml
+    # widget-config
+    sliders:
+      epsilon: {min: 0.001, max: 0.1, step: 0.001, default: 0.0103, label: "Well depth ε (eV)"}
+      sigma:   {min: 1.0,   max: 4.0, step: 0.05,  default: 3.405,  label: "Length scale σ (Å)"}
+    ```
+
+    ```python
+    # widget — Lennard-Jones pair potential V(r)
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    eps = float(epsilon)
+    sig = float(sigma)
+
+    r = np.linspace(0.85 * sig, 3.0 * sig, 400)
+    V = 4.0 * eps * ((sig / r) ** 12 - (sig / r) ** 6)
+    r_eq = 2.0 ** (1.0 / 6.0) * sig
+
+    print(f"ε = {eps:.4f} eV   σ = {sig:.3f} A")
+    print(f"r_eq = 2^(1/6) σ  = {r_eq:.3f} A")
+    print(f"V(r_eq)           = {-eps:.4f} eV")
+    print(f"k_LJ = 72 ε/r_eq² = {72.0 * eps / r_eq ** 2:.4f} eV/A²")
+
+    fig, ax = plt.subplots(figsize=(6.0, 3.8))
+    ax.plot(r, V, color="#5e35b1", lw=1.8, label="V(r)")
+    ax.axhline(0, color="k", lw=0.6)
+    ax.axhline(-eps, color="grey", lw=0.7, ls="--",
+               label=f"−ε = {-eps:.4f} eV")
+    ax.axvline(r_eq, color="grey", lw=0.7, ls=":",
+               label=f"r_eq = {r_eq:.2f} Å")
+    ax.set_ylim(-1.4 * eps, 1.5 * eps)
+    ax.set_xlabel("r (Å)")
+    ax.set_ylabel("V(r) (eV)")
+    ax.set_title("Lennard-Jones 12-6 potential")
+    ax.legend(loc="upper right", fontsize=8)
+    fig.tight_layout()
+    plt.show()
+    ```
+
 ## Embedded Atom Method for metals
 
 A copper atom in bulk copper has 12 nearest neighbours. Adding a 13th neighbour costs more energy than adding the first 12 — the cohesive energy per neighbour decreases as the coordination increases. This **bond order** effect cannot be captured by any pairwise potential, where the per-neighbour energy is constant.

@@ -13,6 +13,8 @@ copyright: |
 theme:
   name: material
   language: en
+  favicon: assets/favicon.svg
+  logo: assets/favicon.svg
   features:
     - navigation.instant
     - navigation.instant.progress
@@ -109,6 +111,13 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - tags
+  - social:
+      enabled: !ENV [CI, false]
+      cards: true
+      cards_layout_options:
+        background_color: "#3949ab"
+        color: "#ffffff"
+        font_family: Inter
 
 extra:
   social:
@@ -123,6 +132,7 @@ nav:
       - Learning Path: learning-path.md
       - Self-Test: prerequisites-checker.md
       - Known Limits: known-limitations.md
+      - Try in Jupyter (in browser): try-in-jupyter.md
   - I · Prereq:
       - Chapter 0 · Mathematics from Scratch:
           - Overview: ch00-math/index.md

@@ -24,6 +24,11 @@ ENV/
 site/
 .cache/
 
+# JupyterLite build output (artefact only — published via GitHub Pages)
+_output/
+.jupyterlite.doit.db
+.venv-lite/
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints

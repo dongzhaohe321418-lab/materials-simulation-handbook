@@ -109,8 +109,8 @@ Two hundred hours is roughly one full-time semester, or two evenings a week for 
 **Pacing.**
 
 - Weeks 1–2: Ch 0, Ch 1.
-- Weeks 3–4: Ch 2, Ch 3, Ch 3.5.
-- Weeks 5–7: Ch 4, Ch 5.
+- Weeks 3–4: Ch 2, Ch 3, Ch 4 (single-particle quantum mechanics).
+- Weeks 5–7: Ch 3.5 (solid-state prereq, uses Ch 4 lightly), then Ch 5 (DFT).
 - Week 8: Ch 6 (get a real DFT calculation running on your own machine or a free cluster).
 - Weeks 9–10: Ch 7, Ch 8.
 - Weeks 11–12: Ch 9, Ch 10.

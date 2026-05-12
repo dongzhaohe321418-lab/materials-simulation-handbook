@@ -359,6 +359,50 @@ Run the script. Typical output (for $N = 400$ grid points and $L = 1$ nm) is:
 
 Four-decimal agreement with theory on a 400-point grid — and the relative error scales as $h^2$, the order of the finite-difference truncation in (4.3.10). The plot shows the numerical eigenfunctions overlaid on the analytical sines: indistinguishable to the eye.
 
+!!! example "Try it interactively"
+    Drag the sliders below to change the box width $L$ and the number of states $n_\text{max}$ shown. The energies are recomputed in your browser using the analytical formula $E_n = n^2 \pi^2 \hbar^2 / (2 m_e L^2)$ and plotted as a level diagram. Notice the $1/L^2$ collapse of the spectrum as the box widens.
+
+    ```yaml
+    # widget-config
+    sliders:
+      L:     {min: 0.1, max: 5.0, step: 0.1, default: 1.0, label: "Box width L (Å)"}
+      n_max: {min: 1,   max: 8,   step: 1,   default: 4,   label: "States to show n_max"}
+    ```
+
+    ```python
+    # widget — energies of a particle in an infinite square well
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    HBAR = 1.054_571_817e-34
+    M_E  = 9.109_383_7e-31
+    EV   = 1.602_176_634e-19
+
+    L_si = L * 1e-10           # slider value L is in Angstrom
+    nmax = int(n_max)
+    n = np.arange(1, nmax + 1)
+    E = (n ** 2 * np.pi ** 2 * HBAR ** 2) / (2.0 * M_E * L_si ** 2)
+    E_eV = E / EV
+
+    print(f"L = {L:.2f} A   n_max = {nmax}")
+    print(" n |     E (eV)")
+    print("---+-----------")
+    for ni, Ei in zip(n, E_eV):
+        print(f"{ni:2d} | {Ei:10.4f}")
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.6))
+    for ni, Ei in zip(n, E_eV):
+        ax.hlines(Ei, 0, 1, color="#5e35b1", lw=2)
+        ax.text(1.02, Ei, f"n={ni}", va="center", fontsize=9)
+    ax.set_xlim(0, 1.25)
+    ax.set_ylim(0, max(E_eV) * 1.1 + 1e-3)
+    ax.set_xticks([])
+    ax.set_ylabel("Energy (eV)")
+    ax.set_title(f"Particle-in-a-box spectrum, L = {L:.2f} A")
+    fig.tight_layout()
+    plt.show()
+    ```
+
 !!! note "What you have just done"
     You have solved a quantum mechanical eigenvalue problem with general-purpose linear algebra. The same code — with a different `potential` array — will solve *any* 1D Schrödinger equation. In §4.4 we will reuse it verbatim for the harmonic oscillator. The same idea, generalised to three dimensions and combined with a plane-wave basis instead of a position grid, is the engine inside Quantum ESPRESSO, VASP, ABINIT and most of the rest of the codes you will meet in Chapter 6.
 

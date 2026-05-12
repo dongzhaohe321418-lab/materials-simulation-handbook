@@ -11,6 +11,27 @@
 // Heavy packages (torch, mace, ase, pymatgen, torch_geometric) are not
 // available in Pyodide. For code that imports those, the button shows a
 // link pointing the reader to Google Colab instead.
+//
+// --- Widget mode -----------------------------------------------------------
+// Authors can opt a code block into "widget mode" by preceding it with a
+// YAML config block whose first line is the marker `# widget-config`.
+// Example markdown:
+//
+//   ```yaml
+//   # widget-config
+//   sliders:
+//     L:     {min: 0.5, max: 5.0, step: 0.1, default: 1.0, label: "Box L (Å)"}
+//     n_max: {min: 1,   max: 8,   step: 1,   default: 4,   label: "States"}
+//   ```
+//
+//   ```python
+//   # widget — uses L, n_max bound from the sliders above
+//   import numpy as np
+//   ...
+//   ```
+//
+// The python block must also begin with a `# widget` line so that the
+// pairing is unambiguous and existing tutorial code is unaffected.
 
 const HEAVY_PACKAGES = [
   "torch", "mace", "mace_torch", "ase", "pymatgen",
@@ -60,6 +81,91 @@ function usesHeavyPackage(code) {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Tiny YAML subset parser
+// ---------------------------------------------------------------------------
+// We only support the exact shape we document for widget-config:
+//
+//   sliders:
+//     NAME: {min: A, max: B, step: C, default: D, label: "..."}
+//     ...
+//
+// This is enough to avoid pulling in js-yaml and keeps the page offline-safe.
+function parseWidgetConfig(text) {
+  const sliders = [];
+  const lines = text.split(/\r?\n/);
+  let inSliders = false;
+  for (let raw of lines) {
+    const line = raw.replace(/\t/g, "  ");
+    if (!line.trim() || line.trim().startsWith("#")) continue;
+    if (/^sliders\s*:\s*$/.test(line)) {
+      inSliders = true;
+      continue;
+    }
+    if (!inSliders) continue;
+    // A slider entry: "  NAME: { ... }"
+    const m = line.match(/^\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*\{(.+)\}\s*$/);
+    if (!m) continue;
+    const name = m[1];
+    const body = m[2];
+    const spec = { name: name, min: 0, max: 1, step: 0.01, default: 0, label: name };
+    // Pull key: value pairs. Values can be numbers or quoted strings.
+    const re = /([A-Za-z_]+)\s*:\s*("([^"]*)"|'([^']*)'|[-+0-9.eE]+)/g;
+    let mm;
+    while ((mm = re.exec(body)) !== null) {
+      const key = mm[1];
+      const valStr = mm[2];
+      let value;
+      if (mm[3] !== undefined) value = mm[3];
+      else if (mm[4] !== undefined) value = mm[4];
+      else value = parseFloat(valStr);
+      spec[key] = value;
+    }
+    sliders.push(spec);
+  }
+  return { sliders: sliders };
+}
+
+// ---------------------------------------------------------------------------
+// Pyodide execution helper (shared by run-button and widget paths)
+// ---------------------------------------------------------------------------
+async function runPythonInto(py, code, output, globalsObj) {
+  py.runPython("import sys, io; sys.stdout = io.StringIO(); sys.stderr = sys.stdout");
+
+  // Inject slider values as module-level globals via Pyodide's globals proxy.
+  if (globalsObj) {
+    for (const [k, v] of Object.entries(globalsObj)) {
+      py.globals.set(k, v);
+    }
+  }
+
+  try {
+    await py.runPythonAsync(code);
+  } catch (e) {
+    const stderr = py.runPython("sys.stdout.getvalue()");
+    output.innerHTML =
+      (stderr ? "<pre class='pyodide-stdout'>" + escapeHtml(stderr) + "</pre>" : "") +
+      "<pre class='pyodide-error'>" + escapeHtml(e.toString()) + "</pre>";
+    return false;
+  }
+
+  const stdout = py.runPython("sys.stdout.getvalue()");
+  let plotB64 = "";
+  try {
+    plotB64 = py.runPython("__capture_plot()");
+  } catch (_) { /* ignore */ }
+
+  let html = "";
+  if (stdout) html += "<pre class='pyodide-stdout'>" + escapeHtml(stdout) + "</pre>";
+  if (plotB64) html += "<img class='pyodide-plot' src='data:image/png;base64," + plotB64 + "' alt='matplotlib output'>";
+  if (!html) html = "<div class='pyodide-note'>Ran successfully — no output.</div>";
+  output.innerHTML = html;
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Plain Run button
+// ---------------------------------------------------------------------------
 function attachRunButton(blockEl) {
   // blockEl is the <div class="language-python ..."> wrapper.
   if (blockEl.dataset.runAttached === "1") return;
@@ -107,39 +213,209 @@ function attachRunButton(blockEl) {
     try {
       const py = await loadPyodideOnce();
       btn.innerHTML = "<span class='pyodide-icon'>⚙</span> Running…";
-
-      py.runPython("import sys, io; sys.stdout = io.StringIO(); sys.stderr = sys.stdout");
-      try {
-        await py.runPythonAsync(code);
-      } catch (e) {
-        const stderr = py.runPython("sys.stdout.getvalue()");
-        output.innerHTML =
-          (stderr ? "<pre class='pyodide-stdout'>" + escapeHtml(stderr) + "</pre>" : "") +
-          "<pre class='pyodide-error'>" + escapeHtml(e.toString()) + "</pre>";
-        btn.disabled = false;
-        btn.innerHTML = "<span class='pyodide-icon'>▶</span> Run";
-        return;
-      }
-
-      const stdout = py.runPython("sys.stdout.getvalue()");
-      let plotB64 = "";
-      try {
-        plotB64 = py.runPython("__capture_plot()");
-      } catch (_) {}
-
-      let html = "";
-      if (stdout) html += "<pre class='pyodide-stdout'>" + escapeHtml(stdout) + "</pre>";
-      if (plotB64) html += "<img class='pyodide-plot' src='data:image/png;base64," + plotB64 + "' alt='matplotlib output'>";
-      if (!html) html = "<div class='pyodide-note'>Ran successfully — no output.</div>";
-
-      output.innerHTML = html;
+      const ok = await runPythonInto(py, code, output, null);
       btn.disabled = false;
-      btn.innerHTML = "<span class='pyodide-icon'>▶</span> Run again";
+      btn.innerHTML = ok
+        ? "<span class='pyodide-icon'>▶</span> Run again"
+        : "<span class='pyodide-icon'>▶</span> Run";
     } catch (err) {
       output.innerHTML = "<pre class='pyodide-error'>" + escapeHtml(err.toString()) + "</pre>";
       btn.disabled = false;
       btn.innerHTML = "<span class='pyodide-icon'>▶</span> Run";
     }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Widget mode: sliders that drive a python re-run
+// ---------------------------------------------------------------------------
+function attachWidget(yamlBlockEl, pythonBlockEl, config) {
+  if (pythonBlockEl.dataset.widgetAttached === "1") return;
+  pythonBlockEl.dataset.widgetAttached = "1";
+  yamlBlockEl.dataset.widgetAttached = "1";
+
+  const codeEl = pythonBlockEl.querySelector("pre > code");
+  if (!codeEl) return;
+
+  // Hide the yaml config block — readers do not need to see the slider spec.
+  yamlBlockEl.style.display = "none";
+
+  // Build the slider panel and place it BEFORE the python block.
+  const panel = document.createElement("div");
+  panel.className = "pyodide-widget-panel";
+
+  const header = document.createElement("div");
+  header.className = "pyodide-widget-header";
+  header.innerHTML =
+    "<span class='pyodide-widget-title'>Interactive — drag to update</span>" +
+    "<span class='pyodide-widget-status'>idle</span>";
+  panel.appendChild(header);
+
+  const status = header.querySelector(".pyodide-widget-status");
+  const inputs = {};
+
+  for (const s of config.sliders) {
+    const row = document.createElement("label");
+    row.className = "pyodide-slider-row";
+
+    const labelText = document.createElement("span");
+    labelText.className = "pyodide-slider-label";
+    labelText.textContent = s.label || s.name;
+    row.appendChild(labelText);
+
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = String(s.min);
+    input.max = String(s.max);
+    input.step = String(s.step);
+    input.value = String(s.default);
+    input.className = "pyodide-slider";
+    row.appendChild(input);
+
+    const valOut = document.createElement("span");
+    valOut.className = "pyodide-slider-value";
+    valOut.textContent = formatVal(parseFloat(input.value), s.step);
+    row.appendChild(valOut);
+
+    input.addEventListener("input", () => {
+      valOut.textContent = formatVal(parseFloat(input.value), s.step);
+      scheduleRun();
+    });
+
+    inputs[s.name] = { input: input, spec: s };
+    panel.appendChild(row);
+  }
+
+  pythonBlockEl.parentNode.insertBefore(panel, pythonBlockEl);
+
+  // Output goes after the python block.
+  const output = document.createElement("div");
+  output.className = "pyodide-output pyodide-widget-output";
+  pythonBlockEl.parentNode.insertBefore(output, pythonBlockEl.nextSibling);
+
+  let pending = null;
+  let running = false;
+  let queued = false;
+
+  function gatherGlobals() {
+    const g = {};
+    for (const [name, entry] of Object.entries(inputs)) {
+      const v = parseFloat(entry.input.value);
+      // Snap to int if the step is integer.
+      if (Number.isInteger(entry.spec.step) && Number.isInteger(entry.spec.min)) {
+        g[name] = Math.round(v);
+      } else {
+        g[name] = v;
+      }
+    }
+    return g;
+  }
+
+  async function doRun() {
+    if (running) { queued = true; return; }
+    running = true;
+    status.textContent = "running…";
+    try {
+      const py = await loadPyodideOnce();
+      const code = codeEl.textContent;
+      const heavy = usesHeavyPackage(code);
+      if (heavy) {
+        output.innerHTML =
+          "<div class='pyodide-note'>This widget uses <code>" + heavy +
+          "</code>, which is not available in browser Python.</div>";
+        status.textContent = "skipped";
+        running = false;
+        return;
+      }
+      const ok = await runPythonInto(py, code, output, gatherGlobals());
+      status.textContent = ok ? "ready" : "error";
+    } catch (err) {
+      output.innerHTML = "<pre class='pyodide-error'>" + escapeHtml(err.toString()) + "</pre>";
+      status.textContent = "error";
+    } finally {
+      running = false;
+      if (queued) {
+        queued = false;
+        scheduleRun();
+      }
+    }
+  }
+
+  function scheduleRun() {
+    if (pending) clearTimeout(pending);
+    pending = setTimeout(doRun, 150);
+  }
+
+  // Kick off an initial run (lazy — only when reader scrolls near it would
+  // be nicer, but Pyodide loadOnce already debounces the heavy work and
+  // most readers will engage with the widget immediately).
+  status.textContent = "loading runtime…";
+  doRun();
+}
+
+function formatVal(v, step) {
+  // Very large or very small magnitudes — use scientific notation.
+  const absv = Math.abs(v);
+  if (absv !== 0 && (absv >= 1e4 || absv < 1e-3)) {
+    return v.toExponential(2);
+  }
+  if (Number.isInteger(step)) return String(Math.round(v));
+  const decimals = Math.max(0, Math.min(6, -Math.floor(Math.log10(step))));
+  return v.toFixed(decimals);
+}
+
+// ---------------------------------------------------------------------------
+// First-line scan: returns the first non-empty text line of a code block.
+// ---------------------------------------------------------------------------
+function firstLine(blockEl) {
+  const codeEl = blockEl.querySelector("pre > code");
+  if (!codeEl) return "";
+  const text = codeEl.textContent || "";
+  for (const line of text.split(/\r?\n/)) {
+    if (line.trim()) return line.trim();
+  }
+  return "";
+}
+
+function isWidgetYaml(blockEl) {
+  return /language-yaml/.test(blockEl.className) &&
+         firstLine(blockEl) === "# widget-config";
+}
+
+function isWidgetPython(blockEl) {
+  return /language-python/.test(blockEl.className) &&
+         /^#\s*widget\b/.test(firstLine(blockEl));
+}
+
+function nextElementBlock(el) {
+  let n = el.nextElementSibling;
+  // Skip empty text-ish wrappers if any.
+  while (n && n.nodeType === 1 && n.children.length === 0 && !n.textContent.trim()) {
+    n = n.nextElementSibling;
+  }
+  return n;
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+function initWidgets() {
+  // Find every yaml block tagged as widget-config and look at its next sibling.
+  const yamls = document.querySelectorAll("div[class*='language-yaml']");
+  yamls.forEach((y) => {
+    if (!isWidgetYaml(y)) return;
+    const nxt = nextElementBlock(y);
+    if (!nxt || !isWidgetPython(nxt)) return;
+    const codeText = (y.querySelector("pre > code") || {}).textContent || "";
+    let config;
+    try {
+      config = parseWidgetConfig(codeText);
+    } catch (e) {
+      console.error("widget-config parse error:", e);
+      return;
+    }
+    if (!config.sliders || config.sliders.length === 0) return;
+    attachWidget(y, nxt, config);
   });
 }
 
@@ -151,6 +427,8 @@ function initRunButtons() {
   );
   containers.forEach((el) => {
     if (el.tagName === "DIV") {
+      // Skip blocks that are already wired up as widgets.
+      if (el.dataset.widgetAttached === "1") return;
       attachRunButton(el);
     } else {
       // <code> element — promote to its <pre>'s parent (or the pre itself if no wrapper)
@@ -158,6 +436,7 @@ function initRunButtons() {
       if (pre) {
         const parent = pre.parentElement;
         if (parent && parent.classList && parent.classList.contains("language-python")) {
+          if (parent.dataset.widgetAttached === "1") return;
           attachRunButton(parent);
         } else {
           attachRunButton(pre);
@@ -167,13 +446,19 @@ function initRunButtons() {
   });
 }
 
-if (document.readyState !== "loading") {
+function initAll() {
+  // Widgets first, so the run-button pass can skip widget-bound python blocks.
+  initWidgets();
   initRunButtons();
+}
+
+if (document.readyState !== "loading") {
+  initAll();
 } else {
-  document.addEventListener("DOMContentLoaded", initRunButtons);
+  document.addEventListener("DOMContentLoaded", initAll);
 }
 
 // Material for MkDocs uses navigation.instant — re-attach on page change.
 if (typeof document$ !== "undefined") {
-  document$.subscribe(() => initRunButtons());
+  document$.subscribe(() => initAll());
 }

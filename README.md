@@ -15,7 +15,7 @@
 
 The *Materials Simulation Handbook* is a self-contained, open-source textbook with accompanying runnable code, through the core of computational materials science, and with some small projects for undergraduate/ graduate level. The book is built in three explicit tiers — *Prerequisites*,* Core*, *Research*. You can read it linearly as a textbook, skip the early tiers if you already have the background, or work backwards from one of five capstone projects.
 
-The ideas starts from a normal undergraduate student, who feels it hard and mist importantly, no guide into the computational simulation of materials. The structure of the handbook is self-designed, detailed contents are filled under human supervision using Claude. Minor mistakes might happen for thhe relevant graphs and plots (mainly using matplotlib). Feel free to leave any advice to this repo!
+The idea starts from the experience of a normal undergraduate student who finds computational materials simulation hard and — most importantly — finds no clear guide into the field. The structure of the handbook is self-designed; the detailed contents are filled in under human supervision using Claude. Minor mistakes may occur in the figures and plots (mainly produced with matplotlib). Please open an issue if you spot one.
 
 ---
 
@@ -41,13 +41,13 @@ If you are not sure where you sit, do the [twenty-question prerequisites checker
 
 ## The five capstone projects
 
-The `docs/projects/` directory holds five self-contained projects, each with its own README, prerequisite list, and grading rubric. They are designed to be doable in four to ten weeks and to produce something publishable as a workshop note or thesis chapter.
+The `docs/projects/` directory holds five self-contained projects, each with its own README, prerequisite list, and grading rubric. They are designed to be doable in six to ten weeks of part-time work and to produce something publishable as a workshop note or thesis chapter.
 
-1. **Project 1 — Defect Formation Energy.** Compute the vacancy formation energy of a chosen material in DFT, with full convergence analysis. *~4 weeks.*
-2. **Project 2 — Melting Point from an MLIP.** Train or fine-tune a machine-learning potential, then estimate the melting point via two-phase coexistence MD. *~6 weeks.*
-3. **Project 3 — Band-Gap Screening.** Build a GNN-based screening pipeline over a Materials Project subset and validate predictions against held-out DFT. *~6 weeks.*
-4. **Project 4 — MLIP from Scratch.** Implement a Behler–Parrinello-style potential end-to-end and benchmark it against a published reference. *~8 weeks.*
-5. **Project 5 — Bayesian Catalyst Search.** Use Bayesian optimisation with surrogate models to search a small catalyst space with a constrained budget of DFT evaluations. *~10 weeks.*
+1. **Project 1 — Defect Formation Energy.** Compute the vacancy formation energy of a chosen material in DFT, with full convergence analysis. *~6 weeks.*
+2. **Project 2 — Melting Point from an MLIP.** Train or fine-tune a machine-learning potential, then estimate the melting point via two-phase coexistence MD. *~8 weeks.*
+3. **Project 3 — Band-Gap Screening.** Build a GNN-based screening pipeline over a Materials Project subset and validate predictions against held-out DFT. *~8 weeks.*
+4. **Project 4 — MLIP from Scratch.** Implement a Behler–Parrinello-style potential end-to-end and benchmark it against a published reference. *~10 weeks.*
+5. **Project 5 — Bayesian Catalyst Search.** Use Bayesian optimisation with surrogate models to search a small catalyst space with a constrained budget of DFT evaluations. *~6 weeks.*
 
 Each project lists exactly which chapters it depends on, so [Path C — Project-driven](docs/learning-path.md#path-c--project-driven-8-weeks) is a viable route through the book.
 

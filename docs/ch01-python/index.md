@@ -1,5 +1,7 @@
 # Chapter 1 — Python and Scientific Computing
 
+[Open in Jupyter (browser)](/materials-simulation-handbook/lite/lab/index.html?path=ch01-python.ipynb){ .md-button .md-button--primary }
+
 Before we can simulate a single atom, we need a working scientific Python environment and enough fluency in it to read, modify, and write the code that the rest of this book is built on. This chapter assumes **no previous programming experience**. If you have written Python before, skim the headings and skip to the exercises at the end; you will lose nothing by checking your fundamentals.
 
 ## Why Python?
