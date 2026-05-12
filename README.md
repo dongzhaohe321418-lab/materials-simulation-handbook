@@ -13,17 +13,15 @@
 
 ## What is this?
 
-The *Materials Simulation Handbook* is a self-contained, open-source textbook with accompanying runnable code, designed as a single coherent arc from the prerequisites you might bring out of a Cambridge IB (or equivalent first-degree second-year) curriculum, through the core of computational materials science, and out into the kind of small original project that a final-year undergraduate or first-year postgraduate thesis is built around. The book is built in three explicit tiers — Prerequisites, Core, Research — so you always know where you are, what you are missing, and what you are aiming at. You can read it linearly as a textbook, skim the early tiers if you already have the background, or work backwards from one of five capstone projects.
-
-The arc the book is designed around is the Cambridge IB-to-undergraduate-thesis arc: a reader who knows calculus, linear algebra, the Schrödinger equation in one dimension and what a Brillouin zone is, but who has never run a DFT calculation, never trained an interatomic potential, and never written a paragraph of research themselves. By the end of Tier 2 such a reader should be able to formulate a small research question, justify a method, run the simulation, and write the result up honestly.
+The *Materials Simulation Handbook* is a self-contained, open-source textbook with accompanying runnable code, through the core of computational materials science, and with some small projects for undergraduate/ graduate level. The book is built in three explicit tiers — *Prerequisites*,* Core*, *Research*. You can read it linearly as a textbook, skip the early tiers if you already have the background, or work backwards from one of five capstone projects.
 
 ---
 
 ## Who is this for?
 
-The **prerequisite floor** is A-level (or international equivalent) mathematics and physics, plus a willingness to install Python and run code from the command line. Concretely: you can differentiate and integrate single-variable functions; you have seen matrices and vectors; you can read a graph of energy vs. distance; you know what a wavefunction is even if you have never solved Schrödinger's equation by yourself.
+The **prerequisite floor** is A-level (or international equivalent) mathematics and physics, plus a willingness to install Python and run code from the command line. Concretely: you can differentiate and integrate single-variable functions; you have seen matrices and vectors; you can read a graph of energy vs. distance; you know what a wavefunction is even if you have never solved Schrödinger's equation by yourself :)
 
-The **comfort zone** the textbook is pitched at is a Cambridge IB Natural Sciences student (Physics, Chemistry, or Materials Science option) or anyone with an equivalent first-degree foundation. If you are above that comfort zone — say a Part III, MSci or MSc graduate — the prerequisites tier will be a quick skim and you will spend most of your time in Tiers 1 and 2. If you are below it — say a strong A-level finisher — start at Chapter 0, take your time over Tier 0, and budget a semester or two.
+The **comfort zone** the textbook is primarily designed for undergraduates with relevant quantum chemistry/ quantum mechanics or material sicence background. You could use external LLMs, e.g. claude or gemini, to help you better understand the ideas you are less familiar with.
 
 If you are not sure where you sit, do the [twenty-question prerequisites checker](docs/prerequisites-checker.md). It takes about half an hour and tells you which chapter to start at and which earlier ones to skim or skip.
 
