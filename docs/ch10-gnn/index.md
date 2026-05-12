@@ -98,3 +98,33 @@ includes a gradient term for the forces. Chapter 12 will return to this
 unification when we examine *foundation models* for materials, where one
 network is pre-trained on all available data and fine-tuned for whatever
 property the user happens to care about.
+
+## Chapter-end summary
+
+By the end of Chapter 10 the reader should be able to:
+
+1. **State the formal definition** of a crystal graph $G = (V, E)$ as a
+   directed multigraph with self-loops, with node features encoding
+   chemistry and edge features encoding Gaussian-expanded distances
+   (§10.1).
+2. **Derive permutation invariance** of the MPNN framework from the
+   commutativity of the neighbour-sum, and **diagnose over-smoothing**
+   via the spectral-contraction argument on the normalised adjacency
+   (§10.2).
+3. **Implement CGCNN** end-to-end in PyTorch Geometric — gated message
+   function, residual update with batch normalisation, mean-pool
+   readout, MLP head — and reproduce published Materials Project MAE
+   numbers within a factor of two on a held-out test set (§10.3).
+4. **Choose between architectures** (CGCNN / MEGNet / ALIGNN / M3GNet)
+   using the §10.4.5a decision tree, with a clear sense of when angular
+   information, state attributes or forces are needed.
+5. **Run an honest Materials Project pipeline**: API setup, query
+   construction, deduplication with `StructureMatcher`, composition-
+   disjoint splitting, training, parity-plot evaluation, and ensemble
+   uncertainty quantification (§10.5).
+
+The single most important takeaway: every GNN architecture in the
+materials literature is a specific point in the five-dimensional design
+space of (message function, aggregation, update, edge update, readout).
+Reading any new GNN paper, locate it in this space and the rest
+follows.

@@ -25,6 +25,15 @@ We adopt the convention that the BO objective is *maximisation* (a band
 gap to maximise, an efficiency to maximise). Minimisation is recovered
 by negating the target.
 
+!!! note "Key Idea (Box 11.3.A)"
+    An acquisition function $\alpha(\mathbf{x})$ is a scalarisation of
+    the surrogate posterior $(\mu(\mathbf{x}), \sigma(\mathbf{x}))$
+    that encodes the experimenter's preferences about the
+    exploration-exploitation trade-off. The three workhorse choices —
+    expected improvement, upper confidence bound, Thompson sampling —
+    differ only in *how* they combine $\mu$ and $\sigma$ into a
+    single number; the underlying surrogate is the same.
+
 ## 11.3.1 Expected Improvement
 
 Let $f^+ = \max_i y_i$ denote the best observed value so far, where the
@@ -46,6 +55,21 @@ $$
 $$
 This is the central acquisition function of Bayesian optimisation. We
 derive its closed form.
+
+!!! note "Theorem 11.3.1 (Mockus 1975; Jones, Schonlau & Welch 1998)"
+    Let $f(\mathbf{x}) \sim \mathcal{N}(\mu(\mathbf{x}), \sigma^2(\mathbf{x}))$
+    with $\sigma(\mathbf{x}) > 0$, and let $f^+ \in \mathbb{R}$ be a
+    fixed threshold. Define $z = (\mu(\mathbf{x}) - f^+)/\sigma(\mathbf{x})$.
+    Then the expected improvement is
+    $$
+    \mathrm{EI}(\mathbf{x}) = \mathbb{E}\!\left[\max(f(\mathbf{x}) - f^+, 0)\right]
+    = (\mu(\mathbf{x}) - f^+)\Phi(z) + \sigma(\mathbf{x})\phi(z),
+    $$
+    where $\phi$ is the standard normal PDF and $\Phi$ the standard
+    normal CDF. Equivalently
+    $\mathrm{EI}(\mathbf{x}) = \sigma(\mathbf{x})[z \Phi(z) + \phi(z)]$.
+
+    *Proof.* See derivation below.
 
 Let $Z = (f(\mathbf{x}) - \mu(\mathbf{x})) / \sigma(\mathbf{x})$ be the
 standardised posterior variable; it is standard normal. Then
@@ -102,6 +126,28 @@ This *automatic* trade-off is what makes EI so widely used. There is no
 explicit exploration parameter; the function naturally balances the
 two.
 
+!!! note "Remark 11.3.2 — alternative derivation via direct integration"
+    Without the substitution, evaluate
+    $$
+    \mathrm{EI}(\mathbf{x}) = \int_{f^+}^{\infty} (f - f^+) \, \mathcal{N}(f \mid \mu, \sigma^2) \, df.
+    $$
+    Split the integrand:
+    $$
+    \mathrm{EI} = \int_{f^+}^\infty f \, \mathcal{N}(f | \mu, \sigma^2) df
+    - f^+ \int_{f^+}^\infty \mathcal{N}(f | \mu, \sigma^2) df.
+    $$
+    The second integral is $\mathbb{P}(f \geq f^+) = \Phi(z)$ with
+    $z = (\mu - f^+)/\sigma$.
+    For the first, use the identity (integration by parts on the
+    Gaussian density)
+    $\int_{a}^\infty f \, \mathcal{N}(f | \mu, \sigma^2) df
+    = \mu \Phi((\mu-a)/\sigma) + \sigma \phi((\mu-a)/\sigma)$.
+    Substituting $a = f^+$,
+    $\int_{f^+}^\infty f \, \mathcal{N}(\cdot) df = \mu \Phi(z) + \sigma \phi(z)$.
+    Combining:
+    $\mathrm{EI} = \mu \Phi(z) + \sigma \phi(z) - f^+ \Phi(z) = (\mu - f^+)\Phi(z) + \sigma \phi(z)$,
+    which agrees with Theorem 11.3.1. $\square$
+
 EI has a known weakness: it can over-exploit when the posterior is
 badly miscalibrated. A small but stubborn refinement is *exploration-
 augmented EI*, which adds a small $\xi > 0$ to the threshold:
@@ -110,6 +156,57 @@ $0.1$ (in the units of $y$), EI requires candidates to beat the current
 best by a comfortable margin before being scored — discouraging the
 algorithm from clustering around the current optimum. This trick is
 standard in production BO codes.
+
+!!! note "Proof of Theorem 11.3.1 (full)"
+    We provide a clean, self-contained proof to complement the
+    substitution-style argument above.
+
+    Let $f \sim \mathcal{N}(\mu, \sigma^2)$. The improvement
+    $I = \max(f - f^+, 0)$ is non-negative and takes the value
+    $f - f^+$ when $f \geq f^+$, zero otherwise. Therefore
+    $$
+    \mathrm{EI} = \mathbb{E}[I] = \int_{-\infty}^{\infty} \max(f - f^+, 0) p(f) df
+    = \int_{f^+}^{\infty} (f - f^+) \cdot \frac{1}{\sigma}\phi\!\left(\frac{f - \mu}{\sigma}\right) df.
+    $$
+    Change variables to $u = (f - \mu)/\sigma$, so $f = \mu + \sigma u$
+    and $df = \sigma du$. The lower limit becomes
+    $u_0 = (f^+ - \mu)/\sigma = -z$ (using our convention
+    $z = (\mu - f^+)/\sigma$). The integrand transforms:
+    $f - f^+ = \mu + \sigma u - f^+ = \sigma(u + z)$. The density
+    transforms: $\frac{1}{\sigma}\phi(u) \cdot \sigma du = \phi(u) du$.
+    Therefore
+    $$
+    \mathrm{EI} = \int_{-z}^{\infty} \sigma(u + z) \phi(u) du
+    = \sigma\left[\int_{-z}^\infty u \phi(u) du + z \int_{-z}^\infty \phi(u) du\right].
+    $$
+    For the first integral, use $\frac{d}{du}\phi(u) = -u\phi(u)$, so
+    $\int u\phi(u)du = -\phi(u)$. Therefore
+    $\int_{-z}^\infty u\phi(u)du = -\phi(u)|_{-z}^\infty
+    = 0 - (-\phi(-z)) = \phi(-z) = \phi(z)$ (using symmetry of $\phi$).
+    For the second integral,
+    $\int_{-z}^\infty \phi(u)du = 1 - \Phi(-z) = \Phi(z)$. Substituting:
+    $$
+    \mathrm{EI} = \sigma\left[\phi(z) + z \Phi(z)\right]
+    = \sigma z \Phi(z) + \sigma \phi(z)
+    = (\mu - f^+)\Phi(z) + \sigma \phi(z),
+    $$
+    where the last step uses $\sigma z = \mu - f^+$ from the
+    definition of $z$. $\square$
+
+    The proof is short but builds in several non-trivial facts: the
+    substitution, the symmetry of the standard normal, and the
+    fundamental theorem of calculus for the Gaussian density. Internalising
+    these is more useful in the long run than memorising the formula.
+
+!!! note "Remark 11.3.1a — degenerate case $\sigma = 0$"
+    When $\sigma = 0$ the candidate has no uncertainty, and EI must be
+    defined by limit. There are two cases: $\mu > f^+$ gives
+    $\mathrm{EI} = \mu - f^+ > 0$ (a guaranteed improvement); $\mu \leq f^+$
+    gives $\mathrm{EI} = 0$ (no improvement, no uncertainty). The closed
+    form $(\mu - f^+)\Phi(z) + \sigma\phi(z)$ becomes
+    $(\mu - f^+) \cdot \mathbb{1}[\mu > f^+]$ in the limit, which agrees.
+    Production code adds a small epsilon to $\sigma$ before computing
+    $z$ to avoid division by zero.
 
 ## 11.3.2 Upper Confidence Bound
 
@@ -138,6 +235,26 @@ This is the schedule from Srinivas et al. (2010), who proved that
 GP-UCB with this schedule has sublinear regret — the average per-
 iteration suboptimality decays to zero as $t \to \infty$. The
 schedule explores aggressively early and exploits late.
+
+!!! note "Theorem 11.3.3 (Srinivas, Krause, Kakade & Seeger 2010)"
+    Let $f$ be sampled from a GP with kernel $k$, and let
+    $\mathbf{x}_t = \arg\max \mathrm{UCB}_t(\mathbf{x})$ with
+    $\kappa_t^2 = 2 \log(|\mathcal{X}| t^2 \pi^2 / (6\delta))$ for a
+    finite candidate set $\mathcal{X}$. Then with probability at least
+    $1 - \delta$, the cumulative regret satisfies
+    $$
+    R_T = O\!\left(\sqrt{T \gamma_T \log T}\right),
+    $$
+    where $\gamma_T$ is the maximum *information gain* after $T$ rounds
+    (a kernel-dependent quantity that grows polylogarithmically for
+    RBF kernels in fixed dimension).
+
+    The proof proceeds by bounding the instantaneous regret
+    $r_t = f^* - f(\mathbf{x}_t)$ by $2\kappa_t \sigma_t(\mathbf{x}_t)$
+    and using a union bound to ensure UCB upper-bounds $f$ everywhere
+    with high probability. Summing $r_t$ over $t$ and applying a
+    Cauchy-Schwarz inequality on $\sum_t \sigma_t(\mathbf{x}_t)^2$ —
+    which is bounded by $\gamma_T$ — gives the stated rate.
 
 UCB is in some sense the *most theoretically grounded* acquisition,
 with sharper regret bounds than EI. In practice the two are
@@ -173,6 +290,20 @@ $B$ independent function samples and selecting their respective maxima
 naturally diversifies the batch, without requiring an explicit batch
 acquisition function. BoTorch supports this directly.
 
+!!! example "Example 11.3.4 — Thompson sampling on a two-point posterior"
+    Suppose we have a 1D GP with posterior $\mathcal{N}(0, 1)$ at
+    $x = 0$ and $\mathcal{N}(1, 0.01)$ at $x = 1$, with very small
+    cross-covariance. A Thompson sample at the two points is a vector
+    drawn from a 2D Gaussian. Typical draw: $(-0.3, 1.05)$ — selects
+    $x = 1$. Another typical draw: $(2.1, 1.02)$ — selects $x = 0$
+    because the random sample at $x = 0$ exceeded the (almost-fixed)
+    sample at $x = 1$. The first case is exploitation; the second is
+    exploration. The probability of exploration is exactly the
+    probability that $f(x=0) > f(x=1)$ under the joint posterior,
+    which is $\Phi(-1/\sqrt{1.01}) \approx 0.16$. The randomness of
+    the sample implements the trade-off without an explicit
+    exploration parameter.
+
 ## 11.3.4 The Knowledge Gradient
 
 The acquisitions so far ask "what is the immediate improvement from
@@ -196,6 +327,36 @@ In practice KG is used when its higher quality justifies the
 implementation overhead — primarily in industrial chemistry and
 process optimisation. For most academic materials BO, EI is the
 default, with UCB as the explicit-control alternative.
+
+## 11.3.4a Comparison of acquisition functions
+
+A summary table consolidates the trade-offs.
+
+| Acquisition | Formula | Exploration knob | Closed form | Theoretical regret bound | Best for |
+| --- | --- | --- | --- | --- | --- |
+| Probability of Improvement (PI) | $\Phi(z)$ | $\xi$ in threshold | yes | weak | sharp exploitation |
+| Expected Improvement (EI) | $(\mu - f^+)\Phi(z) + \sigma\phi(z)$ | implicit via $\sigma$ | yes | $O(\sqrt{T \log T})$ | default for noiseless |
+| Upper Confidence Bound (UCB) | $\mu + \kappa\sigma$ | $\kappa$ | yes | $O(\sqrt{T \gamma_T \log T})$ | explicit control, bandits |
+| Thompson Sampling (TS) | argmax of sample | implicit, random | sample | $O(\sqrt{T \log T})$ | batch BO |
+| Knowledge Gradient (KG) | $\mathbb{E}[\max_{\mathbf{x}'}\mu_{t+1}] - \max_{\mathbf{x}'}\mu_t$ | implicit | Monte Carlo | strongest for terminal | noisy / terminal-reward |
+| Predictive Entropy Search (PES) | $H[\mathbf{x}^*|\mathcal{D}] - \mathbb{E}_y H[\mathbf{x}^*|\mathcal{D}, \mathbf{x}, y]$ | implicit | Monte Carlo | strong | high-dim |
+
+Notes on the table:
+
+- $z = (\mu - f^+) / \sigma$ throughout.
+- PI is mentioned here for completeness; it is rarely used in modern
+  BO because it over-exploits without the $\xi$ trick and is dominated
+  by EI in practice.
+- Regret bounds presume mild kernel assumptions and a sufficiently
+  large candidate set. The Big-$O$ notation hides constants that vary
+  by acquisition.
+- "Closed form" means the acquisition can be evaluated without Monte
+  Carlo; "Monte Carlo" means typical implementation uses 100–1000
+  samples to approximate the expectation.
+
+The first three rows are the canonical "vanilla" acquisitions; the
+last three are advanced choices used when their specific properties
+are needed.
 
 ## 11.3.5 When each is the right choice
 
@@ -227,6 +388,44 @@ A practical guide:
 For multi-objective problems, none of the above apply directly; see
 the next subsection.
 
+!!! example "Example 11.3.5 — EI numerical evaluation"
+    Suppose at a candidate $\mathbf{x}$ the GP gives $\mu = 0.8$,
+    $\sigma = 0.3$, and the current best is $f^+ = 1.0$. Compute EI.
+
+    *Step 1.* $z = (0.8 - 1.0)/0.3 = -2/3 \approx -0.667$.
+
+    *Step 2.* $\Phi(-0.667) \approx 0.253$ (left-tail CDF).
+
+    *Step 3.* $\phi(-0.667) = \phi(0.667) \approx 0.319$.
+
+    *Step 4.* $\mathrm{EI} = (0.8 - 1.0) \cdot 0.253 + 0.3 \cdot 0.319
+    \approx -0.0506 + 0.0957 \approx 0.045$.
+
+    The candidate has a positive EI of about 0.045 despite having
+    posterior mean *below* the current best, because the uncertainty
+    band extends above $f^+$. Compare with a candidate that has
+    $\mu = 0.95, \sigma = 0.05$: $z = -1$, $\Phi(-1) \approx 0.159$,
+    $\phi(-1) \approx 0.242$,
+    $\mathrm{EI} = -0.05 \cdot 0.159 + 0.05 \cdot 0.242 \approx 0.004$.
+    The second candidate has higher mean but lower EI — its
+    uncertainty is too small to plausibly exceed $f^+$. EI correctly
+    prefers the more uncertain candidate. This is the exploration
+    contribution working as designed.
+
+!!! note "Remark 11.3.6 — Probability of Improvement vs Expected Improvement"
+    A related acquisition is the *probability of improvement* (PI):
+    $\mathrm{PI}(\mathbf{x}) = \mathbb{P}(f(\mathbf{x}) > f^+) =
+    \Phi(z)$. It is the probability that $f$ exceeds the best, with no
+    regard for *by how much* it exceeds. PI is greedy: it favours
+    candidates with small but reliable improvements over candidates
+    with large but uncertain ones. EI corrects this by weighting by
+    the size of the improvement, hence the extra $\sigma \phi(z)$
+    term.
+
+    In practice PI is almost always dominated by EI, and EI is the
+    correct default. PI survives as a simple baseline and as a special
+    case of EI with $\xi$ very large.
+
 ## 11.3.6 Multi-objective BO and Pareto fronts
 
 Most materials problems have more than one objective. A
@@ -249,6 +448,21 @@ of the dominated region; for three or more objectives one resorts to
 Monte Carlo. BoTorch implements this directly via
 `qExpectedHypervolumeImprovement`, which is the right starting point
 for any multi-objective materials problem.
+
+!!! example "Example 11.3.7 — Pareto front for strength vs ductility"
+    A structural alloys problem with two objectives: yield strength
+    (maximise) and elongation-to-failure (maximise). Three observed
+    alloys have $(\sigma_y, \epsilon) = (300, 0.4), (500, 0.2),
+    (700, 0.1)$ MPa and fractional strain respectively. None dominates
+    the others: each excels on one axis. The Pareto front is the
+    polyline connecting these three. The dominated hypervolume, with
+    reference point $(\sigma_y^\text{ref}, \epsilon^\text{ref}) = (0, 0)$,
+    is the union of three rectangles, with total area approximately
+    $300 \cdot 0.4 + 200 \cdot 0.2 + 200 \cdot 0.1 = 180$ MPa-strain.
+    Querying a new candidate that achieves $(600, 0.3)$ would extend
+    the front and grow the hypervolume by approximately
+    $100 \cdot 0.1 = 10$ — significant improvement. The EHVI ranks
+    candidates by the expected such growth.
 
 The conceptual content is the same as single-objective EI — quantify
 the expected improvement under the surrogate's posterior, query the
@@ -374,6 +588,57 @@ aggressively, sometimes at the cost of slower convergence to the
 maximum but with stronger guarantees that no better maximum has been
 missed.
 
+## 11.3.7a Iteration-by-iteration narrative: what the BO sees
+
+Walk through the first three iterations of the BO loop above in
+narrative form.
+
+*Iteration 0.* Three initial observations at $x = 1.5, 3.0, 5.0$
+yield $y \approx 1.0, 0.14, -0.96$. The GP fits a posterior with mean
+that interpolates these three points and uncertainty bands wider in
+between and at the edges. EI as a function of $x$ peaks near
+$x = 1.5$, where the mean is already near 1 and the uncertainty band
+just barely admits values exceeding 1. The argmax of EI lies very
+close to $x = 1.566 \approx \pi/2$, the true maximum.
+
+*Iteration 1.* The new observation at $\pi/2$ confirms the maximum.
+The GP posterior tightens around the new point. Now EI is suppressed
+near $\pi/2$ (uncertainty has collapsed) and shifts attention to
+regions where the GP is unsure — typically $x = 0$ (left edge) or
+$x \approx 6.3$ (right side, beyond the data). The algorithm queries
+$x \approx 6.3$, where the truth is $\sin(6.3) \approx 0.0$. Mild
+explorative behaviour.
+
+*Iteration 2.* Now the GP knows the function on $[1.5, 6.3]$ roughly
+well. EI is small everywhere except possibly at very fine refinements
+of the maximum. The next query is back near $\pi/2$, refining the
+estimate of $\sin(\pi/2)$.
+
+This pattern — first localise the optimum, then probe the boundaries,
+then refine — is generic to EI-driven BO. UCB with large $\kappa$
+would interleave more boundary probes before settling near the
+optimum; Thompson sampling would have a stochastic visit pattern.
+
+## 11.3.7b The non-myopia question
+
+EI, UCB and Thompson sampling are all *myopic*: they choose the next
+query as if it were the last. Knowledge Gradient is partially
+non-myopic: it considers the effect of the query on the *next-step*
+posterior. Truly non-myopic acquisitions consider the effect of the
+query on the *final* posterior at the end of the budget. These are
+much harder to compute (the integration is over a tree of possible
+future query trajectories) and rarely used outside specialist
+literature.
+
+The practical impact: with budgets of 20–100 queries, myopic
+acquisitions are typically within 10–20% of the optimal non-myopic
+acquisition. The gap matters in settings with very small budgets
+($T \leq 10$) or very expensive evaluations, where the optimal
+allocation of the next query depends strongly on what we plan to do
+with the remaining ones. Roll-out BO (Lam et al. 2016) and BORE
+(Tiao et al. 2021) are advanced strategies that approximate
+non-myopic behaviour at moderate cost.
+
 ## 11.3.8 Where we are
 
 We have a GP that produces calibrated posteriors and a family of
@@ -396,3 +661,27 @@ real materials-discovery problems. The featurisation choices (what
 $\mathbf{x}$ should look like for a candidate material), the choice
 of oracle (DFT, MLIP, experiment), and the practical workflow with
 BoTorch are the subjects of the next section.
+
+### Section summary
+
+- An *acquisition function* $\alpha(\mathbf{x})$ scalarises the
+  posterior $(\mu, \sigma)$ into a single value to maximise; the
+  argmax becomes the next query.
+- *Expected Improvement* (Theorem 11.3.1):
+  $\mathrm{EI} = (\mu - f^+)\Phi(z) + \sigma\phi(z)$; closed form,
+  automatic exploration-exploitation balance.
+- *Upper Confidence Bound*: $\mathrm{UCB} = \mu + \kappa \sigma$;
+  explicit knob $\kappa$; with $\kappa_t = O(\sqrt{\log t})$,
+  sublinear regret (Theorem 11.3.3).
+- *Thompson sampling*: sample function from posterior, return its
+  argmax; trade-off implicit in the sample randomness; ideal for
+  batch BO.
+- *Knowledge Gradient*: one-step-lookahead version of EI; harder
+  to compute but better for noisy/terminal-reward problems.
+- Multi-objective generalisation: *Expected Hypervolume Improvement*.
+
+!!! tip "Cross-reference"
+    Chapter 12 will use these same acquisition functions atop
+    *foundation-model* surrogates; the mathematics carries over
+    unchanged. The acquisition functions are the part of the BO
+    machinery that no scaling story replaces.

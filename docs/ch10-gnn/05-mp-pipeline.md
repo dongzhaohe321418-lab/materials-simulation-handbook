@@ -15,6 +15,12 @@ for an API key, pull 5000 oxides, deduplicate, split honestly, train,
 evaluate, plot — with commentary at each step on the easily-missed
 pitfalls.
 
+!!! note "Why this section, not a Jupyter notebook?"
+    The pipeline below could be — and should be — a notebook in your own
+    workflow. Read this section as the *commentary* that an experienced
+    practitioner would supply at each cell of that notebook, pointing
+    out the silent ways things go wrong.
+
 ## 10.5.1 Setting up access to the Materials Project
 
 The Materials Project distributes its data through the `mp-api` Python
@@ -36,6 +42,18 @@ from mp_api.client import MPRester
 
 API_KEY = os.environ["MP_API_KEY"]
 ```
+
+!!! note "Why an environment variable?"
+    Hard-coding a secret in a script that you might check into git is a
+    standard route to a leaked credential. The Materials Project key
+    grants access to your usage logs and rate limits; revoking and
+    reissuing if leaked is a chore best avoided. Environment variables
+    keep the key out of source control while still making it available
+    to any process you launch from the same shell. Production
+    deployments use a secrets manager (HashiCorp Vault, AWS Secrets
+    Manager) for the same reason. For our purposes,
+    `export MP_API_KEY=...` in your `~/.bashrc` or `~/.zshrc` is
+    enough.
 
 The client is rate-limited (around 1000 requests per minute as of
 2026) and ships responses in compressed batches; you should not need
@@ -69,6 +87,33 @@ This returns roughly 60 000 documents. We will cap the dataset at 5000
 randomly sampled entries; for a published study you would take them
 all, but the smaller subset finishes training in a reasonable time on a
 laptop GPU.
+
+!!! example "Anatomy of a query"
+    The `summary.search` endpoint is the workhorse: a single call
+    returns every cached scalar property and the relaxed structure for
+    each matching entry. Two arguments deserve attention.
+
+    `fields=[...]`: explicitly list only the fields you need. Each
+    additional field increases response size and time. For training, we
+    need the structure and the target (formation energy); for splitting
+    and analysis, the pretty formula and atom count are useful too.
+
+    `elements=["O"]` and `num_elements=(2, 4)`: combined, these say
+    "contains oxygen, has between two and four distinct elements".
+    Other useful filters include `is_stable=True` (only entries on the
+    convex hull), `band_gap=(0.5, 3.0)` (semiconductor candidates),
+    `theoretical=False` (exclude purely theoretical predictions). The
+    full filter set is in the `mp-api` docs; combining filters at the
+    server side is far cheaper than downloading then filtering
+    locally.
+
+    For our example we want **all** oxides for the GNN to see broadly;
+    we then filter and sample after the download.
+
+    A more advanced workflow paginates the query in chunks to avoid
+    server timeouts on large result sets. `summary.search` handles this
+    automatically for result sets up to $\sim 10^5$; beyond that, use
+    `num_chunks` and `chunk_size` to manage memory.
 
 ```python
 import numpy as np
@@ -114,6 +159,22 @@ rutile in the test set, the model sees a structure in the test set
 that is in some sense already familiar — a different polymorph of an
 already-seen composition. The reported test MAE then overstates the
 true generalisation, sometimes by a factor of two or three.
+
+!!! note "Derivation: why random splits inflate accuracy"
+    Model the formation energy as $y = f(\mathbf{x}) + \eta$ where
+    $\mathbf{x}$ is the structure descriptor, $f$ the true mapping, and
+    $\eta$ measurement-plus-DFT noise. For polymorphs $\mathbf{x}_A,
+    \mathbf{x}_B$ of the same composition, the descriptors are *close*
+    in feature space (similar atomic environments) and $f(\mathbf{x}_A)
+    \approx f(\mathbf{x}_B)$. With a random split, $\mathbf{x}_A$ may
+    be in train and $\mathbf{x}_B$ in test. The model sees a training
+    example near every test point and effectively does 1-nearest-
+    neighbour lookup, achieving low test error not by generalising but
+    by memorising. The empirical inflation factor depends on the
+    polymorph density of the database; on Materials Project oxides we
+    measure roughly $2\times$. The composition-disjoint split removes
+    this leakage by ensuring all polymorphs of a formula share a single
+    split.
 
 There are two principled fixes.
 
@@ -191,6 +252,26 @@ def deduplicate(records: list[StructureRecord]) -> list[StructureRecord]:
         kept.append(rec)
     return kept
 ```
+
+!!! note "What 'the same structure' means to `StructureMatcher`"
+    `StructureMatcher` considers two structures equivalent if there
+    exists a transformation of one onto the other that:
+
+    - Permutes atom labels (so reordering does not matter).
+    - Applies a rigid rotation, reflection, or lattice transformation
+      (so different lattice settings of the same crystal are
+      equivalent).
+    - Displaces each atom by no more than `stol` fractional units (so
+      small DFT-relaxation jitter does not produce false negatives).
+    - Distorts the lattice parameters by no more than `ltol` relative
+      and angles by no more than `angle_tol` degrees.
+
+    The default tolerances (`ltol=0.2, stol=0.3, angle_tol=5`) are
+    reasonable for DFT-relaxed structures; tighter tolerances reject
+    legitimate duplicates, looser ones merge distinct polymorphs.
+    `StructureMatcher.fit` returns boolean equivalence; `fit_with_electrostatics`
+    is a faster shortcut that pre-screens by composition and density
+    before running the full match.
 
 `StructureMatcher` is $O(n^2)$ in the number of structures and slow,
 so deduplicate *within* each composition group rather than globally:
@@ -331,6 +412,33 @@ oxide dataset. With 5000 examples this often reaches lower MAE than
 training a CGCNN from scratch, and the inductive bias of the
 foundation model regularises against the small-data overfitting.
 
+!!! tip "Forward reference"
+    Chapter 11 uses the CGCNN pipeline of this section as the *cheap
+    oracle* in a Bayesian optimisation campaign: predict formation
+    energies for a million candidates with the trained CGCNN; run DFT
+    on the top hundred selected by an acquisition function. The
+    composition-disjoint split is what makes the CGCNN's uncertainty
+    estimates trustworthy in that downstream loop.
+
+!!! note "A common follow-up: predicting band gaps and beyond"
+    The same pipeline retargets to band gaps by replacing
+    `formation_energy_per_atom` with `band_gap` in the query and the
+    dataset constructor. Two practical differences emerge.
+
+    First, band gaps are zero for all metallic compositions, producing a
+    long zero-spike in the histogram. The model can easily learn to
+    output zero — high accuracy on metals but useless on semiconductors.
+    The fix is to split metals and non-metals into two heads (a
+    classifier for metal/non-metal and a regressor for the band gap of
+    non-metals) or to train two separate models.
+
+    Second, the band gap from DFT systematically underestimates the
+    experimental value by roughly 30–50%. A model trained on DFT band
+    gaps therefore predicts DFT band gaps, not measured ones. Match
+    the training labels to the downstream use; if you want experimental
+    band gaps, train on the (much smaller) experimental database such
+    as MatBench's `expt_band_gap` task.
+
 The pipeline you have just built, however, is the right ground truth.
 Before reaching for any foundation model, you should have run *some*
 version of this pipeline from scratch — to understand exactly what data
@@ -339,6 +447,75 @@ trustworthy. With that experience in hand, Chapter 11's question
 becomes much sharper: given a fast property predictor and an
 uncertainty estimate, how should we *use* them to guide the next
 experiment?
+
+## 10.5.7a Uncertainty and ensembles
+
+A single CGCNN gives a *point* prediction. For downstream applications
+(Bayesian optimisation, decision-making under uncertainty) we need a
+*distribution* over predictions. The cheapest reliable route is a *deep
+ensemble*: train $M$ CGCNNs from different random initialisations on
+the same data, and report the ensemble mean as the prediction and the
+ensemble standard deviation as the uncertainty.
+
+```python
+# Train M independently initialised CGCNNs.
+ensemble = []
+for seed in range(5):
+    torch.manual_seed(seed)
+    model = train_cgcnn(train_records, val_records, n_epochs=200)
+    ensemble.append(model)
+
+def ensemble_predict(model_list, data):
+    preds = []
+    for m in model_list:
+        m.eval()
+        with torch.no_grad():
+            preds.append(m(data).cpu().numpy())
+    preds = np.stack(preds)         # (M, batch)
+    return preds.mean(0), preds.std(0)
+```
+
+The ensemble standard deviation tracks the *epistemic* uncertainty —
+the variation in predictions arising from finite training data and
+random initialisation. It is well-calibrated in practice: structures
+with high ensemble disagreement turn out to have high *actual* errors.
+The cost is $M\times$ training compute; with $M = 5$ on a laptop GPU,
+roughly ten hours.
+
+For BO in Chapter 11 we will use exactly this construction: a CGCNN
+ensemble providing $(\mu, \sigma)$ at every candidate, fed into an
+acquisition function.
+
+## 10.5.7b Multi-task learning
+
+A single CGCNN trained on formation energy *only* discards information
+that other property labels carry. Multi-task learning trains one
+network on several properties simultaneously, with a shared backbone
+and per-property heads. The intuition is that the chemistry that
+governs formation energy also governs band gap, bulk modulus and many
+others; learning all of them jointly regularises the backbone and
+improves each individual prediction.
+
+For Materials Project, a multi-task CGCNN with heads for
+$\{E_\text{form}, E_\text{hull}, \text{band gap}, \text{bulk modulus}, V_\text{atom}\}$
+reaches lower MAE on each individual target than five single-task
+models — typically by 5–15%. The loss is a weighted sum of per-task
+losses; the weights matter, and standard schemes (equal weighting,
+inverse-variance weighting, learned weighting via Kendall et al. 2018's
+homoscedastic uncertainty trick) all work.
+
+The relevant change to the §10.3 implementation is to replace the
+single output head with $K$ heads:
+
+```python
+self.heads = nn.ModuleList([
+    nn.Sequential(nn.Linear(atom_dim, hidden_dim), nn.Softplus(),
+                  nn.Linear(hidden_dim, 1))
+    for _ in range(K)
+])
+```
+
+and to compute the multi-task loss as $\sum_k w_k \cdot \mathrm{MAE}_k$.
 
 ## 10.5.8 A reproducible script
 
@@ -350,3 +527,41 @@ chapter's code repository as `mp_pipeline.py`. Run it once with the
 random split, once with the composition-disjoint split, and the
 roughly twofold inflation of accuracy on the random split will make
 the polymorph-leakage point indelible.
+
+!!! note "Sanity checklist before reporting a number"
+    Before quoting a CGCNN MAE to a colleague or paper, verify:
+
+    1. The train/val/test split is composition-disjoint (or
+       structure-disjoint), not random.
+    2. The test set was held out from *every* preprocessing step
+       (normalisation statistics computed on train only, not on
+       train + test).
+    3. The reported MAE is the *test*-set value at the *best
+       validation* checkpoint, not the final-epoch value, and not the
+       validation MAE itself.
+    4. The Materials Project database version is recorded (or commit
+       hash of your local CIF cache).
+    5. The numbers are averaged over $\geq 3$ random seeds, with a
+       reported standard deviation.
+
+    Skipping any of these is the difference between a number you can
+    defend at a conference and a number that quietly drifts up by 30%
+    when somebody re-runs the script. Chapter 12 will return to this
+    "reproducibility ethic" in the context of foundation models, where
+    the surface area for hidden contamination is even larger.
+
+### Section summary
+
+- The Materials Project pipeline is a query → deduplicate → split →
+  train → evaluate workflow; each step has a silent failure mode
+  worth understanding.
+- Random splits *inflate* test-set accuracy by a factor of $\sim 2$
+  on polymorph-rich databases; composition-disjoint splits are the
+  honest baseline.
+- `StructureMatcher` is the standard tool for deduplication; tune
+  `ltol, stol, angle_tol` to match your tolerance for "the same
+  structure".
+- Deep ensembles ($M = 5$) give calibrated uncertainty estimates for
+  use in BO downstream (Chapter 11).
+- Multi-task learning (joint heads for several MP properties)
+  regularises the backbone and lowers per-task MAE by 5–15%.

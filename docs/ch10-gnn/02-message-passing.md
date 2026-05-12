@@ -31,6 +31,14 @@ abstraction is therefore the right investment: once it is internalised,
 the literature reads as a catalogue of design choices rather than a
 proliferation of unrelated networks.
 
+!!! note "Key Idea (Box 10.2.A)"
+    Every modern GNN is a *message-passing neural network* (MPNN): at
+    each layer $t$, each node aggregates messages from its neighbours
+    via a permutation-invariant operation, then updates its state.
+    Equations (10.1)–(10.3) specify the whole framework; specialising
+    $M_t, U_t, R$ to particular forms recovers every architecture in
+    the chapter.
+
 ## 10.2.1 The abstract framework
 
 We are given a graph $G = (V, E)$ with node features
@@ -78,6 +86,40 @@ That is the entire framework. Three equations, three learnable
 ingredients ($M_t$, $U_t$, $R$). Specialising those three to particular
 forms recovers essentially every GNN in the literature.
 
+!!! example "One layer by hand: a three-node graph"
+    Consider a path graph with nodes $V = \{1, 2, 3\}$ and undirected
+    edges $\{(1,2), (2,3)\}$. Take $d_V = 1$, initial node features
+    $h_1^{(0)} = 0.5$, $h_2^{(0)} = 1.0$, $h_3^{(0)} = -0.2$, edge
+    features $e_{12} = e_{23} = 1.0$ (constant), and the simplest
+    message and update,
+    $$
+    M(h_v, h_u, e_{uv}) = h_u + e_{uv}, \qquad
+    U(h_v, m_v) = h_v + 0.5 \, m_v.
+    $$
+    Treating edges as undirected (so each edge contributes a message in
+    both directions), the neighbour sets are
+    $\mathcal{N}(1) = \{2\}$, $\mathcal{N}(2) = \{1, 3\}$,
+    $\mathcal{N}(3) = \{2\}$.
+
+    Step 1 — messages and aggregation.
+    $$
+    m_1 = h_2 + e_{12} = 2.0, \quad
+    m_2 = (h_1 + e_{12}) + (h_3 + e_{23}) = 2.3, \quad
+    m_3 = h_2 + e_{23} = 2.0.
+    $$
+
+    Step 2 — update.
+    $$
+    h_1^{(1)} = 0.5 + 0.5 \cdot 2.0 = 1.5, \quad
+    h_2^{(1)} = 1.0 + 0.5 \cdot 2.3 = 2.15, \quad
+    h_3^{(1)} = -0.2 + 0.5 \cdot 2.0 = 0.8.
+    $$
+
+    After one MPNN layer, every node has absorbed information from its
+    immediate neighbours; after a second pass, node 1 would also see
+    node 3 indirectly through node 2. This is the *receptive field*
+    argument formalised in §10.2.5.
+
 ## 10.2.2 Example: a graph convolution
 
 To anchor the abstraction in something concrete, consider the simplest
@@ -95,6 +137,24 @@ update is a residual-style addition. Read out with a sum, attach a
 linear head, and you have a working node-aggregation network. It is
 unsuitable for crystals — the lack of distance dependence is fatal —
 but it shows how minimal an MPNN can be.
+
+!!! example "Numerical walkthrough: graph convolution on a triangle"
+    Three nodes $V = \{1, 2, 3\}$ form a triangle: edges in both
+    directions between every pair. Take $d_V = 2$, initial states
+    $h_1^{(0)} = (1, 0)$, $h_2^{(0)} = (0, 1)$, $h_3^{(0)} = (1, 1)$,
+    weight matrix $W = \mathrm{diag}(0.5, 0.5)$, and $\sigma$ the
+    identity (for clarity).
+
+    Aggregated message at node 1 (sum over neighbours 2 and 3):
+    $W h_2 + W h_3 = (0, 0.5) + (0.5, 0.5) = (0.5, 1.0)$.
+    The update is $\sigma(W' h_1 + m_1) = (0.5, 0) + (0.5, 1.0) = (1.0, 1.0)$,
+    assuming $W' = W$. Similarly $h_2^{(1)} = (1.0, 1.0)$ and
+    $h_3^{(1)} = (1.5, 1.0)$.
+
+    After one layer node 3, which started as the "odd one out" with
+    larger total magnitude, has retained its distinction. After more
+    layers, however, all three converge towards the same average
+    embedding — the over-smoothing prediction in miniature.
 
 For CGCNN, MEGNet and SchNet the message function will involve the
 edge feature explicitly:
@@ -150,6 +210,81 @@ rarely a problem for crystals (we have edge features and node features
 that break the symmetry), but it explains the recent interest in higher-
 order GNNs and equivariant networks that operate on tuples.
 
+!!! note "Derivation: permutation invariance, formally"
+    Let $\pi: V \to V$ be a bijection (a relabelling of nodes), and let
+    $h_{\pi(v)}^{(0)}$ and $e_{\pi(u)\pi(v)}$ denote the relabelled
+    features. We claim that the layer-$t$ embedding transforms as
+    $h_v^{(t)} \mapsto h_{\pi(v)}^{(t)}$, with no change in the values —
+    only in the labels — and the final readout is identical.
+
+    The proof is by induction on $t$. The base case $t = 0$ is true by
+    assumption: $h_v^{(0)}$ is mapped to $h_{\pi(v)}^{(0)}$, which is
+    the same value attached to the relabelled node.
+
+    For the inductive step, assume $h_v^{(t)} \mapsto h_{\pi(v)}^{(t)}$.
+    The relabelled neighbourhood of node $\pi(v)$ is exactly
+    $\pi(\mathcal{N}(v))$. The aggregated message at $\pi(v)$ is
+    $$
+    m_{\pi(v)}^{(t+1)}
+    = \sum_{u' \in \pi(\mathcal{N}(v))}
+        M_t(h_{\pi(v)}^{(t)}, h_{u'}^{(t)}, e_{u' \pi(v)})
+    = \sum_{u \in \mathcal{N}(v)}
+        M_t(h_v^{(t)}, h_{u}^{(t)}, e_{uv})
+    = m_v^{(t+1)},
+    $$
+    where the second equality re-indexes the sum over $u' = \pi(u)$ and
+    uses that summation is commutative. Applying $U_t$ gives
+    $h_{\pi(v)}^{(t+1)} = h_v^{(t+1)}$. The readout
+    $R(\{h_v^{(T)}\}_v)$, being permutation-invariant in its input
+    multiset, takes the same value in both labellings. $\square$
+
+    The critical step is commutativity of the sum. Replace the sum by
+    *list concatenation in label order* and the proof breaks: the value
+    of $m_{\pi(v)}$ then depends on the order in which we list the
+    neighbours, and the model is no longer permutation-invariant.
+
+!!! note "The Weisfeiler–Lehman test and a counterexample"
+    The 1-WL graph isomorphism test assigns each node an initial label
+    (e.g. its degree). Iteratively, each node's label is updated to the
+    multiset of its neighbours' labels, hashed back into a single
+    symbol. Two graphs are declared equivalent if after sufficient
+    iterations they produce the same multiset of node labels.
+
+    Consider two graphs: $G_1$ is two disjoint triangles (six nodes,
+    six edges), $G_2$ is a single hexagonal cycle (six nodes, six
+    edges). Both are 2-regular — every node has degree two. The 1-WL
+    test cannot distinguish them: at every iteration each node's
+    multiset of neighbour labels is the same in both graphs. No
+    sum-aggregating MPNN with featureless nodes can distinguish them
+    either. This is why pure topology-only GNNs are limited; in
+    crystals, distance- and element-features break this symmetry and
+    restore expressivity in practice.
+
+## 10.2.3a Aggregation as a learnable operator
+
+Modern GNNs sometimes blur the distinction between message and update
+by introducing *learnable aggregators* — neural networks that take the
+multiset of messages and return a fixed-size vector. The two canonical
+designs are:
+
+**DeepSet aggregation.** Apply a small MLP $\rho$ to each message
+individually, sum, then apply another MLP $\phi$:
+$\mathrm{agg} = \phi(\sum_u \rho(m_u))$. The Zaheer et al. (2017)
+universal approximation theorem for permutation-invariant functions
+guarantees this can express any such function in the limit of wide MLPs.
+
+**Principal neighbourhood aggregation (PNA).** Stack several
+aggregators — sum, mean, max, standard deviation — and concatenate the
+result. The motivation is that no single aggregator captures all
+information about the neighbour multiset; concatenating four gives the
+network the choice. PNA is the empirical state of the art on several
+benchmark graph tasks but at the cost of a $4\times$ multiplier on
+parameters and runtime.
+
+For crystals, gated-sum aggregation (CGCNN) is usually sufficient. The
+learnable aggregators above shine on heterogeneous tasks where the
+neighbour multiset has highly varied structure.
+
 ## 10.2.4 Translation, rotation, and the equivariance dimension
 
 Permutation is one symmetry; the others are translation and rotation of
@@ -192,6 +327,28 @@ neighbours of neighbours, i.e. atoms within 10 Å, on the order of a
 hundred atoms. The receptive field grows roughly cubically with $T$
 until it saturates at the size of the unit cell.
 
+!!! note "Derivation: receptive field equals graph $T$-ball"
+    Define the $T$-hop neighbourhood
+    $\mathcal{N}^T(v) = \{u : \text{shortest-path}(v, u) \leq T\}$.
+    Claim: $h_v^{(T)}$ depends only on $\{h_u^{(0)} : u \in \mathcal{N}^T(v)\}$
+    and the corresponding edges.
+
+    Proof by induction. For $T = 0$, $h_v^{(0)}$ trivially depends only
+    on itself, and $\mathcal{N}^0(v) = \{v\}$. Assume the claim for $T$.
+    The equation $h_v^{(T+1)} = U_T(h_v^{(T)}, \sum_u M_T(\ldots))$
+    involves $h_v^{(T)}$ (which depends on $\mathcal{N}^T(v)$) and
+    $h_u^{(T)}$ for $u \in \mathcal{N}(v)$ (each of which depends on
+    $\mathcal{N}^T(u)$). The union
+    $\mathcal{N}^T(v) \cup \bigcup_{u \in \mathcal{N}(v)} \mathcal{N}^T(u)$
+    equals $\mathcal{N}^{T+1}(v)$. $\square$
+
+    Geometrically: with cutoff $r_c$, every hop adds roughly $r_c$ of
+    Euclidean reach, so the $T$-hop ball covers approximately a sphere
+    of radius $T \cdot r_c$. This is the right intuition for choosing
+    the depth: pick $T$ so that $T \cdot r_c$ is at least the
+    characteristic length scale of the physics one is trying to
+    capture.
+
 Two practical consequences follow.
 
 **Some properties are short-ranged; some are not.** Bond energies and
@@ -214,11 +371,73 @@ aggregation operator has a dominant eigenvalue with eigenvector aligned
 along the all-ones direction, and repeated application contracts onto
 that eigenvector.
 
+!!! note "Derivation: over-smoothing as eigenvalue contraction"
+    Consider the simplest linear MPNN: $H^{(t+1)} = \tilde A H^{(t)} W$,
+    where $H^{(t)} \in \mathbb{R}^{N \times d}$ stacks the node
+    embeddings, $\tilde A = D^{-1/2}(A + I)D^{-1/2}$ is the symmetric
+    normalised adjacency with self-loops added (the Kipf–Welling
+    operator), and $W \in \mathbb{R}^{d \times d}$ is a learnable
+    weight matrix. Ignore the nonlinearity $\sigma$ for the moment to
+    isolate the propagation effect.
+
+    Diagonalise $\tilde A = U \Lambda U^T$ with eigenvalues
+    $1 = \lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_N > -1$. The
+    largest eigenvalue is exactly 1 because $\tilde A$ is a normalised
+    adjacency: this is the Perron–Frobenius property of stochastic-like
+    matrices. The corresponding eigenvector $\mathbf{u}_1$ has all
+    components positive (in fact proportional to $D^{1/2}\mathbf{1}$).
+
+    Iterating $T$ times,
+    $$
+    H^{(T)} = \tilde A^T H^{(0)} W^T
+        = U \Lambda^T U^T H^{(0)} W^T.
+    $$
+    As $T \to \infty$, $\lambda_k^T \to 0$ for all $k \geq 2$ (since
+    $|\lambda_k| < 1$ strictly when the graph is connected), and the
+    only surviving term is $\lambda_1^T \mathbf{u}_1 \mathbf{u}_1^T
+    H^{(0)} W^T = \mathbf{u}_1 \mathbf{u}_1^T H^{(0)} W^T$. Every row
+    of $H^{(T)}$ becomes proportional to $\mathbf{u}_1$, meaning every
+    node has *the same embedding up to a known scaling*. All
+    distinguishing information has been smoothed out.
+
+    The rate of convergence is governed by the *spectral gap*
+    $\lambda_1 - \lambda_2 = 1 - \lambda_2$. After $T$ layers the
+    distinguishability of node embeddings has decayed by a factor of
+    roughly $\lambda_2^T$. For a typical crystal graph with high
+    connectivity, $\lambda_2 \approx 0.7$–$0.9$, so after $T = 10$
+    layers distinguishability is reduced by $10\times$ to $100\times$,
+    matching the empirical observation that GNNs plateau or degrade
+    around $T = 4$–$8$ layers.
+
 The standard fix is to add a residual connection: instead of
 $h_v^{(t+1)} = U_t(\ldots)$, write $h_v^{(t+1)} = h_v^{(t)} + U_t(\ldots)$.
 The skip preserves the previous-layer information and lets the network
 choose how much new information to mix in. Most modern GNNs, CGCNN
 included, use residual or gated updates of this form.
+
+!!! note "Derivation: residuals and gradient flow"
+    The reason residual connections rescue deep MPNNs is the same reason
+    they rescue deep ResNets: they prevent the backward pass from
+    vanishing. With $h^{(t+1)} = h^{(t)} + U_t(h^{(t)}, m^{(t+1)})$, the
+    Jacobian of the layer with respect to its input is
+    $$
+    \frac{\partial h^{(t+1)}}{\partial h^{(t)}}
+    = I + \frac{\partial U_t}{\partial h^{(t)}}.
+    $$
+    Chaining through $T$ layers, the gradient at the input is
+    $\prod_{t=0}^{T-1}\bigl(I + \partial U_t / \partial h^{(t)}\bigr)$.
+    Each factor is a perturbation of the identity, so the product
+    cannot collapse to zero unless every $\partial U_t / \partial h^{(t)}$
+    aligns to cancel the identity — an event of measure zero under
+    random initialisation. In the non-residual version, the product is
+    $\prod_t \partial U_t/\partial h^{(t)}$, which generically shrinks
+    geometrically and produces vanishing gradients.
+
+    The same identity-plus-perturbation structure explains why
+    over-smoothing is mitigated: the iterated map is no longer pure
+    eigenvalue contraction towards $\mathbf{u}_1$ but
+    $H^{(t+1)} = H^{(t)} + (\text{contractive update})$, whose fixed
+    points need not be one-dimensional.
 
 A complementary fix is *layer normalisation* applied to $h_v^{(t)}$ at
 each layer, which prevents the magnitudes from collapsing. And a third
@@ -257,6 +476,87 @@ For most crystal property regression tasks, sum or gated-sum aggregation
 with three to five layers and a 5–8 Å cutoff is the right starting
 configuration.
 
+!!! note "When mean beats sum, and vice versa"
+    Suppose we are predicting per-atom formation energy (an *intensive*
+    property). Two crystals with identical local chemistry but different
+    unit cell sizes should give the same prediction. If the readout is
+    a sum of node embeddings, the prediction scales with the number of
+    atoms — the wrong physics. The fix is either a mean readout or to
+    normalise the target by atom count *before* the loss; CGCNN does
+    the latter implicitly because the target is per-atom from the
+    Materials Project.
+
+    For *extensive* targets (total volume, total magnetisation) a sum
+    readout is correct because the property scales linearly with system
+    size. Choose readout to match the physical scaling of the property.
+
+!!! tip "Cross-reference"
+    The same intensive/extensive distinction governs MLIPs in
+    Chapter 9: total energy is extensive (sum over atoms), force per
+    atom is intensive (function of local environment). The architectural
+    decisions follow the physics.
+
+## 10.2.6a A geometric view: graphs as discrete differential operators
+
+A complementary perspective on message passing is that it is a *discrete
+approximation* of a differential operator on a manifold. To see this,
+consider the heat equation on a continuous domain,
+$$
+\frac{\partial f}{\partial t} = \kappa \nabla^2 f,
+$$
+discretised in time as $f^{(t+1)} = f^{(t)} + \kappa \Delta t \nabla^2 f^{(t)}$.
+On a graph, the discrete Laplacian is $L = D - A$, where $D$ is the
+diagonal degree matrix and $A$ the adjacency. The update
+$f^{(t+1)} = f^{(t)} - \kappa \Delta t \, L f^{(t)} = (I - \kappa \Delta t \, L) f^{(t)}$
+is the simplest possible MPNN: mean-aggregate the neighbour features
+and subtract a fraction of the current state.
+
+This connection explains several empirical observations.
+
+*Over-smoothing is heat diffusion.* The heat equation flattens any
+initial condition into a constant as $t \to \infty$. Deep MPNNs with
+mean-aggregation exhibit precisely this behaviour for the same
+mathematical reason.
+
+*Edge features modulate diffusion locally.* A bond with a short distance
+acts like a region of high thermal conductivity; the gated CGCNN
+message function $g_{uv} \odot c_{uv}$ implements precisely this — the
+gate softly closes for long bonds, suppressing diffusion across them.
+
+*Equivariance corresponds to a more general Laplacian.* On a Riemannian
+manifold the Laplace–Beltrami operator acts on tensor fields, not just
+scalars; the discrete analogue is an equivariant MPNN that maintains
+vector and tensor features per node (Chapter 9).
+
+The geometric interpretation is not strictly necessary for implementing
+GNNs but provides a useful intuition pump for designing new aggregation
+schemes.
+
+## 10.2.6b Edge updates and edge-conditioned message passing
+
+So far the edge features $e_{uv}$ have been static — assigned at graph
+construction and never updated. Several modern architectures (MEGNet,
+ALIGNN, M3GNet) also evolve edge features through the network, alongside
+node features. The most general MPNN-with-edge-updates pattern is:
+
+$$
+e_{uv}^{(t+1)} = \phi_e^{(t)}\!\left(e_{uv}^{(t)}, h_u^{(t)}, h_v^{(t)}\right),
+\qquad
+h_v^{(t+1)} = U_t\!\left(h_v^{(t)}, \sum_{u \in \mathcal{N}(v)}
+    M_t(h_v^{(t)}, h_u^{(t)}, e_{uv}^{(t+1)})\right).
+$$
+
+The intuition is that as the node embeddings refine, our representation
+of *what each bond is* should also refine: a Ti–O bond at iteration 0
+is just "a 1.9 Å bond between elements 22 and 8"; at iteration 3 it is
+"a bond contributing to an octahedrally coordinated transition metal in
+a perovskite", a much richer object. Updating edge features lets the
+network express this hierarchical refinement.
+
+The cost is roughly a 30% increase in compute and parameters per layer.
+The benefit is consistent: edge-updating models reach 5–15% lower MAE
+on Matbench tasks than their fixed-edge counterparts.
+
 ## 10.2.7 Putting it together: pseudo-code
 
 ```python
@@ -286,6 +586,30 @@ PyTorch Geometric library wraps it in `scatter_add` and exposes a
 we will use that base class to implement CGCNN; the abstract template
 above is what `MessagePassing` formalises.
 
+!!! note "Computational complexity"
+    A single MPNN layer costs $O(|E| \cdot d_V^2)$ for the message
+    computation (each of $|E|$ edges runs a linear layer on a
+    $d_V$-dimensional input) plus $O(|V| \cdot d_V^2)$ for the update.
+    For typical crystal graphs $|E| \sim 30 |V|$, so the message
+    computation dominates. With $T$ layers, the total forward-pass cost
+    is $O(T |E| d_V^2)$, and on a modern GPU with $d_V = 64$ and
+    $T = 4$ a batch of 32 structures with $\sim 50$ atoms each finishes
+    in well under a millisecond.
+
+    Memory scales as $O(|E| \cdot d_V)$ for the per-edge activations
+    cached for backprop, which dominates over the $O(|V| \cdot d_V)$
+    node activations because $|E| \gg |V|$. This is the practical
+    reason that cutoff is a more consequential hyperparameter than
+    depth: doubling the cutoff roughly octuples memory (because $|E|$
+    scales as cutoff cubed), whereas doubling depth only doubles it.
+
+!!! tip "Forward reference"
+    Chapter 12 will revisit the message-passing template in the context
+    of *foundation models for materials*: a single pre-trained MPNN
+    whose node embeddings can be fine-tuned for any downstream property
+    regression. The template developed here is exactly what those
+    foundation models scale up.
+
 ## 10.2.8 Where we go next
 
 We have now stripped graph neural networks down to a three-function
@@ -299,3 +623,27 @@ Neural Network of Xie and Grossman — and builds it end-to-end. Once you
 have working CGCNN code you have, in effect, a working template for any
 property-regression GNN. Section 10.4 then surveys what changes if you
 substitute MEGNet, ALIGNN or M3GNet for CGCNN.
+
+### Section summary
+
+- The MPNN template — message, aggregate, update, readout —
+  underlies essentially every GNN in the materials literature.
+- Permutation invariance follows for free from sum-aggregation, and
+  is the architectural reason GNNs respect atom relabelling.
+- The Weisfeiler–Lehman test bounds the expressivity of plain sum-MPNNs;
+  edge and node features in crystal graphs typically suffice to
+  exceed this bound in practice.
+- Receptive field at depth $T$ equals the $T$-hop ball; over-smoothing
+  is the eigenvalue-contraction failure mode of deep MPNNs, mitigated
+  by residual connections.
+
+!!! note "Summary of design choices in one table"
+    Every MPNN sits in a five-dimensional design space:
+    (i) message function — linear, MLP, edge-conditioned, gated;
+    (ii) aggregation — sum, mean, max, attention, PNA;
+    (iii) update — concatenation+linear, GRU, residual, gated residual;
+    (iv) edge updates — none, MLP-update;
+    (v) readout — sum, mean, set2set, attention.
+    The literature is, in effect, a catalogue of points in this
+    five-dimensional space. Reading a new GNN paper, locate it on these
+    five axes first; the rest of the architecture follows.

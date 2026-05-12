@@ -120,3 +120,39 @@ and the available budget.
 A working BO loop is, in the end, what makes a fast surrogate
 *actionable*. Without it, GNNs produce piles of predictions. With it,
 they drive the next experiment.
+
+## Chapter-end summary
+
+The reader who has worked through Chapter 11 should now command the
+following.
+
+1. **The exploration-exploitation trade-off as a multi-armed bandit
+   problem** (§11.1). Sublinear-regret algorithms ($\epsilon$-greedy,
+   UCB1, Thompson sampling) are the abstract templates from which all
+   BO acquisitions descend.
+2. **Gaussian processes as the canonical probabilistic surrogate**
+   (§11.2). A GP is defined by its mean function and kernel; the
+   posterior at a new input is a Gaussian whose mean is a linear
+   combination of training labels with weights $\boldsymbol{\alpha} =
+   (K + \sigma_n^2 I)^{-1} \mathbf{y}$, derived from Schur complement
+   conditioning (Theorem 11.2.1). Hyperparameters are learned by
+   marginal-likelihood maximisation.
+3. **Acquisition functions** (§11.3). Expected Improvement (Theorem
+   11.3.1) has closed form $(\mu - f^+)\Phi(z) + \sigma\phi(z)$. UCB
+   admits sublinear regret bounds (Theorem 11.3.3). Thompson sampling
+   diversifies batches naturally. Knowledge Gradient handles
+   noisy/terminal-reward problems. The comparison table in §11.3.4a
+   maps each to its appropriate use case.
+4. **Materials-discovery workflows** (§11.4). Featurisation (Magpie /
+   GNN embeddings), oracle hierarchy (MLIP / DFT / experiment),
+   constraints, batch BO, autonomous experimentation. The A-Lab case
+   study (Case Study 11.4.2) is the production demonstration of the
+   methodology; the BoTorch script (Case Study 11.4.4) is the
+   reference implementation.
+
+The single most important takeaway: a calibrated uncertainty estimate
+is the only thing that makes a surrogate *actionable*. Without it, you
+have predictions; with it, you have a decision rule. Chapter 12's
+foundation-models discussion will revisit the same point in the
+context of universally pre-trained networks, where calibration of the
+fine-tuned uncertainty becomes the dominant practical concern.
