@@ -13,7 +13,7 @@
       "@jupyterlite/pyodide-kernel-extension:kernel": {
         "pipliteUrls": [],
         "loadPyodideOptions": {
-          "packages": ["numpy", "scipy", "matplotlib", "ipywidgets"]
+          "packages": ["numpy", "scipy", "matplotlib"]
         }
       }
     }
