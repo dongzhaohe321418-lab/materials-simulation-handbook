@@ -132,6 +132,104 @@ When should you use simulation rather than CALPHAD?
 
 Modern practice integrates both: high-throughput DFT + MLIP MD provides input to CALPHAD assessments, especially for finite-temperature solid free energies that were historically the weakest link. The **OQMD**, **Materials Project**, and **AFLOW** databases publish DFT-derived formation enthalpies that feed CALPHAD; the next generation of databases will include vibrational free energies from MLIP MD.
 
+## Clausius-Clapeyron, nucleation barriers, and the hysteresis method
+
+Two complementary ideas tie the previous subsections together: the *slope* of a phase boundary is fixed by a thermodynamic identity that any simulation must respect, and the *direct measurement* of melting from heating a single phase is systematically biased by a nucleation barrier that the two-phase method bypasses.
+
+### Deriving Clausius-Clapeyron
+
+Along a phase boundary between phases A and B, $G_A(T, P) = G_B(T, P)$. Differentiate this identity along the boundary, where both phases coexist:
+
+$$
+\left(\frac{\partial G_A}{\partial T}\right)_P\, dT + \left(\frac{\partial G_A}{\partial P}\right)_T\, dP = \left(\frac{\partial G_B}{\partial T}\right)_P\, dT + \left(\frac{\partial G_B}{\partial P}\right)_T\, dP.
+\tag{8.44}
+$$
+
+The Gibbs derivatives are $(\partial G/\partial T)_P = -S$ and $(\partial G/\partial P)_T = V$. Substituting,
+
+$$
+-S_A\, dT + V_A\, dP = -S_B\, dT + V_B\, dP,
+$$
+
+and rearranging,
+
+$$
+\boxed{\frac{dP}{dT} = \frac{S_B - S_A}{V_B - V_A} = \frac{\Delta S}{\Delta V}.}
+\tag{8.45}
+$$
+
+For a first-order transition the latent heat is $L = T \Delta S$, so (8.45) takes its more familiar form
+
+$$
+\frac{dP}{dT} = \frac{\Delta H}{T\, \Delta V},
+\tag{8.46}
+$$
+
+with $\Delta H$ the enthalpy difference between phases at the boundary. Equation (8.46) is exact within equilibrium thermodynamics — it makes no model assumption beyond the first-order character of the transition.
+
+For melting, $\Delta H_\mathrm{fus} > 0$ (heat must be supplied to melt) and typically $\Delta V > 0$ (liquid is less dense than solid), so $dP/dT > 0$: the melting line tilts up. The famous exception is water, with $\Delta V < 0$ (ice floats), so $dP/dT < 0$ and applying pressure melts ice. For solid-solid transitions, both signs are common and the boundary can be steep or shallow.
+
+Clausius-Clapeyron is the basic cross-check on any simulated phase diagram. Compute $T_m(P)$ at two pressures, and also compute $\Delta H$ and $\Delta V$ directly from coexistence simulations. The numerical $dP/dT$ from the boundary trajectory and the right-hand side of (8.46) should agree to within statistical noise. If they disagree by a factor of two, the simulation is unequilibrated, the latent-heat estimate is wrong, or the coexistence has been mis-identified.
+
+### Why direct heating overestimates $T_m$
+
+A perfect single crystal in a periodic box, heated above its thermodynamic $T_m$, does not melt. To start melting it must *nucleate* a liquid embryo of size larger than the critical-nucleus radius $r^*$, against the bulk-liquid-solid interface free energy $\gamma_{sl}$. Classical nucleation theory gives the work of forming an embryo of radius $r$ as
+
+$$
+W(r) = -\frac{4\pi}{3} r^3\, \rho_l\, |\Delta\mu_{sl}(T)| + 4\pi r^2 \gamma_{sl},
+\tag{8.47}
+$$
+
+with $\Delta\mu_{sl} = \mu_l - \mu_s$ the chemical-potential difference, vanishing at $T_m$ and growing approximately linearly with $T - T_m$. The barrier height is
+
+$$
+W^* = \frac{16\pi}{3} \frac{\gamma_{sl}^3}{(\rho_l\, |\Delta\mu_{sl}|)^2},
+\tag{8.48}
+$$
+
+which diverges as $T \to T_m^+$. To melt on the simulation timescale, $T$ must be raised enough that $W^*$ drops to a few $k_B T$ — typically $10$–$30$% above $T_m$. The single-phase heating method therefore reports a **superheating limit** $T_+$ that overestimates $T_m$ systematically. The analogous problem on cooling — undercooling a liquid below $T_m$ before crystallisation nucleates — gives a $T_-$ that underestimates $T_m$.
+
+For Cu with the Mishin EAM, single-phase heating typically reports $T_+ \approx 1500$–$1600$ K, against the true thermodynamic $T_m \approx 1325$ K. The error is $13$–$20$%. Reporting $T_+$ as "the melting point from MD" is one of the most common — and most embarrassing — errors in the literature.
+
+### The hysteresis method
+
+Luo, Strachan and Swift (2004) proposed a clever workaround. Heat a solid until it melts at $T_+$, then cool the resulting liquid until it crystallises at $T_-$. Both transitions are nucleation-limited and the gap is large. Their empirical observation, since validated on dozens of systems, is that
+
+$$
+T_m \approx \frac{T_+ + T_-}{2}
+\tag{8.49}
+$$
+
+to within a few per cent, provided the heating and cooling rates are comparable. The qualitative argument is that the superheating limit and the undercooling limit lie roughly symmetrically about $T_m$ in $\Delta T$, because both barriers scale as $W^* \sim 1/(\Delta T)^2$.
+
+This is cheaper than the two-phase method — one continuous heating-cooling trajectory rather than several distinct simulations at neighbouring temperatures — and is the natural first estimate when bracketing $T_m$. For publication-quality numbers the two-phase method remains the gold standard, but for a quick sanity check on an MLIP's predicted $T_m$ the hysteresis method gives results in a single overnight run.
+
+A representative LAMMPS protocol:
+
+```text
+# Heating ramp
+fix    1 all npt temp 300 2200 0.1 iso 0.0 0.0 1.0
+run    400000
+# Watch potential energy: a discontinuous jump marks T_+
+# Cooling ramp
+fix    1 all npt temp 2200 300 0.1 iso 0.0 0.0 1.0
+run    400000
+# Discontinuous jump on cooling marks T_-
+```
+
+Plot $\langle U\rangle$ versus $T$. The hysteresis loop is a classic double S-curve. Pick $T_+$ and $T_-$ at the inflection points; $T_m$ from (8.49).
+
+### Connection to Project 2 (Cu melting via MLIP)
+
+The Cu-melting project of [Chapter 13](../projects/02-melting-point-mlip/README.md) puts all of this together. The recipe is:
+
+1. **Hysteresis estimate.** Drive a $4 \times 4 \times 4$ fcc Cu supercell with MACE-MP-0 through a heating-then-cooling cycle to bracket $T_m$ to within $\sim 100$ K.
+2. **Two-phase refinement.** Build the half-solid-half-liquid supercell of [§8.4](04-phase-diagrams.md), equilibrate at the hysteresis midpoint, and run at three temperatures spanning $\pm 25$ K. Identify the temperature at which the interface is stationary.
+3. **Clausius-Clapeyron cross-check.** Repeat steps 1-2 at $P = 1$ GPa and $P = 5$ GPa; verify $dT_m/dP$ is consistent with $\Delta V / \Delta S$ measured at the coexistence point.
+4. **Comparison to experiment and to classical EAM.** Mishin EAM gives $T_m \approx 1325$ K; experiment is $1358$ K; a fine-tuned MACE-MP-0 typically lands in between, with the gap shrinking as the fine-tuning data approach the melting region. The size of the residual error tells you how much DFT-MD data on near-melting configurations is missing from the foundation model's training distribution.
+
+The whole pipeline runs in a long weekend on a single A100. It also exposes the limits of every method along the way: the hysteresis estimate has the systematic bias just discussed, the two-phase result is sensitive to interface orientation and finite-size effects, and the Clausius-Clapeyron check fails if pressures are too low to resolve $\Delta V$ above the volume-fluctuation noise. Resolving each of these is the point.
+
 ## A worked example: argon's triple-point temperature
 
 Lennard-Jones argon. Triple point known analytically: $T^* = 0.687, P^* = 0.0017, \rho^*_\mathrm{liq} = 0.847, \rho^*_\mathrm{sol} = 0.96$ (Hansen-Verlet 1969, refined since).

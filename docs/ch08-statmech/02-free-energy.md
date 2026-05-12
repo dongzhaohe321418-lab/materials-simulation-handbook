@@ -105,6 +105,68 @@ FEP is conceptually simpler than TI — one simulation, one expectation value �
 
 The Bennett Acceptance Ratio (BAR) and its extension to multiple states (MBAR, Shirts and Chodera) are the modern optimal estimators that improve on naive FEP by combining forward and backward perturbations between windows. They are now standard; `pymbar` is the canonical implementation.
 
+### The Bennett acceptance ratio, in detail
+
+BAR (Bennett, 1976) is the **minimum-variance** estimator of $\Delta A$ from two independent samples — one drawn from state $0$, one from state $1$ — both connected through the energy difference $\Delta U = U_1 - U_0$. Its derivation makes the optimality precise.
+
+Let $\langle\cdot\rangle_0$ and $\langle\cdot\rangle_1$ denote canonical averages in states $0$ and $1$. For *any* function $w(\Delta U)$ with non-vanishing expectations in both ensembles, the ratio identity
+
+$$
+\frac{Z_1}{Z_0} = \frac{\langle w\, e^{-\beta U_1}\rangle_0 / \langle e^{-\beta U_1}\rangle_0}{\langle w\, e^{-\beta U_0}\rangle_1 / \langle e^{-\beta U_0}\rangle_1} = \frac{\langle w\, e^{-\beta U_1 + \beta U_0}\rangle_0}{\langle w\, e^{-\beta U_0 + \beta U_1}\rangle_1}
+\cdot \frac{Z_0}{Z_0}
+\tag{8.B1}
+$$
+
+holds because both numerator and denominator are computed by reweighting from their own ensemble. Bennett's insight was to optimise the choice of $w$ for minimum variance of $\ln(Z_1/Z_0)$. The variational calculation — minimise the asymptotic variance subject to (8.B1) — yields a *Fermi function* weight:
+
+$$
+w(\Delta U) \propto \frac{1}{1 + e^{\beta(\Delta U - C)}},
+\tag{8.B2}
+$$
+
+with a constant $C$ to be determined self-consistently. Substituting (8.B2) into the ratio identity and rearranging produces the implicit equation
+
+$$
+\boxed{\sum_{n=1}^{N_0} \frac{1}{1 + e^{\beta(\Delta U_n^{(0)} - C)}} = \sum_{m=1}^{N_1} \frac{1}{1 + e^{-\beta(\Delta U_m^{(1)} - C)}},}
+\tag{8.B3}
+$$
+
+where $\Delta U_n^{(0)}$ is the energy difference evaluated on configuration $n$ drawn from ensemble $0$, and analogously for ensemble $1$. The free energy is then
+
+$$
+\Delta A = C - k_B T \ln\frac{N_1}{N_0}.
+\tag{8.B4}
+$$
+
+Solving (8.B3) is a one-dimensional root-find on $C$, trivial in practice. `pymbar.BAR` does this in one line.
+
+### The maximum-likelihood interpretation
+
+Equation (8.B3) is also the **maximum-likelihood estimator** of $\Delta A$ if one views the samples from $0$ and $1$ as realisations of a logistic-regression problem: given a configuration, predict whether it was drawn from $0$ or $1$. The log-likelihood of the logistic classifier with intercept $C$ is exactly the difference of the two sums in (8.B3), and its score equation is the BAR equation. This connection — re-derived by Shirts, Bair, Hooker and Pande in 2003 — places BAR on the firmest possible statistical footing: any other estimator that uses only the same two-sided samples has equal or worse asymptotic variance.
+
+### Why BAR beats one-sided FEP
+
+One-sided FEP (8.22) is the special case of BAR with $C \to -\infty$, throwing away the backward sample entirely. Two failure modes are then exposed:
+
+- **Distribution overlap.** FEP from $0 \to 1$ relies on configurations sampled in $0$ being representative of $1$. When the canonical distributions of $0$ and $1$ overlap poorly — anywhere $\beta|\Delta U|$ exceeds a few — the estimator is dominated by exponentially rare configurations and converges only slowly, or biases low. The backward direction (FEP from $1 \to 0$) suffers symmetrically. BAR uses both directions and is well-conditioned whenever *either* direction has reasonable overlap.
+- **Hysteresis diagnostic.** Forward and backward FEP estimates disagree when the simulations are too short. The discrepancy is itself a diagnostic; BAR collapses the two estimates into a single optimal value and reports a sensible uncertainty.
+
+Empirically, BAR converges roughly four times faster than one-sided FEP for typical alchemical transformations and is essentially never worse. There is no reason to use one-sided FEP in production work.
+
+### Practical use: two-state simulations
+
+A canonical BAR setup interpolates between endpoints $0$ and $1$ through a sequence of $M$ intermediate windows $\lambda_0 = 0 < \lambda_1 < \ldots < \lambda_M = 1$, chosen so that consecutive windows have substantial canonical-distribution overlap. At each window $k$, run MD with potential $U_{\lambda_k}$ and accumulate two energy traces: $\Delta U_{k \to k+1}$ (evaluated on configurations from window $k$) and $\Delta U_{k+1 \to k}$ (from window $k+1$). For each pair of adjacent windows, solve (8.B3) for $\Delta A_{k \to k+1}$; then $\Delta A_{0 \to 1} = \sum_k \Delta A_{k \to k+1}$.
+
+The optimal *spacing* of $\lambda$ values is the one that gives equal overlap (equal pair-BAR variance) between adjacent windows — typically a denser spacing near $\lambda = 0$ when activating Lennard-Jones interactions from zero, and uniform spacing for smooth chemical transformations. An adaptive scheme, where intermediate $\lambda$ values are added on the fly to equalise overlap, is implemented in modern alchemical packages.
+
+### Connection to umbrella sampling and WHAM
+
+The multi-state generalisation of BAR is the **Multistate Bennett Acceptance Ratio** (MBAR; Shirts and Chodera, 2008). Instead of pairwise window combinations, MBAR solves a system of coupled equations for free-energy offsets $f_k = -k_B T \ln Z_k$ across all windows simultaneously, using *every* sample evaluated at *every* window's energy function. The estimator is again maximum-likelihood, and again minimum-variance, but now the variance reduction comes from exploiting *non-adjacent* window overlap when it exists.
+
+The Weighted Histogram Analysis Method (WHAM) of Kumar et al. — used in umbrella sampling as described above — is the discretised (binned) limit of MBAR. The conceptual identity is sharp: WHAM equations are the BAR equations of (8.B3) generalised to many windows, with histogram bins replacing the exact reweighting. Modern practice usually skips the binning step entirely and applies MBAR directly to the raw sample energies, which avoids histogram-bin-width sensitivity and is what `pymbar` does. WHAM remains widespread because of legacy and because for very long simulations the bin-averaged version is faster.
+
+A single unifying picture: BAR, MBAR, WHAM, and the equilibrium reweighting underlying replica exchange are all instances of the same maximum-likelihood estimator applied to the same overlap structure between sampled ensembles. Once you have written one, you have understood them all.
+
 ## Umbrella sampling and WHAM
 
 For free energies along a **collective variable** (CV) — a reaction coordinate, an order parameter — neither TI nor FEP is most natural. You want the potential of mean force (PMF)

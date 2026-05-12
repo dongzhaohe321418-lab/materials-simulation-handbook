@@ -144,6 +144,48 @@ def green_kubo_diffusion(vacf: np.ndarray, dt: float) -> np.ndarray:
 
 Use this to plot $D(t_\mathrm{max})$. A clean simulation produces a curve that rises rapidly, then plateaus.
 
+### Practical convergence: the long-time tail and where to truncate
+
+The Green-Kubo integrand is a correlation function $C(t) = \langle X(0) X(t)\rangle$ for some flux $X$ (velocity, off-diagonal stress, heat flux). Its time-zero value $C(0)$ is large; its long-time value is, in the strict sense, zero — but the approach to zero is rarely a clean exponential.
+
+For self-diffusion in a 3D fluid the **Alder-Wainwright tail** $C(t) \sim t^{-3/2}$ arises from hydrodynamic backflow: a tagged particle drags fluid along with it, the dragged fluid recirculates over picosecond timescales, and the particle "remembers" its motion through the long-wavelength velocity field it created. The integral $\int_0^\infty t^{-3/2}\, dt$ is finite, but the contribution from times beyond the obviously decayed bulk is non-trivial — typically $5$–$15$% of $D$. Truncating the integral at the first zero-crossing misses this.
+
+For shear viscosity, the stress autocorrelation $\langle \sigma_{xy}(0)\sigma_{xy}(t)\rangle$ has a tail dominated by mode-coupling — coupling between the slow shear modes and long-wavelength density fluctuations. The tail decays exponentially in simple liquids but can develop algebraic components in glassy or polymeric systems. For thermal conductivity in dielectrics, the heat-flux autocorrelation has phonon-lifetime tails that can extend over tens of picoseconds in clean crystals, and dominate the integrated value of $\kappa$ entirely.
+
+### Cutoff selection in practice
+
+A pragmatic recipe used widely in the literature:
+
+1. Plot $C(t)/C(0)$ on a semi-log scale. Identify a *correlation time* $\tau_\mathrm{corr}$ — the time at which the normalised correlation function has decayed to roughly $0.1$ of its zero-time value.
+2. Truncate the Green-Kubo integral at $t_\mathrm{cut} \approx (3\text{–}5)\, \tau_\mathrm{corr}$. This captures the bulk of the integral while limiting noise integration.
+3. Quote the **plateau value** of the running integral $D(t_\mathrm{max})$ averaged over a window $[t_\mathrm{cut}, t_\mathrm{cut} + \tau_\mathrm{corr}]$. If the integral drifts within this window beyond the statistical uncertainty, the trajectory is too short — extend it or increase the number of replicas.
+4. For systems where a power-law tail is documented (3D fluid self-diffusion, ionic conductivity in concentrated electrolytes), fit the region $t \in [t_\mathrm{cut}/2, t_\mathrm{cut}]$ to the expected $t^{-3/2}$ or exponential form and integrate the fitted tail analytically to $\infty$. The total $D$ is then $D(t_\mathrm{cut}) + D_\mathrm{tail}$.
+
+The first two steps are robust and uncontroversial; the fourth requires that the tail's functional form be genuinely known a priori, otherwise it bakes in a prejudice. As a sanity check on tail fitting, vary $t_\mathrm{cut}$ over a factor of two; the final $D$ should be stable.
+
+### Statistical error from finite trajectory
+
+The fundamental statistical statement is: a Green-Kubo integral computed from a trajectory of length $T$ contains roughly $N_\mathrm{ind} \approx T/\tau_\mathrm{corr}$ statistically independent samples of the correlation function. The fractional standard error on the integrated transport coefficient is then
+
+$$
+\frac{\sigma_D}{D} \sim \sqrt{\frac{\tau_\mathrm{corr}}{T}}.
+\tag{8.41}
+$$
+
+To get a $1$% error bar on $D$ requires $T \sim 10^4\, \tau_\mathrm{corr}$. For liquid argon ($\tau_\mathrm{corr} \sim 0.5$ ps), that is $5$ ns of trajectory — easy. For viscosity in a polymer melt ($\tau_\mathrm{corr} \sim 10$ ns), it is $10^5$ ns of trajectory, which is impossible on a single processor; multiple independent replicas, each of accessible length, are the routine workaround. $N_\mathrm{rep}$ replicas each of length $T$ deliver the same statistics as a single trajectory of length $N_\mathrm{rep} T$, provided each replica is genuinely independent (separately equilibrated, different random seeds).
+
+For viscosity and thermal conductivity, where the time-zero variance of the correlation function is much larger than the integral, expect to need an order of magnitude more replicas than for diffusion. Twenty to fifty independent NVE trajectories, each $1$–$10$ ns long, is a typical production setup for $\kappa$ in a metal.
+
+### When NEMD beats Green-Kubo
+
+The Green-Kubo formalism is the natural choice when the equilibrium fluctuations are well-behaved — single phase, isotropic, modest correlation times. It struggles in three regimes:
+
+- **Large transport contrast.** In a heterogeneous system — a metal-dielectric interface, a polymer composite, a layered material — the equilibrium heat-flux autocorrelation is a weighted average over phases with vastly different $\tau_\mathrm{corr}$, and the integral picks up contributions from regimes far from where the actual transport happens. NEMD with the imposed gradient localised across the relevant interface gives a direct measurement of the effective transport coefficient without that contamination.
+- **Strong anisotropy.** A laminar polymer, a layered oxide, or a vdW heterostructure has transport coefficients that differ by orders of magnitude between in-plane and cross-plane directions. Green-Kubo requires running the directional integrals separately and tends to be noisy for the smaller (cross-plane) component, since the slow decay is buried under faster in-plane fluctuations. NEMD with the gradient aligned to the direction of interest gives a clean, direct value.
+- **Very long $\tau_\mathrm{corr}$.** Solids with long phonon mean-free-paths (Si, diamond, clean noble metals at low $T$) have heat-flux autocorrelations that decay over many tens of ps. The Green-Kubo trajectory required is then in the multi-hundred-ns regime. NEMD, with a steady-state gradient sustained by hot and cold reservoirs, often converges in $10$ ns of trajectory.
+
+Modern practice runs Green-Kubo and NEMD as complementary cross-checks. The Müller-Plathe estimator for $\kappa$ and the equilibrium Green-Kubo estimator should agree to within combined error bars; if they disagree by more than a factor of $1.5$, one or both is unconverged or has a systematic problem (boundary effects in NEMD, tail truncation in GK).
+
 ## Einstein vs Green-Kubo
 
 For diffusion, the two formulations are equivalent in the long-time limit. Which to use?

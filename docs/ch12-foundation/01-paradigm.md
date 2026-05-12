@@ -231,6 +231,126 @@ practical workflow — query the dataset, filter to your chemistry of
 interest, fine-tune the foundation model — is the subject of the next
 section.
 
+## In-distribution and out-of-distribution: the central diagnostic
+
+The single most consequential question a practitioner can ask of a
+universal MLIP is: *how far from the training distribution is the
+system I want to simulate?* Foundation models work well in the regime
+they have seen and degrade — often without warning — in the regime
+they have not. The decision between zero-shot use, light fine-tuning,
+and full retraining is, in essence, a quantitative answer to this
+question.
+
+### Why universal MLIPs degrade on novel chemistries
+
+The reason is structural rather than incidental. A universal MLIP
+learns a mapping from local atomic environments — typically encoded
+in a radial-and-angular descriptor truncated at a $5$–$6$ Å cutoff —
+to energy contributions. Its training corpus is finite. Any local
+environment whose descriptor lies outside the convex hull of the
+training descriptors is, formally, *extrapolated* rather than
+interpolated, and the model has no principled way to know which
+extrapolation is correct. For smooth descriptors and gentle
+extrapolation the error grows slowly; for descriptors that are
+discontinuous on chemical-bond rearrangements, it can grow
+catastrophically.
+
+The empirical signature is well-documented. The Riebesell et al.
+*Matbench-Discovery* benchmark (2023, updated through 2025) holds
+out structures from chemical systems entirely absent from the
+training corpus. Foundation MLIPs that achieve $\sim 30$ meV/atom
+errors on in-distribution test sets typically report two to four
+times worse on the held-out chemistries. The degradation correlates
+with the number of training configurations involving the rare
+elements: under-represented elements give larger errors, in a
+relationship that is roughly linear in $\log N_\mathrm{train}$.
+
+### Empirical observation: MACE-MP-0 on lithium battery materials
+
+A documented case study from the Cheng group (2024) is informative.
+MACE-MP-0 (medium), trained on MPtrj, was applied zero-shot to
+several lithium-rich battery cathodes (Li$_2$MnO$_3$, Li-excess
+NMC). Energy errors on near-equilibrium configurations were
+$\sim 30$ meV/atom — competitive with bespoke potentials. On
+configurations sampled at high temperature in production MD, where
+Li-Li distances fell below the typical $2.6$ Å distance seen in
+MPtrj training data, errors grew to $\sim 50$–$80$ meV/atom and the
+forces became qualitatively wrong on the migrating Li atoms.
+
+The mechanism: MPtrj is built from DFT *relaxations*, which converge
+toward stable minima. Off-equilibrium configurations — exactly the
+ones an MD trajectory at $1000$ K explores — are systematically
+under-represented. Lithium battery cathodes, with their unusually
+short Li-Li distances and structural disorder, push the model into a
+sparsely-sampled corner of the descriptor space.
+
+The OMat24 dataset (Meta, 2024), constructed by deliberately rattling
+and straining Alexandria structures to populate this off-equilibrium
+region, was a direct response. MACE-MP-0b and EquiformerV2-OMat,
+trained or fine-tuned on OMat24, show substantially reduced
+errors on the same lithium-cathode benchmarks — typically halving
+the energy MAE.
+
+### A concrete diagnostic
+
+Before committing serious compute to a foundation-model simulation,
+the cheapest sanity check is a *descriptor coverage* analysis on a
+single configuration of the target system:
+
+1. Build a representative configuration of the target — a unit cell
+   or a small supercell.
+2. Compute pairwise distance and three-body angle distributions
+   within the cutoff radius. Plot them as histograms.
+3. Compute the same histograms from a subsample (say $10^4$
+   configurations) of MPtrj or whatever the model's training set
+   was.
+4. Overlay the two. Any bin where the target system has substantial
+   density and the training set has near-zero density is an
+   extrapolation warning.
+
+The diagnostic is not fool-proof — descriptor coverage in bond
+lengths and angles does not guarantee coverage in the higher-body
+correlations a deep network actually uses — but it is cheap and
+catches the clearest failure modes. Several recent universal MLIPs
+ship with built-in *uncertainty estimators* (deep ensembles in Orb;
+gradient-based committee variance in MACE) that act as a learned
+version of this same diagnostic; they are increasingly the preferred
+approach.
+
+### A decision flowchart for zero-shot vs fine-tuning
+
+A pragmatic protocol, condensing the considerations above:
+
+```mermaid
+flowchart TD
+    Start{"Run zero-shot MD<br/>on representative<br/>configuration"}
+    Start --> Check["Compute MLIP-DFT<br/>parity on ~20<br/>snapshots"]
+    Check --> Q1{"Force MAE<br/>< 100 meV/Å?"}
+    Q1 -->|"yes"| Q2{"Energies on<br/>convex hull?"}
+    Q1 -->|"no"| FT1["Few-shot fine-tune<br/>on 100-500 DFT<br/>configurations"]
+    Q2 -->|"yes"| Use["Use zero-shot<br/>for production"]
+    Q2 -->|"no"| FT2["Few-shot fine-tune<br/>with energy weight"]
+    FT1 --> Recheck["Re-evaluate parity<br/>on held-out test set"]
+    FT2 --> Recheck
+    Recheck --> Q3{"Errors now<br/>< 20 meV/atom<br/>and < 50 meV/Å?"}
+    Q3 -->|"yes"| Use
+    Q3 -->|"no"| Full["Full fine-tune<br/>or train from scratch<br/>(Chapter 9)"]
+```
+
+The two thresholds — $100$ meV/Å on forces, $20$ meV/atom on energy
+post-tuning — are empirical and somewhat field-dependent. For
+catalysis $50$ meV/atom may be unacceptable; for screening it may be
+plenty. The discipline is to fix the threshold *before* looking at
+the data, in line with the same statistical hygiene one would apply
+to any model comparison.
+
+The single most expensive mistake is to skip the zero-shot parity
+check and run a long production MD with an unvalidated foundation
+model. The cost of generating $20$ DFT single-points to validate is
+small; the cost of discovering, three weeks later, that the entire
+trajectory was sampled with $200$ meV/Å force errors and is
+therefore qualitatively wrong, is enormous.
+
 ## A note on what is *not* a foundation model
 
 The phrase has acquired some marketing weight. Three clarifications

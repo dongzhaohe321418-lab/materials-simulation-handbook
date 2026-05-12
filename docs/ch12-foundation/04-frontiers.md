@@ -186,6 +186,189 @@ pressures, defect states) of those chemistries. They do not yet
 generalise across genuinely new chemistry, and there is no a priori
 reason to expect that they will without further data.
 
+## Three open problems in detail
+
+The brief survey above identified several gaps in the current
+foundation-model toolkit. Three of them deserve closer scrutiny
+because they are *physical* limitations of the dominant
+architectures, not merely engineering debt that will be cleared
+by larger datasets. Each is the subject of substantial recent
+work, none has a clean solution, and each is likely to define a
+sub-field of materials machine learning for the next several years.
+
+### Long-range Coulomb in MLIPs
+
+**The problem.** Every universal MLIP described in this book uses a
+finite cutoff radius — typically $5$–$6$ Å — beyond which atomic
+interactions are simply truncated. For short-range covalent and
+metallic chemistry this is excellent: the energy landscape is set
+by the local bonding environment, and the truncation error decays
+exponentially with the cutoff. For systems where long-range
+electrostatics matters, the truncation is qualitatively wrong.
+
+The clearest diagnostic is the dielectric screening of a polar
+crystal. The macroscopic Born effective charges and the LO–TO
+splitting in the phonon spectrum both arise from the non-analytic
+behaviour of the dynamical matrix at small wavevector,
+$\mathbf{q} \to 0$, where Coulomb forces are unscreened. A purely
+local MLIP cannot reproduce this: the small-$\mathbf{q}$ dynamical
+matrix is built from far-apart-atom-pair contributions that lie
+entirely outside the model's receptive field. Polar phonon spectra,
+ferroelectric instabilities, dielectric constants, and the energetics
+of charged defects in ionic solids all carry the same signature
+error.
+
+**Why current methods fail.** The dominant message-passing
+architectures (MACE, NequIP, SevenNet) gather information through
+local convolutions over a graph defined by the cutoff. Stacking
+more layers extends the *effective* receptive field but at quadratic
+cost in number of operations and worsening numerical stability of
+the gradient through many message-passing steps. To capture
+Coulomb forces with the correct $1/r$ tail requires either an
+analytical long-range term — an Ewald-summed Coulomb interaction
+layered on top of the MLIP, with charges as additional outputs —
+or a fundamentally different architecture (e.g., one that operates
+in reciprocal space).
+
+The 4G-HDNNP architecture of Ko et al. (2021) handles long-range
+electrostatics by *learning* the atomic charges and adding an
+explicit Ewald sum. Recent universal-MLIP descendants (MACE-LR,
+Cheng's Cartesian-ACE long-range extension, the eqV2 long-range
+variant in development) follow the same pattern. None of these is
+yet in widespread use as a drop-in foundation model; the engineering
+of charge equilibration in a parameter-sharing setting across $96$
+elements is genuinely difficult.
+
+**What success would look like.** A universal MLIP that reproduces,
+within DFT accuracy, the Born effective charges and LO–TO splittings
+of a few canonical polar oxides (MgO, SrTiO$_3$, BaTiO$_3$, PbTiO$_3$),
+the dielectric constants of layered materials, and the formation
+energies of charged defects relative to neutral references. As of
+mid-2026 no public model has cleared this bar; the published
+benchmarks compare neutral, near-equilibrium configurations almost
+exclusively.
+
+**Recent attempts.** Anstine and Isayev (2023) survey the field;
+Loche et al. (2024) report a long-range MACE variant that reproduces
+the dielectric response of BaTiO$_3$ within $\sim 15$%; the
+Cheng-group Cartesian-ACE long-range work (npj Computational
+Materials, 2024) shows promising results on simple ionic solids but
+has not yet been scaled to a universal model.
+
+### Charged systems and electrochemistry
+
+**The problem.** Every universal MLIP discussed here treats the
+total charge of the simulation cell as fixed at zero. This is
+implicit in the architecture — atoms have positions and species, no
+spin or charge — and in the training data (DFT calculations almost
+always at charge neutrality). For neutral, isolated systems, this is
+the right choice. For electrochemistry, where an electrode is in
+contact with an electrolyte at a controlled electrochemical
+potential, it is fundamentally wrong.
+
+Electrochemical interfaces have three properties no current universal
+MLIP can represent. First, the electrode can carry a net charge,
+balanced by the diffuse double-layer charge in the electrolyte;
+energetics depend on this charge. Second, the electrochemical
+potential, not the chemical composition, is the natural control
+variable, requiring grand-canonical sampling in the electronic
+degrees of freedom. Third, the system can transfer electrons across
+the interface during reaction events, which neither a fixed-charge
+nor a per-atom-charge model captures.
+
+**Why current methods fail.** The natural way to extend an MLIP to
+charged systems is to add an extra input channel (the total charge,
+or the chemical potential) and retrain. The problem is that DFT
+calculations of charged supercells require careful handling of the
+compensating uniform-jellium background and finite-size corrections
+(Makov-Payne, Freysoldt-Neugebauer); a foundation MLIP trained on
+charged-system DFT data must learn to undo these corrections rather
+than fold them into a meaningful physical signal. No public dataset
+of charged-supercell DFT energies at the scale of MPtrj exists.
+
+A complementary issue: the per-atom-charge-prediction approach
+(CHGNet's magmom head extended to electronic charge) cannot represent
+electron transfer because it does not change the *total* number of
+electrons. Some configurations have only one charge-state assignment
+consistent with chemistry; others (mixed-valent oxides, partially
+reduced oxides) admit several, and the model has no principled way
+to choose.
+
+**What success would look like.** A universal MLIP that can simulate
+an electrode in contact with an electrolyte at a specified potential
+versus a reference (SHE or Ag/AgCl), correctly predicting the
+double-layer capacitance, the surface-charge density as a function
+of potential, and the redox potentials of small molecules at the
+interface within $0.2$–$0.3$ V of experiment. None exists as of
+mid-2026.
+
+**Recent attempts.** The CENT model (Ghasemi et al. 2015, with
+recent extensions) uses charge equilibration with electronegativity
+parameters and is in principle applicable to charged systems, though
+not at universal-MLIP scale. The constant-potential MD method of
+Bonnet, Otani and Sugino (and recent extensions) is an explicit
+DFT-based approach; a learned surrogate is an obvious target. The
+group around Behler has reported preliminary work on
+charge-conditioned 4G-HDNNP at mid-scale; the GitHub repository for
+universal charge-aware models is still small. This is, in our view,
+the most consequential open problem for foundation MLIPs and is
+likely to attract the next generation of architectural innovation.
+
+### Excited states and TDDFT-ML
+
+**The problem.** Every MLIP discussed in this book is trained on
+ground-state DFT, which is exact in principle for the ground-state
+energy and density of a many-electron system. Many of the most
+interesting physical phenomena — photoexcitation, exciton transport,
+non-radiative relaxation, photochemistry — involve excited electronic
+states. The ground-state PES is irrelevant for these processes; what
+is needed is at least the lowest few excited-state PESs and the
+non-adiabatic couplings between them.
+
+**Why current methods fail.** The training data for an excited-state
+MLIP would need to come from a method capable of computing excited
+states accurately. TDDFT (the most accessible option) is roughly an
+order of magnitude more expensive than ground-state DFT for the
+same system. CASSCF and CASPT2 (for stronger correlation) are two to
+three orders more expensive. $GW$+BSE (the closest to experiment for
+solid-state spectra) is two to four orders more expensive and has
+strong system-size limitations. Generating a dataset comparable to
+MPtrj — $1.6 \times 10^6$ configurations — at any of these levels is
+prohibitively expensive, and would have to be redone if the target
+spectroscopy changes.
+
+The architectural problem is also non-trivial. An MLIP predicts a
+*scalar* energy per configuration. An excited-state model would need
+to predict a *set* of energies (one per state), the gradients with
+respect to atomic positions (one per state), and ideally the
+non-adiabatic couplings (matrices between states). The output
+dimension grows linearly with the number of states tracked, and the
+ordering of states can change with configuration (state crossings,
+conical intersections), making the prediction problem
+combinatorially harder than the ground-state case.
+
+**What success would look like.** A foundation model that, given a
+molecular or crystalline configuration, returns the lowest $N$
+adiabatic state energies and gradients with chemical accuracy
+($\sim 0.1$ eV) for at least the chemistries of small organic
+chromophores, transition-metal complexes, and a few canonical
+inorganic semiconductors. With this in hand, photochemistry
+simulations would become tractable at MLIP cost, and the screening
+of light-harvesting materials, photovoltaic absorbers and
+non-linear-optical compounds would accelerate by orders of
+magnitude.
+
+**Recent attempts.** SchNarc (Westermayr et al. 2020) and its
+descendants have demonstrated excited-state neural-network
+potentials for small molecules, with two to ten states tracked and
+non-adiabatic dynamics simulated end-to-end. SPaiNN (Kornbluth et
+al. 2024) extends this to equivariant architectures. The 2025
+review by Kasper et al. (J. Phys. Chem. Lett.) surveys the
+landscape; the universal-foundation-model regime is years away, and
+even per-system models are far from the maturity of ground-state
+MLIPs. This is a problem where the architecture is interesting but
+the data is the limiting factor.
+
 ## A reading list, 2024–2026
 
 The literature in this area is moving fast enough that any printed

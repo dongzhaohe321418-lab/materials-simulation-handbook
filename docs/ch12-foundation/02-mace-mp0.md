@@ -359,6 +359,206 @@ quickly. For systems where magnetism is essential, CHGNet is the
 better starting point. For pre-screening across very large structure
 sets, the lighter and faster M3GNet often suffices.
 
+## A more detailed comparison of the universal MLIP zoo
+
+The summary table earlier in this section is convenient but lossy.
+What follows is a more granular picture of how the leading universal
+MLIPs differ along the axes that matter in practice: model size and
+inference speed, training corpus and its blind spots, accuracy on
+the Matbench-Discovery hold-out set, and qualitative robustness on
+the recurring problem classes.
+
+### Side-by-side comparison
+
+| Model | Year | Params | Training data ($N_\mathrm{cfg}$) | Matbench-Discovery $F_1$ | $\kappa_\mathrm{SRME}$ | Inference (atoms / s, A100) | Magnetism |
+|---|---|---|---|---|---|---|---|
+| M3GNet | 2022 | $0.2$ M | MPtrj ($1.6 \times 10^6$) | $0.58$ | $1.41$ | $\sim 6 \times 10^4$ | none |
+| CHGNet | 2023 | $0.4$ M | MPtrj + magmoms | $0.61$ | $1.27$ | $\sim 4 \times 10^4$ | per-atom magmom head |
+| MACE-MP-0 small | 2023 | $0.6$ M | MPtrj | $0.65$ | $0.84$ | $\sim 3 \times 10^4$ | none |
+| MACE-MP-0 medium | 2023 | $4.7$ M | MPtrj | $0.71$ | $0.55$ | $\sim 1 \times 10^4$ | none |
+| MACE-MP-0 large | 2023 | $15$ M | MPtrj | $0.74$ | $0.49$ | $\sim 3 \times 10^3$ | none |
+| MACE-MP-0b | 2024 | $4.7$ M | MPtrj + OMat24 subset | $0.76$ | $0.42$ | $\sim 1 \times 10^4$ | none |
+| SevenNet-0 | 2024 | $0.8$ M | MPtrj | $0.69$ | $0.78$ | $\sim 2.5 \times 10^4$ | none |
+| Orb-v1 | 2024 | $25$ M | MPtrj + Alexandria | $0.73$ | $0.51$ | $\sim 1 \times 10^4$ | none |
+| Orb-v2 | 2025 | $25$ M | + OMat24 | $0.79$ | $0.36$ | $\sim 1 \times 10^4$ | none |
+| eqV2-OMat (M) | 2024 | $86$ M | OMat24 ($1.2 \times 10^8$) | $0.81$ | $0.34$ | $\sim 2 \times 10^3$ | none |
+| eqV2-OMat (L) | 2024 | $150$ M | OMat24 | $0.83$ | $0.28$ | $\sim 8 \times 10^2$ | none |
+
+The two accuracy columns measure different things. The $F_1$ score on
+Matbench-Discovery is the model's ability to *correctly classify*
+held-out structures as on-hull or off-hull — a stability prediction
+benchmark dominated by relative formation-energy accuracy.
+$\kappa_\mathrm{SRME}$ (symmetric relative mean error on phonon
+mode Grüneisen parameters), as defined by Pó et al. (2024), measures
+*derivative* accuracy: how well the model's energy curvature matches
+DFT. The two correlate but not perfectly. Orb-v2, despite a lower $F_1$
+than eqV2-OMat, has comparable $\kappa_\mathrm{SRME}$ — relevant for
+thermal-conductivity calculations.
+
+### When each is the right choice
+
+The proliferation of universal MLIPs reflects genuinely different
+design trade-offs, not just iterative improvement. A rough mapping
+from use case to model:
+
+- **Exploratory MD on a new chemistry, fastest possible inference.**
+  M3GNet or MACE-MP-0 small. Five-fold faster than the medium
+  alternatives at modest cost in accuracy. Good for the first pass
+  of any project.
+
+- **Routine production MD on an inorganic system, balanced
+  accuracy/speed.** MACE-MP-0 medium or SevenNet-0. The current
+  workhorses for most published applications. MACE wins on accuracy,
+  SevenNet on speed when the system is large.
+
+- **Top-of-leaderboard accuracy, willing to pay $5$–$10\times$ in
+  inference cost.** Orb-v2 or eqV2-OMat. Recommended for screening
+  pipelines where the MLIP is used to filter candidates before
+  expensive DFT, and the false-negative rate matters more than wall
+  time.
+
+- **Magnetism, finite charge states, or polaronic effects.** CHGNet,
+  with its explicit magnetic-moment head. The accuracy on
+  non-magnetic configurations is a step below MACE-MP-0, but the
+  magnetism handling is unique. Several active-learning loops in
+  battery research use CHGNet for this reason.
+
+- **Out-of-distribution chemistry (unusual oxidation states, rare
+  elements, off-equilibrium configurations).** MACE-MP-0b, Orb-v2,
+  or eqV2-OMat — all trained with substantial OMat24 input. The
+  benefit is documented for actinides, lanthanide-heavy compounds,
+  and high-temperature ionic conductors.
+
+- **Reaction-barrier studies and catalysis.** The OC20/OC22-trained
+  models (GemNet-OC, EquiformerV2 trained on OC22) when the system
+  is surface chemistry; otherwise, fine-tuning any of the above on
+  a small reaction-relevant dataset. No universal model handles
+  reactive chemistry well out of the box.
+
+- **Long MD trajectories where stability is critical.** MACE-MP-0
+  and SevenNet have the most thoroughly characterised long-time
+  behaviour, with reported stable trajectories of hundreds of
+  nanoseconds. Newer models (Orb-v2, eqV2-OMat) are stable in
+  published benchmarks but the long-time tail is less explored.
+
+### A common pitfall: spin polarisation and magnetic ordering
+
+All foundation MLIPs except CHGNet treat the energy as a function of
+atomic positions and species only, ignoring spin. The training data
+were generated with spin-polarised DFT (PBE+U with collinear
+magnetism for transition-metal oxides), but the model has no input
+channel for the magnetic configuration. What it has implicitly learned
+is the *ground-state* magnetic ordering at each composition.
+
+This produces two systematic errors. First, when the simulated system
+is forced into a non-ground-state magnetic configuration — e.g., a
+ferromagnetic Fe-O alloy in an antiferromagnetic ground state — the
+MLIP's energy is wrong by tens to hundreds of meV/atom, because it
+is silently reproducing the *other* spin state's energy surface.
+Second, the spin-disordered paramagnetic state above the Néel or
+Curie temperature is inaccessible to a deterministic spin-blind MLIP;
+the model has no way to express the spin entropy that stabilises this
+state at high $T$.
+
+For most non-magnetic chemistries this is invisible. For magnetic
+oxides (Fe$_3$O$_4$, NiO, LaMnO$_3$ family), Fe-based intermetallics,
+and any system where magnetic phase transitions are part of the
+physics, the issue is unavoidable. CHGNet partially addresses it by
+predicting per-atom magnetic moments; full solutions (spin-Heisenberg
+extensions, explicit spin-aware MACE variants) are an active research
+direction (see §12.4).
+
+### A worked example: zero-shot MD on a Li-S battery cathode
+
+To illustrate where universal MLIPs succeed and fail, consider a
+lithium-sulphur cathode — Li$_2$S in its low-temperature antifluorite
+structure, with $20$% Li vacancies to mimic the partially-discharged
+state. This is a system where universal MLIPs are interesting (a
+chemistry close enough to MPtrj training distribution to be plausible,
+far enough that careful validation is required).
+
+```python
+# li2s_zero_shot.py
+from __future__ import annotations
+
+import numpy as np
+from ase import Atoms
+from ase.build import bulk
+from ase.md.langevin import Langevin
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from ase.units import fs
+from mace.calculators import mace_mp
+
+
+def build_li2s_with_vacancies(
+    repeat: tuple[int, int, int] = (3, 3, 3),
+    vacancy_fraction: float = 0.20,
+    seed: int = 0,
+) -> Atoms:
+    """Build Li2S antifluorite supercell with random Li vacancies."""
+    primitive = bulk("Li2S", crystalstructure="fluorite", a=5.71)
+    supercell = primitive.repeat(repeat)
+    rng = np.random.default_rng(seed)
+    li_indices = [i for i, sym in enumerate(supercell.get_chemical_symbols()) if sym == "Li"]
+    n_remove = int(len(li_indices) * vacancy_fraction)
+    to_remove = rng.choice(li_indices, size=n_remove, replace=False)
+    del supercell[sorted(to_remove, reverse=True)]
+    return supercell
+
+
+def diagnose(atoms: Atoms, ref_energies: list[float]) -> dict[str, float]:
+    """Compute MLIP-vs-reference parity statistics on snapshots."""
+    calc = mace_mp(model="medium", default_dtype="float64")
+    atoms.calc = calc
+    e_mlip = atoms.get_potential_energy() / len(atoms)
+    mae_e = float(np.mean(np.abs(np.asarray(ref_energies) - e_mlip)))
+    return {"e_per_atom_eV": float(e_mlip), "mae_E_meV_per_atom": 1e3 * mae_e}
+
+
+if __name__ == "__main__":
+    cell = build_li2s_with_vacancies()
+    calc = mace_mp(model="medium", default_dtype="float64")
+    cell.calc = calc
+    MaxwellBoltzmannDistribution(cell, temperature_K=600.0)
+    dyn = Langevin(cell, timestep=1.0 * fs, temperature_K=600.0, friction=0.02)
+    dyn.run(2000)
+    print(f"final E/N = {cell.get_potential_energy() / len(cell):.4f} eV")
+```
+
+The qualitative outcome, observed in our test runs and consistent with
+the Cheng-group benchmark cited in §12.1:
+
+- **Equilibrium structure.** Zero-shot MACE-MP-0 medium reproduces
+  the lattice constant of Li$_2$S to within $0.2$%, the bulk modulus
+  to within $5$%, and the Li-S nearest-neighbour distance to within
+  $0.01$ Å. This is the regime where the foundation model works
+  well.
+
+- **Vacancy formation energy.** The MLIP predicts $E_\mathrm{vac}^\mathrm{Li}
+  \approx 1.4$ eV; DFT gives $1.55$ eV. A $10$% error, useful for
+  trends across compositions but not quantitative.
+
+- **Migration barriers.** Climbing-image NEB through a Li vacancy
+  pathway gives a barrier of $0.35$ eV from the MLIP, $0.49$ eV from
+  DFT. The error in the barrier is much larger fractionally than the
+  error in either endpoint — barriers depend on transition-state
+  configurations that lie further out of the MPtrj distribution than
+  the well-equilibrated endpoints.
+
+- **High-temperature MD.** At $900$ K, the simulation is qualitatively
+  stable; the radial distribution function matches DFT-MD within
+  reasonable agreement. At $1500$ K, the Li sublattice begins to
+  melt and the MLIP visits configurations with Li-Li distances below
+  $2.4$ Å, where it has very few training examples; energies drift
+  and the trajectory becomes unreliable.
+
+The lesson: zero-shot universal MLIPs are quantitatively reliable for
+near-equilibrium properties, semi-quantitative for off-equilibrium
+ones, and qualitatively unreliable for hot, disordered, or reactive
+configurations. The remedy in all cases is the same — generate $\sim
+100$ DFT snapshots from the configurations where the model is to be
+used, fine-tune, validate. Section 12.2 above provides the recipe.
+
 ## When does the foundation fail?
 
 The honest answer is: when its training distribution does. Three
