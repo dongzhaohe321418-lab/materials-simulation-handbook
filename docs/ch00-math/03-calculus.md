@@ -20,6 +20,35 @@ $$
 
 A function is **differentiable** at $x_0$ if (0.3.1) exists; it is differentiable on an interval if it is differentiable at every point of the interval. Differentiability implies continuity but not vice versa: $|x|$ is continuous at $0$ but not differentiable there.
 
+### A first-principles derivation: the product rule
+
+Most textbooks state the derivative rules and move on. For at least one rule, you should see the limit definition unpacked, because the technique recurs. Let us derive the product rule (0.3.3) from (0.3.1).
+
+**Step (1).** Apply the definition to $(fg)(x)$:
+$$
+(fg)'(x) = \lim_{h \to 0} \frac{f(x+h)g(x+h) - f(x)g(x)}{h}.
+$$
+
+**Step (2).** Add and subtract $f(x+h)g(x)$ in the numerator — a standard trick to introduce shared factors:
+$$
+= \lim_{h \to 0} \frac{f(x+h)g(x+h) - f(x+h)g(x) + f(x+h)g(x) - f(x)g(x)}{h}.
+$$
+
+!!! note "Why this step?"
+    We need to isolate one factor at a time. By adding and subtracting the cross term $f(x+h)g(x)$, we create two differences: one in $g$ (with $f(x+h)$ as a shared factor) and one in $f$ (with $g(x)$ as a shared factor).
+
+**Step (3).** Group and factor:
+$$
+= \lim_{h \to 0} \left[ f(x+h) \cdot \frac{g(x+h) - g(x)}{h} + \frac{f(x+h) - f(x)}{h} \cdot g(x) \right].
+$$
+
+**Step (4).** Take the limit term by term. The difference quotients tend to $g'(x)$ and $f'(x)$, and $f(x+h) \to f(x)$ by continuity (which differentiability implies). The result is
+$$
+(fg)'(x) = f(x)\, g'(x) + f'(x)\, g(x). \quad \square
+$$
+
+The same template — add-and-subtract, factor, take limits — derives the quotient rule and the chain rule. We invoke first principles only once; afterwards, you trust the rules.
+
 ### Rules of differentiation
 
 The following rules are established by elementary manipulation of (0.3.1) and are worth memorising. Let $f$ and $g$ be differentiable.
@@ -57,6 +86,13 @@ The following standard derivatives recur constantly:
 | $\ln x$ | $1/x$ |
 | $\sin x$ | $\cos x$ |
 | $\cos x$ | $-\sin x$ |
+| $\tan x$ | $\sec^2 x = 1/\cos^2 x$ |
+| $\arctan x$ | $1/(1 + x^2)$ |
+| $\sinh x$ | $\cosh x$ |
+| $\cosh x$ | $\sinh x$ |
+| $\tanh x$ | $1 - \tanh^2 x$ |
+
+Two of these deserve a remark. The derivative of $\ln x$ being $1/x$ — a rational function — is what makes the natural logarithm appear so often in integrals: $\int \mathrm{d} x / x = \ln |x| + C$ is the lone exception to the power-rule integral $\int x^n\, \mathrm{d} x = x^{n+1}/(n+1)$. The hyperbolic tangent's derivative $1 - \tanh^2 x$ is the formula that appears in backpropagation when $\tanh$ is the activation function; the derivative is *expressible in terms of the function itself*, allowing efficient gradient computation by reusing the forward-pass value.
 
 !!! example "Chain rule on the Boltzmann factor"
     Differentiate $p(T) = \exp\!\big(-E_\mathrm{a} / (k_\mathrm{B} T)\big)$ with respect to $T$.
@@ -85,17 +121,43 @@ $$
 
 This second-order picture justifies the **harmonic approximation** in materials science: near an equilibrium structure, the energy as a function of displacement is locally quadratic, with curvature given by $f''$. The eigenvalues of the matrix of second derivatives (the *Hessian*) are the squared phonon frequencies.
 
-### Worked example: Taylor expansion of $\cos$
+### Worked example: Taylor expansion of $\cos$ to fourth order
 
-Compute the second-order Taylor expansion of $\cos x$ about $x_0 = 0$.
+Compute the Taylor expansion of $\cos x$ about $x_0 = 0$ up to order $4$, with every factorial explicit.
 
-Derivatives at zero: $\cos 0 = 1$, $-\sin 0 = 0$, $-\cos 0 = -1$. Substituting into (0.3.7) with $x_0 = 0$ gives
-
+**Step (1).** Compute derivatives at zero. We have $f(x) = \cos x$, $f'(x) = -\sin x$, $f''(x) = -\cos x$, $f'''(x) = \sin x$, $f^{(4)}(x) = \cos x$. Evaluating each at $x = 0$:
 $$
-\cos x \approx 1 - \tfrac{1}{2} x^2.
+f(0) = 1, \quad f'(0) = 0, \quad f''(0) = -1, \quad f'''(0) = 0, \quad f^{(4)}(0) = 1.
 $$
 
-A small numerical check: $\cos(0.1) = 0.995004\ldots$, and $1 - 0.5(0.1)^2 = 0.995$. The approximation is excellent for small $x$ — this is exactly the regime in which the small-oscillation approximation holds in classical mechanics.
+**Step (2).** Form the Taylor series term by term. Recall $k!$ for $k = 0, 1, 2, 3, 4$ is $1, 1, 2, 6, 24$.
+$$
+\cos x \approx \frac{1}{0!} + \frac{0}{1!}\,x + \frac{-1}{2!}\,x^2 + \frac{0}{3!}\,x^3 + \frac{1}{4!}\,x^4
+= 1 - \frac{x^2}{2} + \frac{x^4}{24}.
+$$
+
+!!! note "Why this step?"
+    Notice that all *odd*-order terms vanish: $\cos x$ is an even function, so its Taylor expansion contains only even powers. This is a general principle — symmetry properties of a function propagate into structure in its series.
+
+**Step (3).** Numerical sanity check at $x = 0.5$:
+$$
+1 - \frac{(0.5)^2}{2} + \frac{(0.5)^4}{24} = 1 - 0.125 + 0.002604\ldots = 0.877604.
+$$
+The exact value $\cos(0.5) = 0.877583$. The fourth-order approximation matches to four decimal places, an error of about $2 \times 10^{-5}$. Adding the next non-zero term ($-x^6/720$) brings it within $10^{-9}$.
+
+The truncated polynomial $1 - x^2/2$ alone is enough for the **harmonic** (small-amplitude) approximation, but the $+x^4/24$ correction encodes the anharmonicity that produces thermal expansion in solids — see Chapter 8.
+
+```python
+import numpy as np
+x: np.ndarray = np.linspace(-0.5, 0.5, 11)
+exact = np.cos(x)
+approx_2 = 1 - 0.5 * x**2
+approx_4 = 1 - 0.5 * x**2 + x**4 / 24
+print(np.max(np.abs(exact - approx_2)))  # ~3e-3
+print(np.max(np.abs(exact - approx_4)))  # ~2e-5
+```
+
+The original second-order expansion $\cos x \approx 1 - x^2/2$ matches at $x = 0.1$ to $\cos(0.1) = 0.995004\ldots$, with the fourth-order correction $+ x^4 / 24 = 4.2 \times 10^{-6}$ bringing the answer to seven-decimal agreement.
 
 ```python
 import numpy as np
@@ -139,6 +201,25 @@ $$
 
 Every molecular-dynamics integrator, every geometry optimiser, every machine-learning interatomic potential ultimately reduces to evaluating this expression cheaply and accurately.
 
+!!! tip "Visualising the gradient"
+    A useful mental picture: imagine the function $f(x, y)$ as the height of a landscape over the $(x, y)$ plane. Stand at a point and the gradient $\nabla f$ at your feet is the compass bearing of steepest uphill, with magnitude equal to the slope in that direction. Walk along $-\nabla f$ and you descend most rapidly. Walk perpendicular to $\nabla f$ and you stay at constant altitude — you are tracing a contour line. This image extends verbatim to $f \colon \mathbb{R}^n \to \mathbb{R}$ with $n \ge 3$; the "contour lines" become contour hypersurfaces, but the geometric meaning is identical.
+
+### The Hessian
+
+The matrix of second partial derivatives is the **Hessian**:
+$$
+H_{ij}(\mathbf{x}) = \frac{\partial^2 f}{\partial x_i \, \partial x_j}.
+$$
+By the equality-of-mixed-partials theorem (Clairaut's theorem) for sufficiently smooth $f$, the Hessian is *symmetric*: $H_{ij} = H_{ji}$. Consequently (Section 0.2) it has real eigenvalues and orthogonal eigenvectors.
+
+The Hessian encodes local curvature. A point $\mathbf{x}^\star$ with $\nabla f(\mathbf{x}^\star) = \mathbf{0}$ is
+
+- a **local minimum** if all Hessian eigenvalues are positive (the function curves up in every direction);
+- a **local maximum** if all are negative;
+- a **saddle point** if some are positive and some negative.
+
+In a chemistry context, equilibrium geometries are local minima of the potential energy surface; transition states are saddle points with exactly one negative Hessian eigenvalue, whose corresponding eigenvector is the **reaction coordinate**. Chapter 7 §5 discusses transition-state theory in earnest; the Hessian is its central object.
+
 ### Directional derivative
 
 The **directional derivative** of $f$ at $\mathbf{x}$ along a unit vector $\hat{\mathbf{u}}$ is
@@ -148,6 +229,16 @@ D_{\hat{\mathbf{u}}} f(\mathbf{x}) \;=\; \lim_{h \to 0} \frac{f(\mathbf{x} + h \
 $$
 
 It measures the rate of change of $f$ along the chosen direction. The maximum value over unit directions, by the Cauchy–Schwarz inequality applied to (0.3.12), is $\lVert \nabla f \rVert$, achieved when $\hat{\mathbf{u}}$ is parallel to $\nabla f$. This is a one-line proof that the gradient is the direction of steepest ascent.
+
+### Multi-variable chain rule
+
+When several variables are independently varying, the chain rule generalises. If $z = f(x_1, \ldots, x_n)$ and each $x_i = x_i(t)$ depends on a parameter $t$, then
+$$
+\frac{\mathrm{d} z}{\mathrm{d} t} = \sum_{i=1}^{n} \frac{\partial f}{\partial x_i}\, \frac{\mathrm{d} x_i}{\mathrm{d} t} = \nabla f \cdot \frac{\mathrm{d} \mathbf{x}}{\mathrm{d} t}.
+$$
+This is the rate of change of $f$ along a trajectory through its domain. It is the formula that propagates atomic positions to forces in molecular dynamics: the energy $U(\mathbf{r}_1(t), \ldots, \mathbf{r}_N(t))$ changes with time because each position changes, and the chain rule produces $\mathrm{d}U/\mathrm{d}t = -\sum_i \mathbf{F}_i \cdot \mathbf{v}_i$, the familiar power equation.
+
+The same machinery, applied to many *intermediate* variables in a neural network, is **backpropagation**. Chapter 9 §3 derives the backpropagation algorithm from the multi-variable chain rule, three times, in three notational dialects. Get used to (0.3.5) now.
 
 ## The Laplacian
 
@@ -188,6 +279,30 @@ print(integrate_rectangle(np.sin, 0.0, np.pi, 1000))  # ≈ 2.0
 
 Better rules (trapezoidal, Simpson, Gauss quadrature) appear in Chapter 1.
 
+### Sanity check: convergence of the rectangle rule
+
+How fast does the rectangle rule converge? For a smooth integrand, the error scales as $O(1/n)$ — halving the step size halves the error. We can see this from a Taylor argument: within each subinterval of width $h = (b-a)/n$, the deviation of $f$ from its midpoint value is $O(h^2 f''(\xi))$, and there are $n = (b-a)/h$ subintervals, so the total error is $O(h^2) \cdot n = O(h) = O(1/n)$.
+
+The trapezoidal rule, by including endpoint information, achieves $O(1/n^2)$ for smooth $f$; Simpson's rule achieves $O(1/n^4)$ by using parabolic fits; Gauss–Legendre quadrature, which chooses sample points optimally rather than uniformly, achieves spectral (exponential) convergence on analytic integrands. Each step up the ladder costs more thought but pays back enormously when high precision matters. Chapter 5's Brillouin-zone integration is a worked example where the choice of quadrature scheme determines whether a DFT calculation converges in $10$ k-points or $10^4$.
+
+## Vector calculus identities
+
+Three differential operators appear together so often that they deserve grouping. Let $\phi$ be a scalar field and $\mathbf{A}$ a vector field in three dimensions.
+
+The **gradient** $\nabla \phi$ takes scalars to vectors (Section 0.3.9). The **divergence** $\nabla \cdot \mathbf{A} = \sum_i \partial A_i / \partial x_i$ takes vectors to scalars; it measures the local "outflow" of $\mathbf{A}$. The **curl** $\nabla \times \mathbf{A}$ takes vectors to vectors and measures the local rotation of $\mathbf{A}$. Together they assemble into Maxwell's equations and the Navier–Stokes equations.
+
+Two identities you should remember:
+$$
+\nabla \times (\nabla \phi) = \mathbf{0}, \qquad \nabla \cdot (\nabla \times \mathbf{A}) = 0.
+$$
+The first says: a gradient field has no curl (it is "conservative"). The second says: a curl field has no divergence. These are the dual statements behind the existence of scalar and vector potentials in electromagnetism — Chapter 5's electrostatics is built on the first.
+
+A third identity that we will invoke:
+$$
+\nabla \times (\nabla \times \mathbf{A}) = \nabla (\nabla \cdot \mathbf{A}) - \nabla^2 \mathbf{A},
+$$
+where $\nabla^2 \mathbf{A}$ means the componentwise Laplacian. This is what reduces Maxwell's equations to the wave equation in vacuum, and what appears when expanding the kinetic-energy operator in non-Cartesian coordinates.
+
 ## The fundamental theorem of calculus
 
 Differentiation and integration are inverse operations. The **fundamental theorem of calculus** has two parts.
@@ -204,6 +319,22 @@ $$
 $$
 
 This is why a table of derivatives is also a table of integrals: $\int e^{ax} \mathrm{d} x = e^{ax}/a$ because $\frac{\mathrm{d}}{\mathrm{d} x} e^{ax}/a = e^{ax}$.
+
+### A short catalogue of integrals to memorise
+
+The following are the integrals you will encounter most often in this book. Each can be checked by differentiating.
+
+| $f(x)$ | $\int f(x)\, \mathrm{d}x$ |
+|---|---|
+| $x^n$ ($n \ne -1$) | $\dfrac{x^{n+1}}{n+1}$ |
+| $1/x$ | $\ln \lvert x \rvert$ |
+| $e^{ax}$ | $\dfrac{e^{ax}}{a}$ |
+| $\sin(ax)$ | $-\dfrac{\cos(ax)}{a}$ |
+| $\cos(ax)$ | $\dfrac{\sin(ax)}{a}$ |
+| $\dfrac{1}{1 + x^2}$ | $\arctan x$ |
+| $e^{-x^2}$ | (no elementary form; $\sqrt{\pi}\,\mathrm{erf}(x)/2$) |
+
+The last row deserves a remark: the Gaussian integral over the whole line is finite, $\int_{-\infty}^\infty e^{-x^2}\, \mathrm{d} x = \sqrt{\pi}$, despite there being no closed-form antiderivative. The standard trick — squaring the integral and converting to polar coordinates — is one of the most beautiful manoeuvres in elementary calculus and is the workhorse behind every Gaussian moment used in Sections 0.5 and 0.4.
 
 ## Integration by parts
 
@@ -224,6 +355,18 @@ $$
 \frac{\hbar^2}{2m} \int \left| \frac{\mathrm{d} \psi}{\mathrm{d} x} \right|^2 \mathrm{d} x,
 $$
 a manifestly positive quantity. That positivity is the mathematical reason kinetic energy expectation values are non-negative.
+
+### Differential equations: a working vocabulary
+
+Most of the physical laws in this book are differential equations: relations involving a function and its derivatives. A few classifications are worth knowing.
+
+An **ordinary differential equation** (ODE) involves a function of one variable; a **partial differential equation** (PDE) involves a function of several variables. The Schrödinger equation in three dimensions is a PDE; Newton's equations of motion for one particle are an ODE.
+
+The **order** of an equation is the highest derivative appearing in it. Newton's law $m \ddot{\mathbf{r}} = \mathbf{F}$ is second-order in time. The Schrödinger equation is first-order in time but second-order in space.
+
+A **linear** ODE has the unknown function and its derivatives appearing only to the first power, with no products. Linear ODEs admit superposition: a sum of solutions is again a solution. The wave equation, the heat equation, and the time-independent Schrödinger equation are all linear PDEs; their solution spaces are vector spaces, opening the door to Fourier methods. Nonlinear equations (the Navier–Stokes equations, the Gross–Pitaevskii equation, anharmonic oscillators) lack superposition and generally require numerical methods.
+
+We will solve linear ODEs and PDEs by spectral methods (expand in eigenfunctions) starting in Chapter 4. Nonlinear ones — at the heart of molecular dynamics — yield to time-stepping algorithms in Chapter 7.
 
 ## Variational thinking
 
@@ -255,7 +398,94 @@ $$
 
 the time-independent Schrödinger equation with $\lambda$ identified as the eigenvalue $E$. The variational principle thus *derives* the eigenvalue problem of Section 0.2; the Lagrange multiplier *is* the energy. Pause to appreciate this: a question about the minimum of an integral becomes an eigenvalue problem for a linear operator. This is one of the deep bridges between calculus and linear algebra, and it underlies almost everything in Chapters 4 and 5.
 
+### The Rayleigh quotient: full derivation
+
+Let us unpack the chain that takes us from "minimise an energy functional" to "solve an eigenvalue problem". The starting point is the **Rayleigh quotient**
+
+$$
+\mathcal{R}[\psi] = \frac{\langle \psi | \hat H | \psi \rangle}{\langle \psi | \psi \rangle} = \frac{\int \psi^* \hat H \psi\, \mathrm{d}\tau}{\int \psi^* \psi\, \mathrm{d}\tau}. \tag{0.3.19a}
+$$
+
+The claim is that $\mathcal{R}[\psi] \ge E_0$ for any admissible $\psi$, with equality when $\psi$ is the ground-state eigenfunction.
+
+**Step (1).** Expand $\psi$ in the orthonormal eigenbasis of $\hat H$:
+$$
+\psi = \sum_n c_n \phi_n, \qquad \hat H \phi_n = E_n \phi_n, \qquad \langle \phi_m | \phi_n \rangle = \delta_{mn}.
+$$
+
+**Step (2).** Compute the denominator:
+$$
+\langle \psi | \psi \rangle = \sum_{m,n} c_m^* c_n \langle \phi_m | \phi_n \rangle = \sum_n |c_n|^2.
+$$
+
+**Step (3).** Compute the numerator using $\hat H \phi_n = E_n \phi_n$:
+$$
+\langle \psi | \hat H | \psi \rangle = \sum_{m,n} c_m^* c_n E_n \langle \phi_m | \phi_n \rangle = \sum_n E_n |c_n|^2.
+$$
+
+**Step (4).** Form the ratio:
+$$
+\mathcal{R}[\psi] = \frac{\sum_n E_n |c_n|^2}{\sum_n |c_n|^2}.
+$$
+This is a *weighted average* of the eigenvalues $E_n$, with non-negative weights $|c_n|^2$. The weighted average of a list of numbers is always at least the smallest of those numbers, with equality iff all weight sits on that smallest entry. Hence $\mathcal{R}[\psi] \ge E_0$, with equality iff $\psi$ is proportional to $\phi_0$. $\square$
+
+!!! note "Why this step?"
+    The key trick is to switch from the (apparently complicated) functional $\mathcal{R}$ to the (simple) weighted average over discrete eigenvalues. This requires the spectral theorem from Section 0.2: the assertion that $\hat H$ admits an orthonormal eigenbasis. Without that linear-algebra fact, the variational principle would not even be formulable.
+
+### Lagrange multipliers and the stationarity condition
+
+The Rayleigh-quotient proof is elegant but assumes we already know the eigenvalues. A second approach — closer to what is actually done in DFT codes — is to write the constrained minimisation problem and apply Lagrange multipliers directly. Minimise $\langle \psi | \hat H | \psi \rangle$ subject to $\langle \psi | \psi \rangle = 1$.
+
+**Step (1).** Form the Lagrangian
+$$
+L[\psi, \psi^*, \lambda] = \langle \psi | \hat H | \psi \rangle - \lambda \big( \langle \psi | \psi \rangle - 1 \big).
+$$
+
+**Step (2).** Vary $L$ with respect to $\psi^*$, treating $\psi$ and $\psi^*$ as independent (this is the standard trick for complex functionals). The variation of $\langle \psi | \hat H | \psi \rangle = \int \psi^* \hat H \psi\, \mathrm{d}\tau$ with respect to $\psi^*$ at point $\mathbf{r}$ is $\hat H \psi(\mathbf{r})$; the variation of $\langle \psi | \psi \rangle$ is $\psi(\mathbf{r})$. Setting $\delta L / \delta \psi^*(\mathbf{r}) = 0$ gives
+$$
+\hat H \psi(\mathbf{r}) - \lambda\, \psi(\mathbf{r}) = 0,
+$$
+i.e. $\hat H \psi = \lambda \psi$.
+
+**Step (3).** Identify $\lambda$. Take the inner product of both sides with $\psi$: $\langle \psi | \hat H | \psi \rangle = \lambda \langle \psi | \psi \rangle = \lambda$, using the normalisation constraint. So $\lambda$ is the eigenvalue of $\hat H$, i.e. the energy. $\square$
+
+This derivation — Lagrangian, vary, identify — is the template you will see again in Chapter 5 (DFT Kohn–Sham equations) and Chapter 9 (constrained loss minimisation in machine learning).
+
 We will not develop calculus of variations rigorously here; for our purposes the operational rule is that $\delta E / \delta \psi^* = 0$ behaves exactly like an ordinary derivative being set to zero, with $\psi$ and $\psi^*$ treated as independent variables.
+
+### Functional derivatives
+
+The object $\delta E / \delta \psi^*$ used above is a **functional derivative**. Where the ordinary derivative $\mathrm{d} f / \mathrm{d} x$ measures the response of a number to a change in another number, a functional derivative $\delta F / \delta \psi(\mathbf{r})$ measures the response of a number $F[\psi]$ to a *pointwise* change in the function $\psi$ at the location $\mathbf{r}$.
+
+The formal definition is by analogy with the directional-derivative formula (0.3.10). For a functional $F[\psi]$,
+$$
+F[\psi + \epsilon\, \eta] = F[\psi] + \epsilon \int \frac{\delta F}{\delta \psi(\mathbf{r})}\, \eta(\mathbf{r})\, \mathrm{d}^3\mathbf{r} + O(\epsilon^2),
+$$
+for any small perturbation $\eta(\mathbf{r})$. The functional derivative $\delta F / \delta \psi(\mathbf{r})$ is the unique function whose integral against $\eta$ produces the first-order change.
+
+Examples to commit to memory:
+
+- For $F[\psi] = \int \psi(\mathbf{r})^2 \, \mathrm{d}^3\mathbf{r}$, $\delta F / \delta \psi(\mathbf{r}) = 2 \psi(\mathbf{r})$.
+- For $F[\psi] = \int \lvert \nabla \psi \rvert^2 \, \mathrm{d}^3\mathbf{r}$, $\delta F / \delta \psi(\mathbf{r}) = -2 \nabla^2 \psi(\mathbf{r})$ (using integration by parts).
+- For $F[\rho] = \int \rho(\mathbf{r})^{4/3}\, \mathrm{d}^3\mathbf{r}$, $\delta F / \delta \rho(\mathbf{r}) = \tfrac{4}{3} \rho(\mathbf{r})^{1/3}$.
+
+The third example matters: it is the form of the local-density-approximation exchange energy in DFT, and you will meet it in Chapter 5. The take-home message is that functional derivatives obey the same chain, product, and linearity rules as ordinary derivatives, with the variable now being the *value of a function at a point* rather than a scalar.
+
+## Change of variables in integrals
+
+A change of integration variable from $x$ to $u(x)$ involves a Jacobian. In one dimension,
+$$
+\int_a^b f(x)\, \mathrm{d} x = \int_{u(a)}^{u(b)} f(x(u))\, \frac{\mathrm{d} x}{\mathrm{d} u}\, \mathrm{d} u.
+$$
+The factor $\mathrm{d} x / \mathrm{d} u$ corrects for the local stretching of the variable. In multiple dimensions the analogue is the **Jacobian determinant**: if $\mathbf{u} = \mathbf{u}(\mathbf{x})$ is a smooth change of coordinates in $\mathbb{R}^n$,
+$$
+\int_V f(\mathbf{x})\, \mathrm{d}^n \mathbf{x} = \int_{V'} f(\mathbf{x}(\mathbf{u}))\, \big| \det J \big|\, \mathrm{d}^n \mathbf{u},
+$$
+where $J_{ij} = \partial x_i / \partial u_j$ is the Jacobian matrix and $|\det J|$ is the local volume-stretching factor.
+
+The most-used example in this book is the conversion to spherical coordinates $(r, \theta, \phi)$, where $\mathrm{d}^3 \mathbf{r} = r^2 \sin\theta\, \mathrm{d} r\, \mathrm{d}\theta\, \mathrm{d} \phi$. The factor $r^2 \sin\theta$ is the Jacobian; without it, computed integrals would be off by enormous, dimensionally wrong amounts. Every introduction to electrostatics, gravitation, or atomic orbitals gets this wrong at least once.
+
+In machine learning, the change-of-variable formula gives the density of a transformed random variable: if $X$ has density $\rho_X$ and $Y = f(X)$ with $f$ invertible, then $\rho_Y(y) = \rho_X(f^{-1}(y))\, |\mathrm{d} f^{-1}/\mathrm{d} y|$. **Normalising flows** in modern generative modelling stack many invertible $f$'s and track the cumulative Jacobian, exactly this formula applied recursively.
 
 ## Numerical differentiation
 
@@ -272,6 +502,35 @@ f'(x) \approx \frac{f(x + h) - f(x - h)}{2h} \;+\; O(h^2). \tag{0.3.22}
 $$
 
 Central differences are usually preferable: same number of function evaluations, one order higher accuracy. The error analysis comes from Taylor-expanding $f(x \pm h)$ to third order and observing that the odd-order terms cancel.
+
+### Deriving the $O(h^2)$ central-difference error
+
+Let us prove the error scaling. Expand $f(x+h)$ and $f(x-h)$ in Taylor series about $x$ to order $h^3$:
+
+**Step (1).** Forward expansion:
+$$
+f(x + h) = f(x) + h f'(x) + \frac{h^2}{2} f''(x) + \frac{h^3}{6} f'''(x) + O(h^4).
+$$
+
+**Step (2).** Backward expansion (replace $h \to -h$):
+$$
+f(x - h) = f(x) - h f'(x) + \frac{h^2}{2} f''(x) - \frac{h^3}{6} f'''(x) + O(h^4).
+$$
+
+**Step (3).** Subtract:
+$$
+f(x + h) - f(x - h) = 2 h f'(x) + \frac{h^3}{3} f'''(x) + O(h^5).
+$$
+
+!!! note "Why this step?"
+    The even-order terms ($f(x)$ and the $f''(x)/2$ terms) cancel because they have the same coefficient in both expansions. The odd-order terms double, then we divide through. This is why central differences enjoy higher accuracy than forward differences: by symmetry, the leading error term in $f(x+h) - f(x-h)$ is third-order in $h$, not second-order.
+
+**Step (4).** Divide by $2h$:
+$$
+\frac{f(x+h) - f(x-h)}{2h} = f'(x) + \frac{h^2}{6} f'''(x) + O(h^4).
+$$
+
+The dominant error is $h^2 f'''(x)/6$, i.e. $O(h^2)$. By contrast, the analogous calculation for the forward difference $(f(x+h) - f(x))/h$ leaves an $O(h)$ error proportional to $f''(x)/2$. Halving $h$ reduces the central-difference error by a factor of four; the forward-difference error only halves.
 
 ```python
 import numpy as np
@@ -290,6 +549,44 @@ print(np.cos(x0))                  # exact reference
 
 !!! warning "Choosing $h$"
     Smaller $h$ reduces the truncation error in (0.3.21)–(0.3.22), but eventually floating-point round-off in the subtraction $f(x+h) - f(x)$ dominates and the answer gets worse. For double precision and central differences, $h \sim 10^{-5}$ is usually a sweet spot. This is one place where naive intuition ("smaller step is always better") fails badly.
+
+## Optimisation: a working catalogue
+
+The gradient and Hessian together specify a one-step picture of an objective function. **Optimisers** are the algorithms that turn this picture into a sequence of steps that drive us toward a minimum.
+
+The simplest is **gradient descent**:
+$$
+\mathbf{x}^{(t+1)} = \mathbf{x}^{(t)} - \eta\, \nabla f(\mathbf{x}^{(t)}),
+$$
+with $\eta > 0$ the step size (learning rate). For convex quadratic objectives with Hessian condition number $\kappa$, gradient descent converges geometrically at rate $1 - 1/\kappa$ per step — slow when $\kappa$ is large.
+
+**Newton's method** uses the Hessian:
+$$
+\mathbf{x}^{(t+1)} = \mathbf{x}^{(t)} - H^{-1}(\mathbf{x}^{(t)})\, \nabla f(\mathbf{x}^{(t)}).
+$$
+For a smooth, strongly convex objective near the minimum, Newton's method enjoys quadratic convergence: the number of correct digits doubles per step. The cost is computing and inverting the Hessian, which is $O(n^3)$ in the dimension.
+
+**Quasi-Newton methods** (BFGS, L-BFGS) build up an approximate inverse Hessian from successive gradients. They achieve nearly Newton-like convergence at gradient-only cost. They are the workhorse for geometry optimisation in molecular simulation (Chapter 7).
+
+**Stochastic gradient descent** (SGD) approximates the gradient using a random subset of data points. The noisy gradient introduces variance but reduces per-iteration cost by orders of magnitude. SGD with momentum and adaptive step sizes (Adam, AdamW) is the standard for training neural networks (Chapter 9).
+
+The choice of optimiser is part craft, part theory. A small, smooth, deterministic problem demands Newton or BFGS. A massive, noisy, non-convex problem (a deep network on millions of data points) demands SGD-style methods. Recognising which regime you are in is the first design decision.
+
+## Convexity and global minima
+
+A function $f$ is **convex** if its graph lies below every chord: for any $x_1, x_2$ and $t \in [0, 1]$,
+$$
+f\big(t x_1 + (1 - t) x_2 \big) \le t f(x_1) + (1 - t) f(x_2).
+$$
+For twice-differentiable functions, convexity is equivalent to $f''(x) \ge 0$ everywhere (or, in multiple dimensions, positive-semi-definiteness of the Hessian). A **strictly convex** function (strict inequality, or $f'' > 0$) has at most one local minimum, which is therefore the global minimum.
+
+Convexity is the property that makes optimisation tractable. Linear regression with squared loss is convex; logistic regression is convex; support-vector machines are convex. Their training problems have unique global optima and reliable solvers. Neural networks, by contrast, are *highly non-convex*; their loss landscapes have many local minima and saddle points, and modern stochastic-gradient methods are remarkably effective at finding "good enough" ones — a phenomenon still imperfectly understood (Chapter 9).
+
+A close relative: **Jensen's inequality** for convex $f$ and random variable $X$,
+$$
+f(\langle X \rangle) \le \langle f(X) \rangle.
+$$
+Apply this with $f(x) = -\ln x$ (which is convex) and you obtain the **Gibbs inequality**, the foundation of information theory. Apply it to the partition-function average and you obtain the **Bogoliubov–Feynman variational free-energy bound**, a workhorse of approximate statistical mechanics.
 
 ## Where this is used
 

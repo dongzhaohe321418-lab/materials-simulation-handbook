@@ -79,6 +79,22 @@ x = rng.normal(loc=3.0, scale=2.0, size=100_000)
 print(np.mean(x), np.var(x), np.std(x))  # ≈ 3.0, 4.0, 2.0
 ```
 
+### Covariance and correlation
+
+When two random variables interact, their joint statistics are summarised by the **covariance**
+$$
+\mathrm{Cov}(X, Y) = \langle (X - \langle X \rangle)(Y - \langle Y \rangle) \rangle = \langle XY \rangle - \langle X \rangle \langle Y \rangle. \tag{0.5.8a}
+$$
+A positive covariance means $X$ and $Y$ tend to deviate from their means in the same direction; negative means opposite directions. The dimensionless analogue is the **Pearson correlation coefficient**
+$$
+\rho_{XY} = \frac{\mathrm{Cov}(X, Y)}{\sigma_X \sigma_Y} \in [-1, 1]. \tag{0.5.8b}
+$$
+Independence implies zero covariance, but zero covariance does *not* imply independence — a frequent source of confusion. Two variables can be uncorrelated yet strongly dependent through non-linear interactions. The variance of a sum generalises (0.5.7):
+$$
+\mathrm{Var}(X + Y) = \mathrm{Var}(X) + \mathrm{Var}(Y) + 2\, \mathrm{Cov}(X, Y).
+$$
+The covariance matrix $\Sigma_{ij} = \mathrm{Cov}(X_i, X_j)$ of a vector-valued random variable plays the same role for multivariate Gaussians that $\sigma^2$ plays for univariate ones. It is symmetric and positive semi-definite — once again, Section 0.2 linear algebra is the right toolkit.
+
 ## The Gaussian (normal) distribution
 
 The single most important continuous distribution is the **Gaussian**, with density
@@ -95,6 +111,46 @@ Three properties make the Gaussian central.
 
 **2. Maximum entropy.** Among all distributions with a given mean and variance, the Gaussian maximises the entropy $-\int \rho \ln \rho \, \mathrm{d} x$. In the absence of additional information, the Gaussian is the "least biased" choice — the formal version of "innocent until proven guilty".
 
+### Deriving the Gaussian as a maximum-entropy distribution
+
+The maximum-entropy claim deserves a full derivation; it is the cleanest way to motivate the Gaussian's appearance everywhere from thermal noise to neural-network priors.
+
+The problem: maximise the entropy functional
+$$
+S[\rho] = -\int_{-\infty}^{\infty} \rho(x) \ln \rho(x)\, \mathrm{d} x
+$$
+subject to three constraints: normalisation $\int \rho\, \mathrm{d} x = 1$; fixed mean $\int x\,\rho\, \mathrm{d} x = \mu$; and fixed variance $\int (x - \mu)^2 \rho\, \mathrm{d} x = \sigma^2$.
+
+**Step (1).** Form the Lagrangian with three multipliers $\alpha, \beta, \gamma$:
+$$
+L[\rho] = -\int \rho \ln \rho\, \mathrm{d} x - \alpha \left( \int \rho\, \mathrm{d} x - 1 \right) - \beta \left( \int x \rho\, \mathrm{d} x - \mu \right) - \gamma \left( \int (x-\mu)^2 \rho \, \mathrm{d} x - \sigma^2 \right).
+$$
+
+**Step (2).** Functional derivative with respect to $\rho(x)$, set to zero. The derivative of $-\rho \ln \rho$ at fixed $x$ is $-\ln \rho - 1$. The three constraints contribute $-\alpha$, $-\beta x$, $-\gamma (x - \mu)^2$ respectively. Setting the total to zero:
+$$
+-\ln \rho(x) - 1 - \alpha - \beta x - \gamma (x - \mu)^2 = 0.
+$$
+
+!!! note "Why this step?"
+    The functional derivative of $-\int \rho \ln \rho\, \mathrm{d} x$ with respect to $\rho(x)$ is most easily found by treating $\rho \ln \rho$ as an ordinary function of the variable $\rho$, then differentiating: $\mathrm{d}(\rho \ln \rho)/\mathrm{d}\rho = \ln \rho + 1$. The functional formalism turns each constraint into an extra additive term that is linear in $\rho$.
+
+**Step (3).** Solve for $\rho$:
+$$
+\rho(x) = \exp\!\Big( -1 - \alpha - \beta x - \gamma (x - \mu)^2 \Big).
+$$
+For the integral over $\mathbb{R}$ to converge we need $\gamma > 0$. The linear $\beta x$ term can be absorbed into the quadratic by completing the square (and by the mean constraint, $\beta = 0$ when the centre is already at $\mu$). What remains is
+$$
+\rho(x) = C\, e^{-\gamma (x - \mu)^2}.
+$$
+
+**Step (4).** Fix $C$ and $\gamma$ from the normalisation and variance constraints. Normalisation gives $C = \sqrt{\gamma / \pi}$ (the standard Gaussian integral). The variance constraint gives $\langle (x-\mu)^2 \rangle = 1/(2\gamma) = \sigma^2$, so $\gamma = 1/(2 \sigma^2)$. Substituting yields
+$$
+\rho(x) = \frac{1}{\sqrt{2\pi}\, \sigma}\, e^{-(x-\mu)^2 / (2\sigma^2)},
+$$
+which is exactly (0.5.9). $\square$
+
+This derivation is more than a curiosity: it is the proper justification for using the Gaussian as a prior in Bayesian inference, as a noise model in regression, and as the energy distribution in the harmonic-oscillator partition function. Whenever we know nothing about a quantity except its mean and variance, the maximum-entropy principle says to model it as a Gaussian.
+
 **3. The central limit theorem.** The sum of many independent random variables, suitably normalised, tends to a Gaussian regardless of the individual distributions. Precisely: if $X_1, \ldots, X_N$ are independent and identically distributed with finite mean $\mu$ and variance $\sigma^2$, then
 
 $$
@@ -102,6 +158,30 @@ $$
 $$
 
 This theorem is why Gaussians appear in places that have nothing to do with Gaussian inputs. Measurement errors, thermal noise, financial returns, sums of many small independent contributions — they all tend toward normality. The Maxwell–Boltzmann velocity distribution of a classical ideal gas, which you will derive in Chapter 8, is exactly a Gaussian in each Cartesian component because each component is a sum of many small molecular collisions.
+
+### Sketch of the CLT proof via moment-generating functions
+
+The classical proof uses **characteristic functions** (Fourier transforms of densities). Define the moment-generating function $M_X(t) = \mathbb{E}[e^{t X}]$, assuming it exists in some neighbourhood of $t = 0$.
+
+**Step (1).** Let $Y_i = (X_i - \mu)/\sigma$ be the centred and scaled samples, with $\mathbb{E}[Y_i] = 0$ and $\mathrm{Var}(Y_i) = 1$. By Taylor expansion,
+$$
+M_{Y_i}(t) = 1 + t \cdot 0 + \frac{t^2}{2} \cdot 1 + O(t^3) = 1 + \frac{t^2}{2} + O(t^3).
+$$
+
+**Step (2).** Consider the standardised sum $S_N = N^{-1/2} \sum_i Y_i$. By independence, moment-generating functions of independent variables multiply:
+$$
+M_{S_N}(t) = \prod_{i=1}^{N} M_{Y_i}(t/\sqrt N) = \left[ 1 + \frac{t^2}{2 N} + O\!\left(\frac{t^3}{N^{3/2}}\right) \right]^N.
+$$
+
+**Step (3).** Take $N \to \infty$. Using $\lim_{N \to \infty} (1 + a/N)^N = e^a$,
+$$
+\lim_{N \to \infty} M_{S_N}(t) = e^{t^2 / 2}.
+$$
+
+!!! note "Why this step?"
+    The function $e^{t^2 / 2}$ is the moment-generating function of the standard normal $\mathcal{N}(0, 1)$. A theorem of Lévy guarantees that pointwise convergence of moment-generating functions in a neighbourhood of zero implies convergence in distribution. So $S_N \xrightarrow{d} \mathcal{N}(0, 1)$. $\square$
+
+The proof reveals **why** the Gaussian is the universal limit: it is the unique distribution whose moment-generating function is the exponential of a quadratic in $t$. Any sum of independent variables, once we expand to second order and exponentiate, lands here. The shape of the limiting distribution is determined entirely by the first two moments — mean and variance — which is exactly the maximum-entropy framing from earlier.
 
 ```python
 import numpy as np
@@ -139,6 +219,60 @@ $$
 So thermodynamic response functions are statistical moments of the underlying microstate distribution. This is one of the most beautiful results in physics.
 
 Second, Monte Carlo simulation works by drawing samples from (0.5.11) without ever computing $Z$. The Metropolis–Hastings algorithm, which you will implement in Chapter 8, only requires ratios $e^{-\beta \Delta E}$, sidestepping the typically intractable partition function entirely.
+
+### Deriving the Boltzmann distribution from counting
+
+Where does (0.5.11) come from? The deepest derivation rests on counting microstates in the microcanonical ensemble. We sketch it here; the details belong to Chapter 8.
+
+**Setup.** Imagine a small system $A$ in thermal contact with a vast reservoir $R$, the combined system being isolated. The total energy $E_\mathrm{tot}$ is fixed. Let $\Omega_R(E_R)$ count the microstates of $R$ at energy $E_R$. When $A$ is in microstate $s$ with energy $E(s)$, the reservoir has energy $E_\mathrm{tot} - E(s)$, and so the number of accessible joint microstates is $\Omega_R(E_\mathrm{tot} - E(s))$.
+
+**Step (1).** By the postulate of equal a priori probability (Chapter 8), every microstate of the isolated total system is equally likely. Hence
+$$
+p(s) \propto \Omega_R(E_\mathrm{tot} - E(s)).
+$$
+
+**Step (2).** Take the logarithm and Taylor-expand around $E_\mathrm{tot}$:
+$$
+\ln \Omega_R(E_\mathrm{tot} - E(s)) = \ln \Omega_R(E_\mathrm{tot}) - E(s) \cdot \frac{\partial \ln \Omega_R}{\partial E_R}\bigg|_{E_\mathrm{tot}} + O(E(s)^2).
+$$
+The first term is a constant, irrelevant to relative probabilities. The coefficient of $-E(s)$ in the second term is identified with $\beta = 1/(k_\mathrm{B} T)$, the **inverse temperature** of the reservoir. (This is essentially the definition of temperature: how rapidly the reservoir's log-multiplicity grows with energy.)
+
+!!! note "Why this step?"
+    The Taylor expansion of $\ln \Omega_R$ rather than $\Omega_R$ itself is essential. $\Omega_R$ is astronomically large — easily $10^{10^{23}}$ — so its direct Taylor series converges glacially. Its logarithm, by contrast, is well-behaved and order $N$. The reservoir's energy scale $E_\mathrm{tot}$ is enormous compared with $E(s)$, so the linear term dominates.
+
+**Step (3).** Exponentiating,
+$$
+p(s) \propto e^{-\beta E(s)}.
+$$
+This is the Boltzmann factor. Normalising by $Z = \sum_s e^{-\beta E(s)}$ recovers (0.5.11). $\square$
+
+### Stirling's approximation
+
+A workhorse formula used throughout the derivation above (and many in Chapter 8) is **Stirling's approximation** for factorials of large numbers:
+$$
+\ln N! \approx N \ln N - N \quad \text{for large } N, \tag{0.5.11a}
+$$
+with relative error of order $\ln N / N$, hence vanishing fast for thermodynamic $N \sim 10^{23}$. A quick derivation: write $\ln N! = \sum_{k=1}^{N} \ln k$, then approximate the sum by the integral $\int_1^N \ln x\, \mathrm{d} x = N \ln N - N + 1$. The constant terms are sub-leading.
+
+A sanity check: for $N = 10$, $\ln(10!) = \ln(3628800) \approx 15.10$, and $N \ln N - N = 10 \ln 10 - 10 \approx 13.03$. The relative error is about $14\%$, falling to $1\%$ at $N = 100$ and to $0.1\%$ at $N = 1000$. For the thermodynamic limit $N \to \infty$, Stirling is exact.
+
+Stirling's approximation is what turns counting problems (like the multinomial number of ways to distribute $N$ particles into energy levels) into smooth optimisation problems amenable to Lagrange multipliers — and ultimately what produces the Boltzmann exponential.
+
+## A short catalogue of distributions
+
+Beyond the Gaussian, a few discrete and continuous distributions appear so often that they deserve naming.
+
+The **Bernoulli** distribution: $X \in \{0, 1\}$ with $P(X = 1) = p$. The two-outcome trial. Mean $p$, variance $p(1-p)$.
+
+The **binomial** distribution: $X \sim \mathrm{Bin}(N, p)$ counts the number of successes in $N$ independent Bernoulli trials, with $P(X = k) = \binom{N}{k} p^k (1-p)^{N-k}$. Mean $Np$, variance $Np(1-p)$. By the CLT, $\mathrm{Bin}(N, p)$ tends to a Gaussian for large $N$.
+
+The **Poisson** distribution: $X \sim \mathrm{Pois}(\lambda)$ has $P(X = k) = e^{-\lambda} \lambda^k / k!$. It arises as the limit of $\mathrm{Bin}(N, p)$ with $N \to \infty$, $p \to 0$, $Np = \lambda$ fixed. Mean and variance both equal $\lambda$. Used for radioactive decay counts, photon counts, defect counts in a crystal.
+
+The **exponential** distribution: $X \sim \mathrm{Exp}(\lambda)$ with density $\rho(x) = \lambda e^{-\lambda x}$ for $x \ge 0$. Mean $1/\lambda$, variance $1/\lambda^2$. It is the waiting-time distribution between events of a Poisson process — for instance, between successive jumps in a Markov-chain Monte Carlo simulation. It is also the *only* continuous distribution that is **memoryless**: $P(X > s + t \mid X > s) = P(X > t)$.
+
+The **uniform** distribution on $[a, b]$: constant density $1/(b - a)$. The default "I know nothing more than the range" distribution; the maximum-entropy distribution under a support constraint.
+
+The **multivariate Gaussian** $\mathcal{N}(\boldsymbol{\mu}, \Sigma)$: density $\rho(\mathbf{x}) \propto \exp\!\big( -\tfrac{1}{2}(\mathbf{x} - \boldsymbol{\mu})^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol{\mu}) \big)$ with mean vector $\boldsymbol{\mu}$ and covariance matrix $\Sigma$. The generalisation of the univariate Gaussian to vector-valued random variables, central to Gaussian processes in Chapter 11.
 
 ## Joint and conditional probability
 
@@ -180,6 +314,34 @@ Three remarks for later use.
 
 **3.** Gaussian processes — the workhorse surrogate model in Chapter 11's Bayesian optimisation — are Bayes' rule applied to function-valued random variables with Gaussian priors over functions. The posterior remains Gaussian, and acquisition functions like expected improvement are tractable integrals against this posterior. We will spell this out properly when the time comes; for now the formula (0.5.17) is the seed.
 
+### Worked example: Bayes' rule with a medical test
+
+A useful intuition pump: a disease has prevalence $0.1\%$ in the general population, so $p(\text{disease}) = 0.001$. A diagnostic test has sensitivity $99\%$ — $p(\text{positive} \mid \text{disease}) = 0.99$ — and specificity $99\%$ — $p(\text{positive} \mid \text{no disease}) = 0.01$. You test positive. What is the probability you have the disease?
+
+**Step (1).** Apply Bayes' rule (0.5.17). With $\theta = \text{disease}$ and $D = \text{positive test}$,
+$$
+p(\text{disease} \mid +) = \frac{p(+ \mid \text{disease})\, p(\text{disease})}{p(+)}.
+$$
+
+**Step (2).** Compute the evidence $p(+)$ by the law of total probability:
+$$
+p(+) = p(+ \mid \text{disease})\, p(\text{disease}) + p(+ \mid \text{no disease})\, p(\text{no disease}).
+$$
+Substituting:
+$$
+p(+) = 0.99 \cdot 0.001 + 0.01 \cdot 0.999 = 0.00099 + 0.00999 = 0.01098.
+$$
+
+**Step (3).** Form the ratio:
+$$
+p(\text{disease} \mid +) = \frac{0.99 \cdot 0.001}{0.01098} = \frac{0.00099}{0.01098} \approx 0.0902.
+$$
+
+!!! note "Why this step?"
+    Despite a $99\%$ accurate test, a positive result implies only a $\sim 9\%$ posterior probability of disease. The reason is the low base rate: the false positives from the $99.9\%$ of healthy people swamp the true positives from the $0.1\%$ sick. This is the **base-rate fallacy**, and it appears whenever a rare phenomenon is screened for with an imperfect test.
+
+The same arithmetic governs anomaly detection in materials informatics: if your model flags $1\%$ of structures as "unstable" but the true rate of instability is $0.1\%$, the precision of your alarm — the fraction of flagged structures that really are unstable — depends critically on the base rate, not just the model's accuracy.
+
 ## A short numerical illustration: Bayesian coin flip
 
 Suppose we are uncertain whether a coin is fair. Let $\theta \in [0, 1]$ be the unknown probability of heads, with a uniform prior $p(\theta) = 1$. We observe $n_H$ heads in $N$ flips. The likelihood is
@@ -216,6 +378,22 @@ Three observations: more data sharpens the posterior; with uniform prior and Ber
 !!! note "Frequentist versus Bayesian"
     Section 0.5 has implicitly adopted a Bayesian outlook — probabilities as degrees of belief, updated by data. The frequentist counterpart — probabilities as long-run frequencies, parameters as fixed unknowns — is equally valid and produces, in many cases, numerically similar answers. Modern materials ML mixes both: maximum-likelihood training of neural networks is frequentist in spirit; Bayesian optimisation and uncertainty quantification are Bayesian. You will need to be bilingual.
 
+## Information and entropy
+
+The entropy functional we maximised in deriving the Gaussian deserves a section of its own. For a discrete distribution $p$ on outcomes $\{x_i\}$, the **Shannon entropy** is
+$$
+S(p) = -\sum_i p(x_i) \ln p(x_i).
+$$
+It is non-negative, with $S = 0$ iff $p$ is concentrated on a single outcome (no uncertainty), and maximal when $p$ is uniform (complete uncertainty among the available outcomes). For continuous distributions the analogue is the **differential entropy** $-\int \rho \ln \rho\, \mathrm{d} x$.
+
+Two related quantities appear in machine learning. The **Kullback–Leibler divergence**
+$$
+D_\mathrm{KL}(p \,\|\, q) = \sum_i p(x_i) \ln \frac{p(x_i)}{q(x_i)}
+$$
+measures how distinguishable distribution $p$ is from a reference $q$. It is non-negative, zero iff $p = q$, and not symmetric. The **cross-entropy** $H(p, q) = -\sum_i p(x_i) \ln q(x_i)$ is the loss function for classification: training a neural network by maximum likelihood is mathematically the same as minimising cross-entropy.
+
+The physical interpretation: $S$ is the average number of nats of information needed to specify a sample drawn from $p$. The Boltzmann entropy of statistical mechanics, $S_\mathrm{thermo} = k_\mathrm{B} \ln \Omega$, agrees with the Shannon entropy of the microcanonical distribution up to the prefactor $k_\mathrm{B}$. Chapter 8 develops this connection in earnest.
+
 ## Sampling and Monte Carlo, briefly
 
 A great deal of computational materials science is, at heart, the problem of computing expectations like (0.5.5) when the integral is too high-dimensional for grid-based quadrature. The solution is **Monte Carlo**: draw samples $x_1, \ldots, x_M$ from $\rho$ and approximate
@@ -227,6 +405,31 @@ $$
 with statistical error scaling as $1/\sqrt M$ by the central limit theorem (0.5.10). The error is independent of dimension — the Monte Carlo killer feature that makes statistical mechanics in $3N$ dimensions tractable.
 
 When direct sampling from $\rho$ is impossible — as it is for the Boltzmann distribution at non-trivial energies — Markov-chain Monte Carlo methods construct a stochastic process whose stationary distribution is the target. This is the subject of Chapter 8.
+
+## Markov chains and detailed balance
+
+A **Markov chain** is a stochastic process on a state space $\mathcal{S}$ defined by transition probabilities $T(s' \mid s)$ — the probability of moving from $s$ to $s'$ in one step. The key property is **memorylessness**: the probability of the next state depends only on the current state, not on the history. Formally, if $X_t$ denotes the state at step $t$,
+$$
+P(X_{t+1} = s' \mid X_t = s, X_{t-1}, \ldots, X_0) = T(s' \mid s).
+$$
+
+If the chain has been running long enough, it converges (under technical conditions: irreducibility and aperiodicity) to a **stationary distribution** $\pi(s)$ satisfying
+$$
+\pi(s') = \sum_s T(s' \mid s)\, \pi(s). \tag{0.5.19}
+$$
+The stationary distribution is the eigenvector of the transition operator with eigenvalue $1$ — note the connection to Section 0.2 eigenproblems.
+
+### Detailed balance
+
+A sufficient condition for $\pi$ to be the stationary distribution is **detailed balance**:
+$$
+\pi(s)\, T(s' \mid s) = \pi(s')\, T(s \mid s'), \quad \text{for all } s, s'. \tag{0.5.20}
+$$
+This says that, in equilibrium, the flow of probability from $s$ to $s'$ exactly cancels the reverse flow. Summing over $s$ on both sides and using $\sum_{s'} T(s' \mid s) = 1$ recovers (0.5.19), so detailed balance implies stationarity.
+
+The Metropolis–Hastings algorithm constructs a chain that explicitly satisfies detailed balance with $\pi(s) \propto e^{-\beta E(s)}$. The acceptance probability $\min(1, e^{-\beta \Delta E})$ is precisely what is needed to balance forward and reverse moves. We will derive this in Chapter 8 §3 and use it for Ising-model simulations.
+
+Detailed balance has a beautiful physical interpretation: it is the microscopic statement of **time-reversal symmetry**. In a chain that obeys detailed balance, no movie of the trajectory could give away whether it was running forward or backward in time. This is exactly the property a thermal equilibrium state must have. Chains that violate detailed balance correspond to driven, non-equilibrium systems — also useful, but outside the scope of this book.
 
 ## Where this is used
 
