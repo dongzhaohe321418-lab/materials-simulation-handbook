@@ -216,6 +216,146 @@ A pragmatic guide:
 
 The diffusion-coefficient row deserves emphasis: thermostats with large friction distort kinetics. For computing $D$ via MSD or Green-Kubo, either use NVE after equilibration (sampling NVE with a properly equilibrated initial condition) or use NVT with the gentlest possible thermostat (small Langevin friction, or large Nosé-Hoover time constant). LAMMPS users frequently equilibrate in NPT, then switch to NVE for production data collection; this is good practice.
 
+## Metropolis Monte Carlo and the canonical ensemble
+
+MD is not the only way to sample a Boltzmann distribution. The **Metropolis algorithm** (Metropolis, Rosenbluth, Rosenbluth, Teller and Teller, 1953) generates a Markov chain on configuration space whose stationary distribution is exactly $P_\mathrm{NVT}(\mathbf{q}) \propto e^{-\beta U(\mathbf{q})}$. The derivation is short, and worth doing once: it is the same logic underlying parallel tempering, replica exchange, the basin-hopping global optimisers of [Chapter 9](../ch09-mlip/index.md), and — pertinently for [Chapter 11](../ch11-active/index.md) — Metropolis-Hastings acquisition in Bayesian optimisation.
+
+### Detailed balance from scratch
+
+Consider a Markov chain with transition matrix $T_{i \to j}$ — the probability that, given the system is currently in microstate $i$, the next step moves it to $j$. If $P_i$ is the stationary distribution then by definition
+
+$$
+P_j = \sum_i P_i\, T_{i \to j},\qquad \sum_j T_{i \to j} = 1.
+\tag{8.A1}
+$$
+
+A **sufficient** (not necessary) condition for $P_i$ to be stationary is **detailed balance**:
+
+$$
+P_i\, T_{i \to j} = P_j\, T_{j \to i}\qquad \forall i, j.
+\tag{8.A2}
+$$
+
+Summing (8.A2) over $i$ reproduces (8.A1); the converse is not true. Detailed balance is the stronger statement that every microscopic transition is balanced by its time-reverse — equilibrium in the sense of zero net probability flow.
+
+### The Metropolis acceptance criterion
+
+Factor the transition as a *proposal* times an *acceptance*: $T_{i \to j} = g_{i \to j}\, A_{i \to j}$, where $g_{i \to j}$ is the probability of *proposing* move $i \to j$ (chosen by the simulator — e.g., displace a random atom by a uniform random vector) and $A_{i \to j} \in [0, 1]$ is the probability of accepting that proposal. Choose a *symmetric* proposal: $g_{i \to j} = g_{j \to i}$. Detailed balance then reduces to
+
+$$
+\frac{A_{i \to j}}{A_{j \to i}} = \frac{P_j}{P_i} = e^{-\beta (U_j - U_i)} = e^{-\beta \Delta U}.
+\tag{8.A3}
+$$
+
+Any pair of acceptance probabilities satisfying (8.A3) gives a correct sampler. Metropolis chose the maximal-acceptance pair:
+
+$$
+\boxed{A_{i \to j} = \min\!\left(1,\, e^{-\beta \Delta U}\right).}
+\tag{8.A4}
+$$
+
+When $\Delta U \le 0$ the move is accepted with probability $1$ (always go downhill); when $\Delta U > 0$ it is accepted with probability $e^{-\beta \Delta U}$, decaying exponentially with the cost in $k_B T$. Verifying (8.A3) is one line: if $\Delta U > 0$ then $A_{i \to j} = e^{-\beta\Delta U}$ and $A_{j \to i} = 1$, so the ratio is $e^{-\beta\Delta U}$ as required; the case $\Delta U < 0$ is symmetric.
+
+The crucial observation is that the acceptance depends only on $\Delta U$, not on the absolute energies or on the partition function $Z$. That is why MC samples the canonical distribution at all: $Z$ cancels in every ratio.
+
+### The algorithm
+
+```text
+choose initial configuration q_0
+for step = 1, 2, ...:
+    propose q' = q + dq          # symmetric random displacement
+    DeltaU = U(q') - U(q)
+    if DeltaU <= 0:
+        accept: q <- q'
+    else:
+        draw u ~ Uniform(0, 1)
+        if u < exp(-beta * DeltaU):
+            accept: q <- q'
+        else:
+            reject: q unchanged
+    record q  # for ensemble averages
+```
+
+Rejection is *not* idle: the rejected step contributes the same configuration to the running ensemble average, weighted by the time it spent there. Skipping the recording is a common bug.
+
+A target acceptance rate of $30$–$50$% is the conventional sweet spot: a much higher rate means displacements are too small (slow decorrelation); a much lower rate means too many proposals are wasted. Tune the displacement step size during equilibration to land in this band.
+
+### A 60-line 2D Ising demo
+
+The two-dimensional Ising model on an $L \times L$ square lattice with periodic boundaries is the canonical test bed. Spins $s_i \in \{-1, +1\}$, energy $U = -J \sum_{\langle ij\rangle} s_i s_j$, exact critical temperature $T_c = 2J / [k_B \ln(1 + \sqrt{2})] \approx 2.269\, J/k_B$ (Onsager 1944). Below $T_c$ the system magnetises spontaneously; above $T_c$, $\langle m \rangle = 0$.
+
+```python
+from __future__ import annotations
+
+import numpy as np
+
+
+def ising_mc(
+    L: int = 32,
+    beta: float = 0.44,
+    n_sweeps: int = 4000,
+    n_burn: int = 1000,
+    seed: int = 0,
+) -> tuple[float, np.ndarray]:
+    """Single-spin-flip Metropolis MC on the 2D Ising model.
+
+    Returns the mean absolute magnetisation per spin (post-burn-in)
+    and the magnetisation time series in units of [1].
+    """
+    rng = np.random.default_rng(seed)
+    s = rng.choice([-1, 1], size=(L, L)).astype(np.int8)
+    mag_trace = np.empty(n_sweeps, dtype=np.float64)
+
+    # Precompute acceptance probabilities for the only possible
+    # values of DeltaU in 2D Ising: -8, -4, 0, +4, +8 (units of J).
+    accept = {dU: min(1.0, np.exp(-beta * dU)) for dU in (-8, -4, 0, 4, 8)}
+
+    for sweep in range(n_sweeps + n_burn):
+        # One sweep = L*L attempted flips.
+        for _ in range(L * L):
+            i, j = rng.integers(0, L, size=2)
+            nb_sum = (
+                s[(i + 1) % L, j] + s[(i - 1) % L, j]
+                + s[i, (j + 1) % L] + s[i, (j - 1) % L]
+            )
+            dU = int(2 * s[i, j] * nb_sum)        # J = 1
+            if rng.random() < accept[dU]:
+                s[i, j] = -s[i, j]
+        if sweep >= n_burn:
+            mag_trace[sweep - n_burn] = s.mean()
+
+    return float(np.abs(mag_trace).mean()), mag_trace
+
+
+if __name__ == "__main__":
+    # Sweep T from below to above the Onsager critical point.
+    Ts = np.linspace(1.5, 3.5, 21)
+    m_of_T = np.array([ising_mc(beta=1.0 / T)[0] for T in Ts])
+    for T, m in zip(Ts, m_of_T):
+        print(f"T = {T:.2f}   <|m|> = {m:.3f}")
+```
+
+The output shows $\langle |m|\rangle$ falling from near unity (ordered) to near $1/L$ (disordered fluctuations of a finite paramagnet) as $T$ crosses $T_c \approx 2.27$. The curve has the characteristic Onsager shape, and the finite-size rounding around $T_c$ is the textbook demonstration that critical singularities only become singular in the thermodynamic limit.
+
+This sixty-line program contains everything: detailed-balance acceptance, the canonical-ensemble logic, and a real second-order phase transition. The same loop, with continuous-coordinate displacements and an inter-atomic potential, is the entire Metropolis MC method for fluids.
+
+### When MC beats MD
+
+For atomic systems Metropolis MC has three advantages over MD:
+
+- **No forces.** Only $\Delta U$ is needed, which is often cheaper than the full gradient — useful for complicated potentials or DFT-on-the-fly methods.
+- **Non-physical moves.** Particle insertions/deletions ($\mu VT$), atom swaps (alloy ordering), large rotational moves for molecules — none of these have natural MD analogues. Hybrid MD/MC samplers use MD for local equilibration and MC for moves that break the conservation laws Newton's equations enforce.
+- **No timestep stability.** Hard cores, near-singular potentials, stiff bonds — MC handles them through rejections, where MD would explode.
+
+The disadvantage is that MC gives no dynamics: there is no time, no diffusion coefficient, no transport. MC samples the equilibrium distribution; if you want kinetics, use MD.
+
+!!! note "Metropolis-Hastings, the asymmetric generalisation"
+    If the proposal is *not* symmetric — for instance, biased toward downhill moves, or drawn from a non-uniform distribution — the acceptance must include the proposal ratio:
+    $$
+    A_{i \to j} = \min\!\left(1,\, \frac{g_{j \to i}}{g_{i \to j}} e^{-\beta \Delta U}\right).
+    $$
+    This is the **Metropolis-Hastings** algorithm (Hastings, 1970). It is the engine underneath modern Markov-chain-Monte-Carlo samplers (HMC, NUTS in PyMC, parallel tempering), and — relevant for [Chapter 11](../ch11-active/index.md) — underneath the Thompson sampling and acquisition-function machinery used in Bayesian optimisation, where the "energy" $\beta U$ is replaced by a negative log-posterior.
+
 ## What we have
 
 A precise vocabulary for what each MD ensemble samples, and for what quantities each ensemble gives most cleanly. The next two sections build on this: free energies ([§8.2](02-free-energy.md)) require sampling that **interpolates between** ensembles or potentials, and transport coefficients ([§8.3](03-transport.md)) come from equilibrium fluctuations of currents rather than of state variables.

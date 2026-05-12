@@ -116,11 +116,12 @@ extra:
 
 nav:
   - Home: index.md
-  - How to use this book: how-to-use.md
-  - Learning Path: learning-path.md
-  - Prerequisites Check: prerequisites-checker.md
-  - Known Limitations: known-limitations.md
-  - Part I — Prerequisites:
+  - Start Here:
+      - How to use: how-to-use.md
+      - Learning Path: learning-path.md
+      - Self-Test: prerequisites-checker.md
+      - Known Limits: known-limitations.md
+  - I · Prereq:
       - Chapter 0 · Mathematics from Scratch:
           - Overview: ch00-math/index.md
           - 0.1 Numbers, sets, functions: ch00-math/01-numbers.md
@@ -136,7 +137,7 @@ nav:
           - 1.3 Plotting with Matplotlib: ch01-python/03-matplotlib.md
           - 1.4 Reproducibility, environments, version control: ch01-python/04-reproducibility.md
           - Exercises: ch01-python/exercises.md
-  - Part II — The Big Picture:
+  - II · Big Picture:
       - Chapter 2 · What is Materials Simulation?:
           - Overview: ch02-foundations/index.md
           - 2.1 The scale ladder: ch02-foundations/01-scales.md
@@ -161,7 +162,7 @@ nav:
           - 3.5.6 Thermal models — Einstein and Debye: ch03b-solid-state/06-thermal-models.md
           - 3.5.7 Defects and band engineering: ch03b-solid-state/07-defects-and-band-engineering.md
           - Exercises: ch03b-solid-state/exercises.md
-  - Part III — Electrons:
+  - III · Electrons:
       - Chapter 4 · Quantum Mechanics for Materials:
           - Overview: ch04-quantum/index.md
           - 4.1 Why we need quantum mechanics: ch04-quantum/01-why.md
@@ -189,7 +190,7 @@ nav:
           - 6.4 Band structures and density of states: ch06-running-dft/04-bands-dos.md
           - 6.5 Defects and formation energies: ch06-running-dft/05-defects.md
           - Exercises: ch06-running-dft/exercises.md
-  - Part IV — Atoms in Motion:
+  - IV · Dynamics:
       - Chapter 7 · Molecular Dynamics:
           - Overview: ch07-md/index.md
           - 7.1 Newton, Verlet, and time integration: ch07-md/01-integration.md
@@ -206,7 +207,7 @@ nav:
           - 8.3 Transport and the fluctuation–dissipation theorem: ch08-statmech/03-transport.md
           - 8.4 Phase diagrams from simulation: ch08-statmech/04-phase-diagrams.md
           - Exercises: ch08-statmech/exercises.md
-  - Part V — Modern Machine Learning:
+  - V · ML:
       - Chapter 9 · Machine Learning Interatomic Potentials:
           - Overview: ch09-mlip/index.md
           - 9.1 Why MLIPs — the accuracy–cost gap: ch09-mlip/01-why.md
@@ -238,7 +239,7 @@ nav:
           - 12.3 Generative models — MatterGen and friends: ch12-foundation/03-generative.md
           - 12.4 What comes next: ch12-foundation/04-frontiers.md
           - Exercises: ch12-foundation/exercises.md
-  - Part VI — Beyond a Single Scale:
+  - VI · Frontier:
       - Chapter 13 · Multiscale Methods:
           - Overview: ch13-multiscale/index.md
           - 13.1 Coupling schemes: ch13-multiscale/01-coupling-schemes.md
@@ -257,7 +258,7 @@ nav:
           - 14.6 Writing up: ch14-capstone/06-writing-up.md
           - 14.7 The five projects: ch14-capstone/07-the-five-projects.md
           - Exercises: ch14-capstone/exercises.md
-  - Capstone Projects:
+  - Projects:
       - Project 1 · Defect Formation Energy: projects/01-defect-formation-energy/README.md
       - Project 2 · Melting Point from an MLIP: projects/02-melting-point-mlip/README.md
       - Project 3 · Band-Gap Screening: projects/03-band-gap-screening/README.md
