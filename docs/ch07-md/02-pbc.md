@@ -1,5 +1,12 @@
 # 7.2 Periodic Boundary Conditions
 
+!!! tip "Why periodic boundary conditions exist"
+    A real crystal has $\sim 10^{23}$ atoms; an MD simulation can manage $\sim 10^3$ to $10^8$. The atoms at the surface of a small simulation box are not surrounded by their proper environment — they see vacuum. For a box of $10^3$ argon atoms, more than half of them are within two atomic diameters of a face. The "simulation" then describes an unphysically small cluster, not a bulk material.
+    
+    The cure is a kind of mathematical magic: identify opposite faces of the box, turning the cube into a topological 3-torus. An atom that walks off the right face re-enters from the left at the same height. Periodic copies of the cell tile space; each atom is surrounded by an infinite homogeneous environment.
+    
+    Picture in your head: a video game world that wraps. You walk east and arrive at your starting point from the west. Physically, PBC are how we make a small box pretend to be a chunk of bulk material. The price: artefacts when interactions are longer than the box (the cause is that one atom can interact with multiple periodic copies of another), and missing physics for interfaces (you cannot have a free surface in a torus).
+
 ## Why we need PBC
 
 Take 1000 argon atoms in a cubic box of side 30 Å. If the box has hard walls, the atoms within one or two atomic diameters of a wall experience an environment qualitatively different from those in the bulk: fewer neighbours, asymmetric forces, anomalous density. Of our 1000 atoms, perhaps 600 are "surface" atoms in this sense. The simulation is then a study of an extremely small cluster, not of bulk argon.
@@ -17,6 +24,13 @@ U(\mathbf{r}_1, \ldots, \mathbf{r}_i + \mathbf{n}, \ldots, \mathbf{r}_N) = U(\ma
 $$
 
 The simulation cell holds $N$ atoms; the infinite lattice holds their images. We integrate Newton's equations only for the $N$ in-cell atoms; image positions are determined by the lattice translation.
+
+**Definition 7.2.1 (Periodic system).** A system of $N$ atoms in a simulation cell with lattice matrix $\mathbf{H} = (\mathbf{a}_1\,|\,\mathbf{a}_2\,|\,\mathbf{a}_3)$ is *periodic* if the potential satisfies (7.14) for all integer triples $(n_1,n_2,n_3)\in\mathbb{Z}^3$.
+
+**Definition 7.2.2 (Minimum image).** Given two atoms at positions $\mathbf{r}_i, \mathbf{r}_j$ in a periodic cell, the *minimum image* of $j$ relative to $i$ is the periodic image $\mathbf{r}_j + \mathbf{n}\cdot\mathbf{H}$ minimising $|\mathbf{r}_j + \mathbf{n}\cdot\mathbf{H} - \mathbf{r}_i|$. For an orthorhombic cell with sides $L_\alpha$ and cutoff $r_c < L_\alpha/2$, the minimum image is unique.
+
+!!! abstract "Key idea (Half-box rule)"
+    Periodic boundary conditions and a finite-range force coexist *only* if the force range is strictly less than half the cell's smallest perpendicular width. Beyond that limit, multiple periodic images come into range and the minimum-image convention breaks. This is the single most important geometric constraint in MD.
 
 ## The minimum image convention
 
@@ -131,9 +145,48 @@ $$
 
 with an analogous expression for the pressure. Tail corrections recover the long-range thermodynamics at zero additional cost; they fail near interfaces or whenever the assumption of uniform density breaks.
 
+## A worked minimum-image example
+
+Take a 2D snapshot for clarity. Two atoms at $\mathbf{r}_1 = (0.1, 0.1)$ and $\mathbf{r}_2 = (0.9, 0.9)$ in a unit-side square cell. The naive displacement is $\mathbf{r}_2 - \mathbf{r}_1 = (0.8, 0.8)$, with magnitude $\sqrt{1.28}\approx 1.13$. But $r_\mathrm{cut} < L/2 = 0.5$, so this distance is meaningless — there is a periodic image of atom 2 closer to atom 1.
+
+Apply (7.15) with $L=1$:
+$$\Delta x = 0.8 - 1\cdot \mathrm{round}(0.8) = 0.8 - 1 = -0.2.$$
+Similarly $\Delta y = -0.2$. The minimum-image displacement is $(-0.2, -0.2)$, magnitude $\sqrt{0.08}\approx 0.28$. This is the image of atom 2 sitting at $(-0.1, -0.1)$ — across the boundary in both directions.
+
+A unit test of the minimum-image function should include this 2D case: it catches off-by-one and sign errors that pass silently in symmetric 3D tests.
+
+```python
+def test_minimum_image() -> None:
+    box = np.array([1.0, 1.0, 1.0])
+    # Cross-corner pair
+    dr = np.array([0.8, 0.8, 0.0])
+    np.testing.assert_allclose(minimum_image(dr, box),
+                                np.array([-0.2, -0.2, 0.0]))
+    # Exactly half-box (ambiguous; numpy's round-to-even kicks in)
+    dr = np.array([0.5, 0.0, 0.0])
+    result = minimum_image(dr, box)
+    assert abs(result[0]) < 1e-10 or abs(abs(result[0]) - 0.5) < 1e-10
+    # Pair within range
+    dr = np.array([0.1, 0.0, 0.0])
+    np.testing.assert_allclose(minimum_image(dr, box), dr)
+```
+
+The "exactly half-box" case is an edge case: the closer image is mathematically tied. Most implementations let `numpy.round` (banker's rounding) decide; some break ties by always rounding down. For simulations near the half-box limit the choice does not matter because $r_\mathrm{cut}$ is strictly less than $L/2$ — atoms at the half-box separation are *outside* the cutoff and contribute zero force in either case.
+
+### The half-box rule, formally
+
+The minimum-image convention is well-defined as long as $r_\mathrm{cut} < L_\mathrm{perp}/2$, where $L_\mathrm{perp}$ is the *perpendicular* distance between opposite faces of the cell (not the longest cell vector). For an orthorhombic cell $L_\mathrm{perp,\alpha} = L_\alpha$; for a triclinic cell with one long axis and a small tilt, $L_\mathrm{perp}$ can be much smaller than the longest edge. LAMMPS computes these perpendicular widths and warns if you cross the threshold.
+
+Why "half"? Because if $r_\mathrm{cut} = L/2$, there are *two* images of atom $j$ at distance exactly $L/2$ from atom $i$ — one in each direction — and the minimum-image convention cannot decide between them. For any $r_\mathrm{cut} > L/2$ multiple images come into range; the convention breaks completely. The strict inequality $r_\mathrm{cut} < L/2$ guarantees uniqueness.
+
 ## Long-range Coulomb: Ewald summation
 
 Truncating Coulomb interactions does not work. The $1/r$ tail is too long-ranged: the contribution of pairs beyond any cutoff is not small. Naive truncation produces simulations whose dielectric response, ion mobility and thermodynamics are all wrong.
+
+!!! note "Why splitting is the right idea"
+    The Coulomb kernel $1/r$ has two awkward features simultaneously: it is *singular* at $r=0$ and *long-ranged* as $r\to\infty$. No single summation strategy handles both. Real-space sums converge slowly (the tail does not decay fast enough); reciprocal-space sums converge slowly at small $|\mathbf{k}|$ (the singularity at the origin). The Ewald trick is to algebraically split $1/r$ into two pieces, one of which is short-ranged (handle in real space) and the other of which is smooth at the origin (handle in reciprocal space). The standard identity used is the partition of unity
+    $$\frac{1}{r} = \frac{\mathrm{erfc}(\alpha r)}{r} + \frac{\mathrm{erf}(\alpha r)}{r},$$
+    where $\alpha$ is a tunable parameter with units of inverse length. The first piece decays as $e^{-\alpha^2 r^2}/r$ for large $r$ — short-ranged. The second piece is finite at $r=0$ (since $\mathrm{erf}(\alpha r)/r \to 2\alpha/\sqrt{\pi}$) and represents the smooth long-range part — sum in reciprocal space via Fourier transform.
 
 Ewald's 1921 insight: split the Coulomb interaction into a short-ranged part that sums in real space, and a long-ranged smooth part that sums in reciprocal space. Around each point charge $q_i$ at $\mathbf{r}_i$ place a compensating Gaussian charge density of opposite sign:
 
@@ -167,6 +220,23 @@ and $U_\mathrm{self} = (\alpha/\sqrt{\pi}) \sum_i q_i^2$ corrects for each charg
 
 For production work the **particle-mesh Ewald (PME)** method replaces the explicit reciprocal sum (7.23) by evaluation on a regular mesh via FFT, achieving $O(N \log N)$ scaling. PME is the default Coulomb method in GROMACS, AMBER, NAMD, OpenMM and LAMMPS' `kspace_style pppm`. You will rarely write Ewald code yourself; you will tune two numbers: the real-space cutoff and the PME grid spacing. Typical settings for bulk water are a real-space cutoff of 10 Å and a grid spacing of about 1 Å, giving forces accurate to $10^{-5}\,e/$Å.
 
+### Particle-mesh Ewald in three steps
+
+The PME algorithm reduces the long-range Coulomb cost from $O(N^{3/2})$ (best naive Ewald) to $O(N\log N)$. The recipe:
+
+1. **Charge assignment.** For each point charge $q_i$ at $\mathbf{r}_i$, distribute the charge to a small set of nearby grid points using a cardinal B-spline interpolation of order $p$ (typically $p=4$ or 6). This produces a gridded charge density $\rho(\mathbf{R}_g)$ on a regular mesh of $N_g \sim L/h$ points per side, where $h$ is the grid spacing.
+2. **FFT the gridded density** to reciprocal space, $\hat\rho(\mathbf{k}) = \sum_g e^{-i\mathbf{k}\cdot\mathbf{R}_g}\rho(\mathbf{R}_g)$. Multiply by the Ewald reciprocal kernel $(4\pi/k^2)e^{-k^2/(4\alpha^2)}$ to get the Fourier-space potential $\hat V(\mathbf{k})$. FFT back to real space, $V(\mathbf{R}_g)$.
+3. **Force interpolation.** For each charge, gather the gradient of $V$ at the charge position by differentiating the B-spline interpolant, $\mathbf{F}_i = -q_i \sum_g \nabla M_p(\mathbf{r}_i - \mathbf{R}_g)\,V(\mathbf{R}_g)$.
+
+The FFT step dominates: $O(N_g^3\log N_g) = O(N\log N)$ since $N_g\propto L\propto N^{1/3}$. Charge assignment and force interpolation are $O(N p^3)$ with the small prefactor $p^3 = 64$ for $p=4$. Real-space short-ranged part scales as $O(N)$ with the neighbour list.
+
+**Two tunable parameters.** The Ewald split parameter $\alpha$ and the grid spacing $h$ trade off real-space and reciprocal-space accuracy:
+
+- Larger $\alpha$: real-space erfc decays faster (smaller real-space cutoff possible), but the reciprocal-space Gaussian width $1/\alpha$ shrinks and a finer grid is needed.
+- Smaller $\alpha$: coarser grid suffices but real-space cutoff must grow.
+
+In practice you fix the desired force accuracy (typically $10^{-4}$-$10^{-5}\,e$/Å), then solve for the cheapest $\alpha$ given hardware FFT performance. Codes do this automatically: in LAMMPS, `kspace_style pppm 1e-4` asks for a relative force error of $10^{-4}$ and the code picks $\alpha$ and grid.
+
 !!! note "PME is not optional for ionic systems"
     A simulation of NaCl in water with a plain Coulomb cutoff will give wrong radial distribution functions, wrong ion-pair lifetimes, and possibly the wrong sign of the Soret coefficient. Use PME (or PPPM, or its variants) for any system with explicit point charges.
 
@@ -197,6 +267,28 @@ D_\infty = D_\mathrm{PBC} + \frac{k_B T\, \xi}{6\pi \eta L},
 $$
 
 removes the leading hydrodynamic finite-size error from MD self-diffusion coefficients. Use it whenever quoting a diffusion coefficient to more than one significant figure.
+
+## Self-Coulomb correction and tinfoil boundary
+
+A subtle point: Ewald's reciprocal sum (7.23) excludes $\mathbf{k}=0$. The omitted term, sometimes called the "tinfoil" or "metallic" boundary, is finite if the cell has a net dipole moment but undefined if it does not. The physical interpretation is that the system is embedded in a conducting medium (tinfoil), so any net dipole is screened. For most condensed-phase simulations this is the appropriate choice and is the default in LAMMPS' `kspace_style pppm`.
+
+If you simulate something with intrinsic dipole order — a ferroelectric, a polar slab — the tinfoil boundary condition has consequences: the long-range depolarisation field induced by periodic copies of the dipole is removed, which may or may not be what you want for the experimental setup you are modelling.
+
+For polar slabs perpendicular to a periodic direction, the standard fix is a *dipole correction*: a triangular electric field added to cancel the macroscopic dipole. In LAMMPS this is `kspace_modify slab 3.0` (the 3.0 sets the vacuum-to-slab ratio); in VASP `LDIPOL` and `IDIPOL`; in QE `dipfield=.true.` in `&CONTROL`.
+
+## Neighbour lists — how PBC interacts with the inner loop
+
+The minimum-image convention is the geometric foundation; the *algorithmic* expression is the **neighbour list**. For each atom $i$, we maintain a list of all atoms $j$ within $r_\mathrm{cut} + r_\mathrm{skin}$ of $i$, including periodic images. The list is built periodically (every 10-20 steps) and used at each timestep to skip distant pairs.
+
+Two algorithms dominate:
+
+**Cell list (linked-cell)**. Partition the simulation box into cells of side $\ge r_\mathrm{cut}$. Each atom is assigned to one cell. To find neighbours of atom $i$, scan only the 27 cells surrounding $i$'s cell (3D). Cost: $O(N)$ to build, $O(N\cdot M_\mathrm{neighbours\_per\_cell})$ to use.
+
+**Verlet list**. For each atom, store explicitly the indices of nearby atoms. Built from a cell list. Cost: $O(N)$ to build, $O(N\cdot Z)$ to use where $Z$ is the average coordination.
+
+LAMMPS uses both: cell list to find candidates, Verlet list to store the result. The `neighbor 2.0 bin` command sets a 2.0 Å skin: atoms within $r_\mathrm{cut} + 2.0$ Å are kept in the list. The skin is rebuilt only when an atom has moved more than `skin/2` since the last rebuild — checked every `neigh_modify every N` steps.
+
+A practical consequence: the *cell size* $r_\mathrm{cut} + r_\mathrm{skin}$ must be less than $L_\mathrm{perp}/2$ for the minimum-image convention to apply within neighbour search. If your cell is small, LAMMPS uses Newton's third law to fold pair forces back to a single computation per pair, but the geometry still requires the cell-size constraint.
 
 ## What we have
 

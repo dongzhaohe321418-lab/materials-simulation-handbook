@@ -10,9 +10,28 @@
 <figcaption>Figure 6.3.2. \(k\)-point convergence on an \(N \times N \times N\) Monkhorst–Pack grid (synthetic example). The error oscillates as the mesh resolves more Brillouin-zone features; the 1 meV/atom tolerance is reached around \(N=10\). Metals typically need denser grids than insulators.</figcaption>
 </figure>
 
+!!! tip "Why convergence testing exists"
+    A DFT total energy is not a property of a system; it is a property of *a particular numerical calculation* of that system. Change the plane-wave cutoff, the k-grid, the pseudopotential, the smearing — and you change the number. To turn DFT into a science you have to control these numbers until they no longer matter for the question being asked.
+    
+    Picture: you are measuring the height of a mountain with a tape measure marked in metres. The answer depends on whether you read off the nearest metre, the nearest decimetre, the nearest centimetre. To say "the mountain is 3127 m tall, ± 1 m" you need a measurement device with at least metre precision. Convergence testing is your tape-measure calibration for DFT: it tells you how fine your numerical mesh has to be to make the *physics* visible above the *numerical noise*.
+    
+    A converged calculation is a calculation where halving every numerical parameter would *not change the answer at the reported precision*. Most published "DFT results" come with the implicit promise that this is the case; a sobering fraction of them do not actually deliver.
+
 A DFT total energy is meaningless without two numbers attached: the plane-wave cutoff and the k-point density it was computed at. Without those, two people running the "same calculation" can disagree by 100 meV/atom — more than a typical formation-energy difference and certainly more than the accuracy needed to predict phase stability, defect populations, or reaction energies.
 
 This section walks through the systematic convergence procedure that every paper *should* include in its supplementary information and a depressing fraction does not.
+
+## 6.3.0 The shape of convergence — qualitative pictures
+
+Before any code, it helps to know what convergence *looks like* for the three knobs we have. Each behaves differently.
+
+**Plane-wave cutoff.** $E_\mathrm{tot}(E_\mathrm{cut})$ is monotonic (variational), decreasing exponentially toward an asymptote. Plot $\log|E - E_\mathrm{ref}|$ vs $E_\mathrm{cut}$ and you see (approximately) a straight line: each extra Rydberg of cutoff gains a roughly constant amount of energy. The slope depends on how "hard" the pseudopotential is — for ONCV-NC pseudopotentials the slope is shallow (need 80-100 Ry for a meV); for SSSP-USPP it is steep (40-50 Ry suffices).
+
+**k-point grid.** $E_\mathrm{tot}(N_k)$ is *not* monotonic in general. The error oscillates as the grid resolves successive features of the BZ — when a high-symmetry point is included it can produce a small dip; when an irrational mismatch arises it can produce a small bump. The envelope decays with grid density. For insulators the convergence is fast and oscillation small; for metals the convergence is slow and oscillation is dominated by which $\mathbf{k}$ points happen to fall at or near the Fermi surface.
+
+**Smearing width.** $E_\mathrm{tot}(\sigma)$ at fixed k-grid has a non-monotonic structure too: at small $\sigma$ the k-grid undersamples the Fermi surface (bumps); at large $\sigma$ the smearing distorts the occupation (smooth bias). The optimum lives in a window where the smearing error is small *and* the k-grid is dense enough that there is no undersampling noise.
+
+The interplay between k-grid and smearing is the slowest part of convergence for metals: doubling $N_k$ and halving $\sigma$ simultaneously is the only way to reach 1 meV/atom for transition metals. For insulators the smearing is zero or irrelevant, so only $E_\mathrm{cut}$ and $N_k$ matter — both converge cleanly.
 
 ## 6.3.1 Why convergence matters
 
@@ -257,6 +276,55 @@ On a 2023 laptop, the cutoff sweep (7 points) takes ~3 minutes, the k-sweep (8 p
 
 The script caches by label, so re-runs (after adjusting plotting code) are free.
 
+### Smearing-width convergence — a worked sweep for aluminium
+
+For metals you have a *third* convergence parameter: the smearing width $\sigma$. Smaller $\sigma$ is more accurate but converges slower with the k-grid; larger $\sigma$ converges faster but introduces a smearing error. The procedure mirrors the cutoff sweep:
+
+```python
+def sweep_degauss(atoms: Atoms, ecutwfc: float, ecutrho: float,
+                  kpts: tuple[int, int, int],
+                  degauss_values: list[float]) -> list[tuple[float, float]]:
+    """Sweep MV-smearing width at fixed cutoff and k-grid."""
+    results: list[tuple[float, float]] = []
+    for sigma in degauss_values:
+        workdir = Path("conv") / f"al_deg{sigma:.4f}"
+        workdir.mkdir(parents=True, exist_ok=True)
+        a = atoms.copy()
+        profile = EspressoProfile(command="pw.x", pseudo_dir=PSEUDO_DIR)
+        a.calc = Espresso(
+            profile=profile, directory=str(workdir),
+            pseudopotentials={"Al": "Al.pbe-n-kjpaw_psl.1.0.0.UPF"},
+            input_data={
+                "system": {"ecutwfc": ecutwfc, "ecutrho": ecutrho,
+                           "occupations": "smearing", "smearing": "mv",
+                           "degauss": sigma},
+                "electrons": {"conv_thr": 1e-9, "mixing_beta": 0.4},
+            },
+            kpts=kpts,
+        )
+        E = a.get_potential_energy()
+        results.append((sigma, E / len(a)))
+        print(f"  sigma={sigma:.4f} Ry  E={E/len(a):.6f} eV/atom")
+    return results
+```
+
+The expected behaviour for Al with a $12\times 12\times 12$ grid and MV smearing: $E$ varies by perhaps 2 meV/atom across $\sigma=0.005$-$0.04$ Ry, and the curve is flat near $\sigma=0.01$-$0.02$ Ry — exactly the range we recommended.
+
+### k-grid density under cell deformation
+
+When you change the cell (variable-cell relaxation, equation of state, or phonon calculation with a deformed cell), the reciprocal lattice vectors $\mathbf{b}_\alpha$ change too. A k-grid of $N_1\times N_2\times N_3$ defined on the original cell does *not* correspond to the same absolute k-point density in the deformed cell. For an isotropic 5% volume change, the BZ shrinks by 5% in linear size and your $\mathbf{k}$-grid becomes 5% coarser in absolute terms.
+
+Two practical implications:
+
+1. **Spurious "energy" jumps in EOS calculations.** If you sweep $a$ from 5.30 to 5.55 Å using the same `(N,N,N)` grid, the numerical part of $E_\mathrm{tot}(a)$ contains a sub-meV bump from changing k-density. For total energies this is below noise; for stresses (derivatives), it can matter.
+2. **Honest variable-cell relaxations** specify the k-grid density per Å$^{-1}$ rather than a fixed integer count. ASE exposes this via `kspacing` (Å$^{-1}$ between successive grid lines) which it converts to an integer grid for each cell. Use it whenever the cell changes appreciably during a calculation.
+
+```python
+si.calc = Espresso(..., kspacing=0.20)  # 0.20 Å^-1 grid density
+```
+
+This keeps the absolute density constant under cell deformation. The trade-off is integer rounding: a 4×4×4 grid for one cell may become 5×4×4 in a slightly distorted one, which adds noise of its own. For high-precision work, pick a `kspacing` so that all cells in your sweep round to the same integer grid.
+
 ## 6.3.5 What "converged" actually means
 
 A few subtleties the script glosses over.
@@ -283,6 +351,36 @@ A k-grid that is good for total energies may be inadequate for:
 
 For total energies, forces, and stresses on bulk insulators — the bread and butter of materials simulation — the procedure above is sufficient.
 
+### Convergence of a derived quantity: the bulk modulus
+
+A useful exercise that complements raw $E_\mathrm{tot}$ convergence is to check that a *property* — not just the energy — has converged. The bulk modulus
+$$B_0 = -V_0\left(\frac{\partial P}{\partial V}\right)_{V_0} = V_0\left(\frac{\partial^2 E}{\partial V^2}\right)_{V_0}$$
+is the standard target for solid-state DFT benchmarks. To extract it from a series of SCF runs at different volumes:
+
+```python
+def birch_murnaghan(V: np.ndarray, V0: float, B0: float, Bp: float,
+                    E0: float) -> np.ndarray:
+    """Birch-Murnaghan equation of state."""
+    eta = (V0 / V) ** (2/3)
+    return E0 + (9 * V0 * B0 / 16) * (
+        (eta - 1) ** 3 * Bp + (eta - 1) ** 2 * (6 - 4 * eta)
+    )
+
+def fit_eos(volumes: np.ndarray, energies: np.ndarray
+            ) -> tuple[float, float, float, float]:
+    """Return (V0, B0, Bp, E0) by fitting B-M EOS to E(V) data."""
+    from scipy.optimize import curve_fit
+    # Initial guesses
+    V0_init = volumes[energies.argmin()]
+    p0 = [V0_init, 0.6, 4.0, energies.min()]
+    popt, _ = curve_fit(birch_murnaghan, volumes, energies, p0=p0)
+    return tuple(popt)
+```
+
+Now sweep $E_\mathrm{cut}$ — at each cutoff, run 7 EOS points around the equilibrium volume, fit B-M, extract $B_0$. Plot $B_0(E_\mathrm{cut})$. Typical pattern for Si: $B_0$ converges to ~97 GPa (experiment 99 GPa) but only slowly — needs $E_\mathrm{cut} \approx 70$ Ry rather than the 50 Ry that converged the total energy. The reason: stresses (second derivatives of energy with respect to strain) require an `ecutrho` *higher* than `ecutwfc * 8` to fully capture the augmentation charges. If you care about $B_0$, set `ecutrho = 12 * ecutwfc`.
+
+This is the deeper lesson: **converge what you report**. Total energies are a good proxy for most quantities, but stresses, second derivatives, dynamical matrices, and so on need their own convergence tests. Build them into the same systematic procedure: sweep, plot, look for plateau.
+
 ## 6.3.6 Recommended Si parameters going forward
 
 From the procedure above, our converged parameters for silicon with SSSP-PBE-efficiency are:
@@ -299,6 +397,34 @@ From the procedure above, our converged parameters for silicon with SSSP-PBE-eff
 
 We will use these values in the next section to compute the silicon band structure.
 
+### Numerical example: sample convergence numbers for Si
+
+For SSSP-PBE-efficiency on the 2-atom Si primitive cell, the sweep typically gives (your numbers will vary by a few meV/atom depending on pseudopotential version and SCF threshold):
+
+| `ecutwfc` (Ry) | $E$ (eV/atom) | $|E - E_\mathrm{ref}|$ (meV/atom) |
+|---|---|---|
+| 20 | $-158.821$ | 120 |
+| 30 | $-158.918$ | 23 |
+| 40 | $-158.937$ | 4 |
+| 50 | $-158.940$ | 1 |
+| 60 | $-158.941$ | 0.4 |
+| 70 | $-158.941$ | 0.1 |
+| 80 | $-158.941$ | 0 (ref) |
+
+The "exponential approach with a long tail" is exactly what the variational principle guarantees: monotonic decrease, with progressively smaller decrements. The 1 meV/atom target is reached at ~50 Ry, the 0.1 meV/atom target at ~70 Ry — a factor of 2$\times$ in basis size to gain one decimal place.
+
+For the k-grid:
+
+| Grid | $E$ (eV/atom) | $|E - E_\mathrm{ref}|$ (meV/atom) |
+|---|---|---|
+| $2\times 2\times 2$ | $-158.892$ | 48 |
+| $4\times 4\times 4$ | $-158.938$ | 3 |
+| $6\times 6\times 6$ | $-158.940$ | 0.7 |
+| $8\times 8\times 8$ | $-158.941$ | 0.2 |
+| $12\times 12\times 12$ | $-158.941$ | 0 (ref) |
+
+For an insulator (which Si is) the k-grid converges noticeably faster than the cutoff. For a metal at the same density, expect the k-grid to dominate convergence: a Cu primitive cell at 50 Ry/MV/0.02 needs a $12^3$ grid for 1 meV/atom; a Si cell at the same cutoff needs $4^3$.
+
 ## 6.3.7 Beyond what we did
 
 Three things this section did not cover but you should think about for real work:
@@ -306,5 +432,7 @@ Three things this section did not cover but you should think about for real work
 - **Supercell-size convergence** for defects (next section): the defect formation energy must converge as the supercell grows. For neutral vacancies, 64-atom cells are often adequate; for charged defects, 216 or 512 atoms with image-charge corrections.
 - **Slab-thickness convergence** for surfaces: each surface energy calculation involves a slab + vacuum geometry; both the slab thickness and the vacuum padding need convergence tests.
 - **Cell-shape convergence** for variable-cell relaxations: a converged stress requires higher `ecutrho` than a converged energy, because stress is the derivative of energy with respect to strain, and derivatives amplify basis-set errors.
+
+**Remark 6.3.1 (Convergence as a culture, not a task).** The procedure here looks formulaic — sweep cutoff, sweep k-grid, plot, choose. The deeper habit it instils is a culture of being skeptical of one's own numbers. Every parameter has a default in QE; every default is a guess for "average usage". For a serious paper your numbers are not "average usage" and you cannot trust the defaults blindly. The convergence procedure is the institutional embodiment of "trust nothing about the numerics, verify everything".
 
 Convergence tests look like busywork. They are not. They are the price of admission for results anyone else can trust. Build them into your workflow once — write the script — and from then on you run it without thinking, for every new system. The papers you can read and the papers you cannot will then become visibly distinct.
