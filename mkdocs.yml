@@ -99,6 +99,8 @@ markdown_extensions:
 extra_javascript:
   - assets/javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js
+  - assets/javascripts/run_python.js
 
 extra_css:
   - assets/stylesheets/extra.css

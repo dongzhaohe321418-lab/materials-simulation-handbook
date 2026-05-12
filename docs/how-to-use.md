@@ -47,6 +47,19 @@ Exercises are marked:
 
 A reference like *(Section 5.3)* points to the section with that number in this book. A reference like *(Martin §7.2)* points to a section in an external textbook listed in [Appendix D](appendix/D-reading.md).
 
+## Running the code live in your browser
+
+Every Python code block in this book has a small **▶ Run** button in its top-right corner. Click it and the code executes **inside your browser** — no install, no account, no server. The first run on any page takes ~10 seconds while the WebAssembly Python runtime is fetched and cached; after that, every subsequent run is instant.
+
+What works in-browser: NumPy, SciPy, Matplotlib (all the maths, plotting, and small-system simulation code in Chapters 0–8 and most of 11).
+
+What does NOT work in-browser: PyTorch, MACE, ASE, pymatgen, and other heavy scientific packages. Code blocks that import these (mostly Chapters 6, 9, 10, 12) display a polite note pointing you to [Google Colab](https://colab.research.google.com/), where the full stack is available with one click.
+
+If a code block produces a plot, the figure renders directly under the **▶ Run** button. If it prints text, the text appears there. If it raises an error, the traceback is shown in red — debug it, edit the code, and run again.
+
+!!! tip
+    Editing the code in the page directly is not yet supported in the live runner; if you want to tweak a value and re-run, paste the snippet into the Python cell or open the corresponding notebook on Colab.
+
 ## Errata and contributions
 
 If you spot a mistake — a typo, an incorrect derivation, a code example that does not run — please open an issue or a pull request on [GitHub](https://github.com/dongzhaohe321418-lab/materials-simulation-handbook). This book gets better when readers push back.

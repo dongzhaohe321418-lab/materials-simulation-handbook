@@ -44,4 +44,102 @@
   .md-header, .md-tabs, .md-sidebar, .md-footer { display: none !important; }
   .md-main__inner { margin: 0; }
   .md-content { max-width: 100%; }
+  .pyodide-wrap .pyodide-run-btn { display: none; }
+}
+
+/* ----- Inline Pyodide Run buttons ----- */
+
+.pyodide-wrap {
+  position: relative;
+  margin: 1em 0;
+}
+
+.pyodide-run-btn {
+  position: absolute;
+  top: 0.4em;
+  right: 0.4em;
+  background: rgba(94, 53, 177, 0.92);
+  color: #fff;
+  border: none;
+  padding: 0.25em 0.75em;
+  font-size: 0.78em;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  z-index: 2;
+  transition: background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.pyodide-run-btn:hover:not(:disabled) {
+  background: rgba(69, 39, 160, 1);
+}
+
+.pyodide-run-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.pyodide-icon {
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.pyodide-output {
+  margin-top: 0.5em;
+  padding: 0.75em 1em;
+  background: var(--md-code-bg-color, #f5f5f5);
+  border-left: 3px solid #5e35b1;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.85em;
+  overflow-x: auto;
+}
+
+.pyodide-output pre {
+  margin: 0;
+  background: transparent;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+}
+
+.pyodide-stdout {
+  color: var(--md-default-fg-color, #1a1a1a);
+}
+
+.pyodide-error {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.06);
+  padding: 0.5em;
+  border-radius: 4px;
+  margin-top: 0.5em;
+}
+
+[data-md-color-scheme="slate"] .pyodide-error {
+  color: #ef9a9a;
+  background: rgba(239, 154, 154, 0.1);
+}
+
+.pyodide-note {
+  color: var(--md-default-fg-color--light, #666);
+  font-style: italic;
+}
+
+.pyodide-note code {
+  font-style: normal;
+}
+
+.pyodide-plot {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.5em;
+  border-radius: 4px;
+  background: #fff;
+  padding: 4px;
+}
+
+[data-md-color-scheme="slate"] .pyodide-plot {
+  background: #1e1e2a;
 }
