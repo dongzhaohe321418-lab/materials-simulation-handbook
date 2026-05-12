@@ -33,6 +33,17 @@ This is the canonical form. The angular frequency $\omega$ is the same one a cla
 !!! note "The lesson"
     Whenever you ask a quantum-mechanical question about *small* deviations from equilibrium, the harmonic oscillator is the right starting point. In Chapter 7 we will compute vibrational frequencies of molecules and phonons of crystals by precisely this procedure: locate equilibrium, compute the Hessian $V''$ (the "force-constant matrix"), diagonalise it to obtain the normal modes — each of which is, by construction, a harmonic oscillator.
 
+### Natural units by dimensional analysis
+
+Before diving into the eigenvalue problem it is worth asking: what are the natural length, momentum and energy scales of the Hamiltonian (4.4.3)? The parameters available are $\hbar$ (J s), $m$ (kg), and $\omega$ (s$^{-1}$). There is a unique length, momentum and energy formable from these:
+
+$$x_0 \equiv \sqrt{\frac{\hbar}{m\omega}}, \qquad p_0 \equiv \sqrt{\hbar m \omega}, \qquad E_0 \equiv \hbar\omega. \tag{4.4.D1}$$
+
+!!! note "Why this step? — building scales by dimensional analysis"
+    We need $[x_0] = $ m. From $\hbar$ (units kg m$^2$ s$^{-1}$), $m$ (kg) and $\omega$ (s$^{-1}$), the combination with units of m$^2$ is $\hbar/(m\omega)$; take the square root for a length. Repeat for $p_0$ (units kg m s$^{-1}$) and $E_0$ (units kg m$^2$ s$^{-2}$). The check $x_0 p_0 = \sqrt{(\hbar/m\omega)(\hbar m\omega)} = \hbar$ shows that position and momentum scales saturate the Heisenberg uncertainty product. The HO ground state will indeed be a *minimum-uncertainty wavepacket* — a sharper version of the result we just saw for the particle in a box.
+
+For an oscillating diatomic molecule with $\omega \sim 10^{14}$ rad/s and $m \sim m_e$, $x_0 \sim 0.3$ Å — the same order as a chemical bond length. For an electron in a magnetic field oscillating at the cyclotron frequency $\omega_c = eB/m$ with $B = 1$ T, $\omega_c \approx 1.8\times 10^{11}$ s$^{-1}$ and $x_0 \approx 26$ nm — the magnetic length. The HO length sets the spatial scale of the wavefunction. Every numerical SHO calculation must put its simulation box at "many $x_0$" or the wavefunction will be clipped at the walls.
+
 ## 4.4.2 The analytical spectrum
 
 The eigenvalue problem $\hat{H} \psi = E\psi$ for the Hamiltonian (4.4.3) is the equation
@@ -51,7 +62,57 @@ Writing $\varepsilon \equiv E/(\hbar\omega)$,
 
 $$\psi''(\xi) = (\xi^2 - 2\varepsilon)\psi(\xi). \tag{4.4.7}$$
 
-There are now two paths to the spectrum. The series-solution method (used in nearly every textbook) makes the asymptotic substitution $\psi(\xi) = H(\xi)\, e^{-\xi^2/2}$, derives the Hermite differential equation for $H$, and observes that polynomial solutions exist only when $\varepsilon = n + \tfrac12$ for non-negative integers $n$. The operator-ladder method (due to Dirac) introduces creation and annihilation operators $\hat a^\dagger, \hat a$ satisfying $[\hat a, \hat a^\dagger] = 1$ and shows that $\hat{H} = \hbar\omega(\hat a^\dagger \hat a + \tfrac12)$ has eigenvalues $\hbar\omega(n + \tfrac12)$ for $n = 0, 1, 2, \ldots$ — we revisit this in the exercises.
+There are now two paths to the spectrum. The series-solution method (used in nearly every textbook) makes the asymptotic substitution $\psi(\xi) = H(\xi)\, e^{-\xi^2/2}$, derives the Hermite differential equation for $H$, and observes that polynomial solutions exist only when $\varepsilon = n + \tfrac12$ for non-negative integers $n$. The operator-ladder method (due to Dirac) introduces creation and annihilation operators $\hat a^\dagger, \hat a$ satisfying $[\hat a, \hat a^\dagger] = 1$ and shows that $\hat{H} = \hbar\omega(\hat a^\dagger \hat a + \tfrac12)$ has eigenvalues $\hbar\omega(n + \tfrac12)$ for $n = 0, 1, 2, \ldots$
+
+### The ladder method in full
+
+The operator approach is elegant enough — and useful enough downstream, when we quantise fields and phonons — that we work it through completely here. Introduce the dimensionless position and momentum operators
+
+$$\hat X \equiv \hat x/x_0, \qquad \hat P \equiv \hat p\, x_0/\hbar.$$
+
+These satisfy $[\hat X, \hat P] = i$, by direct substitution into $[\hat x, \hat p] = i\hbar$. The Hamiltonian (4.4.3) becomes
+
+$$\hat H = \frac{\hbar\omega}{2}\left(\hat P^2 + \hat X^2\right).$$
+
+Now define the **annihilation** and **creation** operators
+
+$$\boxed{\;\hat a \equiv \frac{1}{\sqrt 2}(\hat X + i\hat P), \qquad \hat a^\dagger \equiv \frac{1}{\sqrt 2}(\hat X - i\hat P).\;} \tag{4.4.L1}$$
+
+Both are non-Hermitian; $\hat a$ and $\hat a^\dagger$ are adjoints of each other. Their commutator is
+
+$$[\hat a, \hat a^\dagger] = \tfrac12[(\hat X + i\hat P), (\hat X - i\hat P)] = \tfrac12(-i[\hat X, \hat P] + i[\hat P, \hat X]) = -i\cdot i = 1.$$
+
+!!! note "Why this step?"
+    The cross-terms in $[\hat X + i\hat P, \hat X - i\hat P]$ are $-i[\hat X, \hat P] + i[\hat P, \hat X] = -i(i) + i(-i) = 1 + 1 = 2$, divided by 2 gives 1. The non-trivial commutator $[\hat a, \hat a^\dagger] = 1$ is the algebraic statement of canonical quantisation, recast in a basis where the Hamiltonian becomes diagonal.
+
+The Hamiltonian factorises:
+
+$$\hat a^\dagger \hat a = \tfrac12 (\hat X - i\hat P)(\hat X + i\hat P) = \tfrac12(\hat X^2 + \hat P^2 + i[\hat X, \hat P]) = \tfrac12(\hat X^2 + \hat P^2) - \tfrac12,$$
+
+so
+
+$$\hat H = \hbar\omega\,(\hat a^\dagger \hat a + \tfrac12) \equiv \hbar\omega\,(\hat N + \tfrac12), \tag{4.4.L2}$$
+
+where $\hat N \equiv \hat a^\dagger \hat a$ is the **number operator**.
+
+Now the algebra does the work. If $|\nu\rangle$ is an eigenstate of $\hat N$ with eigenvalue $\nu$, then so are $\hat a|\nu\rangle$ and $\hat a^\dagger|\nu\rangle$, with eigenvalues $\nu - 1$ and $\nu + 1$ respectively:
+
+$$\hat N \hat a|\nu\rangle = \hat a^\dagger \hat a \hat a|\nu\rangle = (\hat a\hat a^\dagger - 1)\hat a|\nu\rangle = \hat a(\hat N - 1)|\nu\rangle = (\nu - 1)\hat a|\nu\rangle.$$
+
+So $\hat a$ lowers the eigenvalue by one quantum, and $\hat a^\dagger$ raises it by one. But $\hat N$ is positive semi-definite: for any $|\psi\rangle$, $\langle\psi|\hat N|\psi\rangle = \langle\psi|\hat a^\dagger \hat a|\psi\rangle = \|\hat a|\psi\rangle\|^2 \geq 0$. The descending ladder $|\nu\rangle, |\nu - 1\rangle, |\nu - 2\rangle, \ldots$ must therefore terminate, which happens if and only if $\nu$ is a non-negative integer and there exists a state $|0\rangle$ annihilated by $\hat a$:
+
+$$\hat a |0\rangle = 0. \tag{4.4.L3}$$
+
+The full spectrum is $\hat N|n\rangle = n|n\rangle$ for $n = 0, 1, 2, \ldots$, and from (4.4.L2),
+
+$$E_n = \hbar\omega(n + \tfrac12). \quad\checkmark$$
+
+We have recovered (4.4.8) without ever solving the differential equation.
+
+The ground-state wavefunction follows from (4.4.L3) in position representation: $\hat a |0\rangle = \tfrac{1}{\sqrt 2}(\hat X + i\hat P)|0\rangle = 0$ becomes $(\xi + \partial_\xi)\psi_0 = 0$, with solution $\psi_0(\xi) \propto e^{-\xi^2/2}$ — a Gaussian, in agreement with (4.4.9). Excited states are generated by $|n\rangle = (\hat a^\dagger)^n/\sqrt{n!}\;|0\rangle$, which automatically produces the Hermite polynomials.
+
+!!! tip "Why ladder operators matter beyond the SHO"
+    Every quantised harmonic system — phonons in a crystal, photons in a cavity, magnons in a magnet, plasmons in a metal — has the same algebraic structure: a creation operator that adds one quantum and an annihilation operator that removes one. The state with $n$ quanta is $(\hat a^\dagger)^n|0\rangle/\sqrt{n!}$. Quantum field theory is, in a precise sense, just a great many coupled oscillators with this ladder structure. The few pages of algebra you just read are the seed of an enormous tree.
 
 Either way the result is the same: the energy eigenvalues are
 
@@ -88,6 +149,11 @@ The zero-point energy has real physical consequences.
 - **Isotope effects in vibrational spectra**: replacing $^1$H with $^2$H (deuterium) halves the zero-point energy of an O–H stretch, shifting absorption lines by 30%. This is the basis of vibrational mode assignment in infrared spectroscopy.
 
 - **Casimir-style cavity effects** in electromagnetism are zero-point energies of photon harmonic oscillators in a confined geometry.
+
+!!! example "Numerical: zero-point energy of H$_2$"
+    The H$_2$ molecule has a vibrational wavenumber $\tilde\nu \approx 4400$ cm$^{-1}$. Convert to angular frequency: $\omega = 2\pi c \tilde\nu = 2\pi(3\times 10^{10}\,\text{cm/s})(4400\,\text{cm}^{-1}) \approx 8.3\times 10^{14}$ s$^{-1}$. Then
+    $$E_0 = \tfrac12 \hbar\omega = \tfrac12 (1.055\times 10^{-34})(8.3\times 10^{14}) \approx 4.4\times 10^{-20}\ \mathrm{J} \approx 0.273\ \mathrm{eV}.$$
+    Equivalently $E_0 \approx 6.3$ kcal/mol — about 1.5% of the H–H bond energy (104 kcal/mol). At $T = 0$ a hydrogen molecule still vibrates with this energy. Replace one proton by deuterium and the reduced mass roughly doubles, so $\omega \propto 1/\sqrt\mu$ drops by $\sqrt 2$ and the ZPE drops to $\sim 0.19$ eV. This 0.08 eV gap is responsible for measurable kinetic-isotope effects in hydrogen-transfer reactions.
 
 ## 4.4.4 Numerical solution
 
@@ -190,6 +256,9 @@ hbar*omega = 0.658212 eV
 
 The numerical levels are *evenly spaced* by $\hbar\omega$, just as (4.4.8) predicts, and agree with theory to seven significant figures for the ground state. The error grows with $n$ because higher states have shorter wavelengths and probe the grid more finely; this is the same effect we saw in §4.3.
 
+!!! tip "What changed from §4.3?"
+    The whole script differs from `particle_in_a_box.py` in three lines: (i) the grid is symmetric around $x = 0$ rather than $[0, L]$; (ii) we add the diagonal $V(x_i) = \tfrac12 m\omega^2 x_i^2$ to the Hamiltonian; (iii) we extend the box wide enough to contain the Gaussian tails. Everything else — the second-difference kinetic operator, the call to `np.linalg.eigh`, the post-processing — is identical. This is the central pay-off of working numerically: once the infrastructure exists, every new potential is a one-line change.
+
 !!! warning "Grid extent matters"
     For the SHO the wavefunctions decay as $\exp(-x^2/2\ell^2)$, where $\ell$ is the oscillator length. The simulation box must be many oscillator lengths wide, or the artificial walls at the box edges will spuriously confine the wavefunction and shift the energies upward. For the parameters above, $\ell = \sqrt{\hbar/m_e\omega} \approx 1.06$ nm, so a half-width of 4 nm ($\approx 4\ell$) gives Gaussian tails of $e^{-8} \approx 3 \times 10^{-4}$ at the wall — small enough not to matter. If you increase $\omega$, decrease the box width proportionally.
 
@@ -209,7 +278,22 @@ $$\hat{H} = \sum_s \hat{H}_s, \quad \hat{H}_s = \frac{\hat P_s^2}{2} + \tfrac12 
 
 where $\hat Q_s, \hat P_s$ are mass-weighted normal-mode coordinates. Each $\hat{H}_s$ is exactly the SHO we just solved. Its excitations are **phonons** — the quanta of lattice vibration.
 
-Two practical consequences. First, the *vibrational contribution to the free energy* of a solid is
+### One phonon mode is one harmonic oscillator
+
+Pause to appreciate the deep identification we have just made. We started with an interacting many-body system — a crystal with $\sim 10^{23}$ atoms coupled by quantum-mechanical bonds — and ended with a sum of $3N$ *decoupled* harmonic oscillators. Each oscillator is independent; each obeys the equation we solved in §4.4.2; each has equally spaced energy levels $E_s(n_s) = \hbar\omega_s(n_s + 1/2)$. The state of the lattice is specified by giving the occupation $n_s \in \{0, 1, 2, \ldots\}$ of each mode.
+
+The natural language is *quanta*: the integer $n_s$ counts how many quanta — **phonons** — are present in mode $s$. The ladder operators $\hat a_s, \hat a_s^\dagger$ that we constructed for a single oscillator now play double duty: they *create* and *annihilate* phonons. The Hamiltonian in second-quantised form is
+
+$$\hat H = \sum_s \hbar\omega_s\,(\hat a_s^\dagger \hat a_s + \tfrac12).$$
+
+Phonons are *bosons*: any number of them can occupy the same mode (because $(\hat a^\dagger)^n |0\rangle$ exists for all $n$). The Bose–Einstein distribution $\langle\hat n_s\rangle = 1/(e^{\hbar\omega_s/k_BT} - 1)$ governs their thermal occupation. We forward-reference Chapter 3.5.5 for the full development of lattice dynamics, but the algebraic engine — the operator-ladder method of §4.4.2 — is already in your hands.
+
+!!! tip "The same algebra everywhere"
+    Replace "phonon" by "photon" and "lattice mode" by "electromagnetic mode of a cavity": you have the quantum theory of light. Replace by "magnon" and "spin wave": magnetism. Replace by "plasmon" and "collective electron oscillation": metals. Replace by "Cooper pair" and you are most of the way to BCS superconductivity. The harmonic oscillator is not one model among many; it is the *building block* from which most of quantum many-body physics is assembled.
+
+### Two practical consequences
+
+First, the *vibrational contribution to the free energy* of a solid is
 
 $$F_{\mathrm{vib}}(T) = \sum_s\left[ \tfrac12 \hbar\omega_s + k_{\mathrm B}T \ln\!\left(1 - e^{-\hbar\omega_s/k_{\mathrm B}T}\right)\right], \tag{4.4.14}$$
 
@@ -225,7 +309,46 @@ Reality is never exactly harmonic. Cubic and higher terms in (4.4.1) couple diff
 
 Anharmonic methods (self-consistent phonons, molecular dynamics, machine-learning potentials) take the harmonic baseline and correct it. We meet them in Chapters 7 and 9.
 
+### The Morse potential — a paradigmatic anharmonic correction
+
+The most popular analytical model for a real chemical bond is the **Morse potential**,
+
+$$V_{\mathrm M}(r) = D_e\left[1 - e^{-a(r - r_e)}\right]^2, \tag{4.4.M1}$$
+
+where $r_e$ is the equilibrium bond length, $D_e$ is the dissociation energy, and $a$ controls the width of the well. Expanding $V_{\mathrm M}$ about $r = r_e$,
+
+$$V_{\mathrm M}(r) \approx D_e a^2 (r - r_e)^2 - D_e a^3 (r - r_e)^3 + \tfrac{7}{12} D_e a^4 (r - r_e)^4 + \cdots,$$
+
+so the harmonic approximation has $k = 2 D_e a^2$ and $\omega = \sqrt{2 D_e a^2/m}$. The cubic and quartic corrections produce anharmonicity in a controlled way. Remarkably, the Schrödinger equation for the Morse potential is *exactly* solvable; the energies are
+
+$$E_n = \hbar\omega(n + \tfrac12) - \frac{[\hbar\omega(n + \tfrac12)]^2}{4 D_e}, \tag{4.4.M2}$$
+
+a quadratic correction to the SHO spectrum. The levels are *no longer* evenly spaced: as $n$ grows, the gaps shrink (the bond softens), and the spectrum terminates at a finite number of bound states (the bond breaks). For H$_2$, $D_e \approx 4.75$ eV and $\hbar\omega \approx 0.55$ eV, giving an anharmonic correction to $E_0$ of about $-0.02$ eV — small but spectroscopically measurable.
+
+The Morse curve is plotted alongside the harmonic approximation in Fig. 4.4.2. The two coincide to about 0.1 Å around the minimum and diverge rapidly thereafter. This is the standard cartoon for "harmonic everywhere near the minimum, breaks down at large amplitude" — and is the conceptual basis for why room-temperature solid mechanics is *almost* harmonic but thermal expansion, thermal conductivity, and bond dissociation require anharmonic terms.
+
+!!! tip "When to worry about anharmonicity"
+    A useful rule of thumb: the harmonic approximation is reliable when the thermal energy $k_B T$ is less than $\sim 10\%$ of the well depth $D_e$. At room temperature ($k_B T \approx 0.026$ eV), this gives a threshold of $D_e \gtrsim 0.25$ eV — easily satisfied by ordinary covalent bonds ($D_e \sim 4$ eV) but failing for weak intermolecular interactions, hydrogen bonds, and any system near a phase transition.
+
 The harmonic oscillator is therefore the lingua franca of vibrational physics: it is the model we *start* with, the model whose eigenvalues we *report*, and the model whose deviations we *correct*. Solving it by hand (as in §4.4.2) and on the computer (as in §4.4.4) is among the most valuable hours you can spend in this book.
+
+## 4.4.6a Coherent states: the most classical of quantum states
+
+It is sometimes asked: what is the *most classical* state of a quantum oscillator? A definite-energy eigenstate $|n\rangle$ has zero mean position and momentum, which is hardly classical. The answer, due to Schrödinger and Glauber, is a **coherent state** $|\alpha\rangle$ — a right-eigenstate of the annihilation operator:
+
+$$\hat a|\alpha\rangle = \alpha|\alpha\rangle, \qquad \alpha \in \mathbb C.$$
+
+In the energy basis,
+
+$$|\alpha\rangle = e^{-|\alpha|^2/2}\sum_{n=0}^\infty \frac{\alpha^n}{\sqrt{n!}}\,|n\rangle.$$
+
+Coherent states have several remarkable properties:
+
+- The mean position oscillates exactly as a classical particle: $\langle\hat x(t)\rangle = \sqrt{2}\,x_0\,\text{Re}(\alpha\, e^{-i\omega t})$.
+- The position and momentum uncertainties saturate the Heisenberg bound: $\Delta x\,\Delta p = \hbar/2$, with $\Delta x = x_0/\sqrt 2$.
+- The wavepacket *does not spread* with time — a Gaussian of fixed width that simply translates back and forth.
+
+Coherent states describe the output of a laser, the motion of an ion in a Paul trap, and the macroscopic vibrations of a mechanical oscillator. They are how the *classical* limit of the harmonic oscillator emerges naturally from the quantum theory.
 
 ## 4.4.7 What's coming
 

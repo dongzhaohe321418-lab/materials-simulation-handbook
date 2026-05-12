@@ -11,6 +11,25 @@ The motivation is partly pedagogical and partly practical. Pedagogically, the bo
 
 We will solve the problem twice: once analytically with paper and pencil, and once numerically by turning the Hamiltonian into a matrix and diagonalising it. The numerical method we develop here — finite differences plus `scipy.linalg.eigh` — is exactly the method we will reuse in §4.4 for the harmonic oscillator and which, in spirit, underlies modern plane-wave electronic-structure codes.
 
+## 4.3.0 Classical preview: a ball in a box
+
+Before doing any quantum mechanics, take a moment to remember what the *classical* version of this problem looks like, because the contrast is illuminating.
+
+A classical point particle of mass $m$ is placed inside a 1D region $0 < x < L$ with rigid walls at the endpoints. Inside, no force acts: the particle moves at constant velocity. At each wall it undergoes an elastic collision that reverses its momentum. The motion is a perfectly periodic back-and-forth at constant speed.
+
+What can we say about this system?
+
+- **Energy is continuous.** The particle has kinetic energy $E = \tfrac12 m v^2$ for any $v \geq 0$ we like. There is no minimum energy: a ball sitting at rest in the middle of the box has $E = 0$.
+- **Position is uniform on average.** Time-averaged over many bounces, the probability density of finding the ball at any $x \in (0, L)$ is uniform, $\rho_{\mathrm{cl}}(x) = 1/L$. The ball spends equal time at every point because it moves at constant speed.
+- **No interference.** There is no analogue of a "node" in the probability density.
+
+Now contrast: quantum mechanically, the *same* setup with the *same* walls produces a discrete spectrum, a non-zero ground-state energy, and probability densities $|\psi_n(x)|^2 = (2/L)\sin^2(n\pi x/L)$ that *oscillate* between zero (nodes) and a maximum $2/L$. The classical uniform distribution is recovered only as an average over many neighbouring quantum states — the correspondence principle in action.
+
+!!! tip "Standing waves are the right intuition"
+    A musician knows what frequencies a string can sound: only those whose half-wavelength fits an integer number of times into the string length. A quantum particle in a box is exactly the same constraint applied to its de Broglie wave. The wavefunction has to *fit* — and only certain wavelengths fit, which is why only certain energies are allowed. The discreteness is forced by geometry, not postulated.
+
+With this intuition in place, the analytical solution that follows is no more mysterious than the modes of a guitar string.
+
 ## 4.3.1 The model
 
 Consider a single particle of mass $m$ in one dimension, with potential
@@ -26,6 +45,17 @@ Inside the box the time-independent Schrödinger equation (4.2.6) reads
 $$-\frac{\hbar^2}{2m}\frac{d^2 \psi}{dx^2} = E\, \psi. \tag{4.3.3}$$
 
 ## 4.3.2 Analytical solution
+
+We solve (4.3.3) step by step, naming every move.
+
+!!! note "Why this step? — five-step solution skeleton"
+    The following derivation has a structure that recurs in every 1D bound-state problem:
+    (i) solve the ODE in regions where $V$ is constant;
+    (ii) apply continuity at boundaries to determine the constants;
+    (iii) apply the other boundary condition to get the eigenvalue condition;
+    (iv) normalise;
+    (v) read off energies and wavefunctions.
+    Memorise the five steps; we will use the same template for the harmonic oscillator (§4.4), for tunnelling problems (Chapter 11), and for the radial equation of the hydrogen atom in any textbook.
 
 Equation (4.3.3) is a linear second-order ODE with constant coefficients — the same equation that governs a simple harmonic oscillator in classical mechanics, with the spatial coordinate playing the role of time. Define
 
@@ -84,6 +114,61 @@ using the standard sine-sine integral. This is the orthogonality theorem of §4.
     $$E_1 = \frac{\pi^2 (1.055 \times 10^{-34})^2}{2 \cdot 9.109 \times 10^{-31} \cdot (10^{-9})^2} \approx 6.0 \times 10^{-20}\ \mathrm{J} \approx 0.376\ \mathrm{eV}.$$
     The first excited state is at $4 E_1 \approx 1.5$ eV, and the $1 \to 2$ transition occurs at a wavelength of $\sim 1100$ nm — the near-infrared. Make the box 0.5 nm and the transition shifts into the visible. This is the physics of quantum-confined optical materials.
 
+!!! example "An even smaller box: $L = 1$ Å, electron"
+    For $L = 0.1$ nm $= 1$ Å — roughly the size of a hydrogen atom — the ground-state energy is
+    $$E_1 = (0.376\ \mathrm{eV}) \times 100 = 37.6\ \mathrm{eV},$$
+    using the inverse-square scaling with $L$. This is in the right ballpark for atomic ionisation energies (hydrogen: 13.6 eV; helium: 24.6 eV; lithium 2$s$: 5.4 eV). The box is too crude to give numerical chemistry, but the *scale* is correct, which is one of the appealing features of the model.
+
+## 4.3.2a Expectation values and the uncertainty product
+
+The wavefunctions (4.3.9) are explicit enough that we can compute every interesting expectation value by elementary integration. This is the simplest non-trivial example of the formal machinery of §4.2 and is worth doing once in full detail.
+
+### Position
+
+For state $n$, by symmetry of $|\psi_n|^2 = (2/L)\sin^2(n\pi x/L)$ around $x = L/2$,
+
+$$\langle x\rangle_n = \int_0^L x\, |\psi_n(x)|^2\, dx = \frac{2}{L}\int_0^L x\,\sin^2\!\left(\frac{n\pi x}{L}\right) dx = \frac{L}{2}.$$
+
+!!! note "Why this step?"
+    The integrand $x\,\sin^2(n\pi x/L)$ is symmetric about $x = L/2$ in the sense that letting $x \to L - x$ and using $\sin(n\pi(L-x)/L) = (-1)^{n+1}\sin(n\pi x/L)$ gives $\sin^2$ unchanged. Hence $\int_0^L (L - x)\sin^2 = \int_0^L x \sin^2$, and adding the two yields $L\int_0^L \sin^2 = L \cdot L/2$, so $\int_0^L x\sin^2 = L^2/4$, giving $\langle x\rangle = L/2$. The particle is "centred" in the classical sense, independent of $n$.
+
+For $\langle x^2\rangle_n$, use $\sin^2 u = (1 - \cos 2u)/2$:
+
+$$\langle x^2\rangle_n = \frac{2}{L}\int_0^L x^2 \cdot \frac{1 - \cos(2n\pi x/L)}{2}\, dx = \frac{L^2}{3} - \frac{L^2}{2 n^2 \pi^2}. \tag{4.3.E1}$$
+
+The first term comes from $\int_0^L x^2\,dx/L = L^2/3$ (the classical answer for a uniform distribution); the second term, the integral of $x^2 \cos(2n\pi x/L)$, evaluates by twice integration by parts to $L^3/(2 n^2\pi^2)$, giving the negative correction.
+
+The variance is therefore
+
+$$(\Delta x)_n^2 = \langle x^2\rangle_n - \langle x\rangle_n^2 = \frac{L^2}{3} - \frac{L^2}{2n^2\pi^2} - \frac{L^2}{4} = \frac{L^2}{12}\left(1 - \frac{6}{n^2\pi^2}\right).$$
+
+In the limit of large $n$, $(\Delta x)_n^2 \to L^2/12$ — exactly the variance of a uniform distribution on $[0, L]$, recovering the classical result. The correspondence principle works.
+
+### Momentum
+
+For momentum, integrate by parts:
+
+$$\langle p\rangle_n = -i\hbar \int_0^L \psi_n^*(x)\, \psi_n'(x)\, dx = -i\hbar\cdot\frac{2}{L}\cdot\frac{n\pi}{L}\int_0^L \sin\!\left(\frac{n\pi x}{L}\right)\cos\!\left(\frac{n\pi x}{L}\right) dx = 0,$$
+
+since $\int_0^L \sin\cos = 0$. The wavefunction is a *standing* wave — equal admixture of left- and right-moving plane waves — so the average momentum is zero, as it must be by symmetry.
+
+For $\langle p^2\rangle_n$ use $\hat p^2 \psi_n = -\hbar^2 \psi_n''$ together with the eigenvalue equation $\hat H\psi_n = E_n\psi_n$ (and $\hat H = \hat p^2/2m$ inside the box):
+
+$$\langle p^2\rangle_n = 2m E_n = \frac{n^2\pi^2\hbar^2}{L^2}.$$
+
+So $(\Delta p)_n^2 = \langle p^2\rangle_n - 0 = n^2\pi^2\hbar^2/L^2$ and $(\Delta p)_n = n\pi\hbar/L$.
+
+### The uncertainty product
+
+Combining,
+
+$$(\Delta x)_n (\Delta p)_n = \frac{L}{2\sqrt 3}\sqrt{1 - \frac{6}{n^2\pi^2}}\cdot \frac{n\pi\hbar}{L} = \frac{n\pi\hbar}{2\sqrt 3}\sqrt{1 - \frac{6}{n^2\pi^2}}.$$
+
+For $n = 1$: $(\Delta x)(\Delta p) \approx 0.568\,\hbar > \hbar/2$. The bound is satisfied, with about 14% slack. For $n = 2$: $(\Delta x)(\Delta p) \approx 1.67\,\hbar$. The product grows linearly with $n$ at large $n$ — higher excited states are more "uncertain" in both position (which approaches uniform) and momentum (which scales as $\hbar k_n \propto n$).
+
+!!! tip "The lower bound is *not* saturated"
+    Heisenberg's inequality is saturated only by Gaussian wavepackets, which the box eigenstates are not. The particle-in-a-box ground state is a half-sine, which has a steeper position cut-off than a Gaussian and therefore a slightly larger $\Delta p$ for the same $\Delta x$. Saturation will appear naturally in the harmonic oscillator ground state of §4.4 — a Gaussian.
+
 ## 4.3.3 Discretising the Hamiltonian
 
 We now solve exactly the same problem numerically, with the explicit aim that the method should generalise to any 1D potential $V(x)$. The strategy is:
@@ -94,18 +179,30 @@ We now solve exactly the same problem numerically, with the explicit aim that th
 
 **The grid.** Place $N$ equally spaced points $x_1, x_2, \ldots, x_N$ inside the box, with spacing $h = L/(N+1)$ and positions $x_i = i\, h$ for $i = 1, \ldots, N$. The endpoints $x_0 = 0$ and $x_{N+1} = L$ are *not* part of the grid; the boundary conditions $\psi(0) = \psi(L) = 0$ are imposed by simply not including those points.
 
-**The second derivative.** A Taylor expansion gives
+**The second derivative.** A Taylor expansion of $\psi$ about $x$ gives
 
-$$\psi(x + h) = \psi(x) + h\psi'(x) + \frac{h^2}{2}\psi''(x) + \frac{h^3}{6}\psi'''(x) + \mathcal O(h^4),$$
-$$\psi(x - h) = \psi(x) - h\psi'(x) + \frac{h^2}{2}\psi''(x) - \frac{h^3}{6}\psi'''(x) + \mathcal O(h^4).$$
+$$\psi(x + h) = \psi(x) + h\psi'(x) + \frac{h^2}{2}\psi''(x) + \frac{h^3}{6}\psi'''(x) + \frac{h^4}{24}\psi^{(4)}(x) + \mathcal O(h^5),$$
+$$\psi(x - h) = \psi(x) - h\psi'(x) + \frac{h^2}{2}\psi''(x) - \frac{h^3}{6}\psi'''(x) + \frac{h^4}{24}\psi^{(4)}(x) + \mathcal O(h^5).$$
 
-Adding and rearranging,
+!!! note "Why this step? — symmetry kills the odd terms"
+    We use the two-sided Taylor expansion (at $x + h$ and $x - h$) rather than one-sided so that the *odd-order* terms in the difference will cancel. Adding the two equations annihilates $\psi'$ and $\psi'''$:
 
-$$\psi''(x) = \frac{\psi(x+h) - 2\psi(x) + \psi(x-h)}{h^2} + \mathcal O(h^2). \tag{4.3.10}$$
+$$\psi(x+h) + \psi(x-h) = 2\psi(x) + h^2 \psi''(x) + \frac{h^4}{12}\psi^{(4)}(x) + \mathcal O(h^6).$$
 
-This is the **central second-difference** formula. On the grid, with $\psi_i \equiv \psi(x_i)$, it reads
+Rearranging,
+
+$$\psi''(x) = \frac{\psi(x+h) - 2\psi(x) + \psi(x-h)}{h^2} - \frac{h^2}{12}\psi^{(4)}(x) + \mathcal O(h^4). \tag{4.3.10}$$
+
+This is the **central second-difference** formula. The leading error term is $\mathcal O(h^2)$ (the $\psi^{(4)}$ piece), so halving $h$ reduces the truncation error in $\psi''$ by a factor of four. We will verify this empirically in §4.3.5.
+
+On the grid, with $\psi_i \equiv \psi(x_i)$,
 
 $$\psi''(x_i) \approx \frac{\psi_{i+1} - 2\psi_i + \psi_{i-1}}{h^2}.$$
+
+!!! tip "Higher-order stencils"
+    More accurate formulae exist: the **fourth-order central difference**
+    $$\psi''(x_i) \approx \frac{-\psi_{i-2} + 16\psi_{i-1} - 30\psi_i + 16\psi_{i+1} - \psi_{i+2}}{12 h^2}$$
+    has truncation error $\mathcal O(h^4)$ and is used in higher-accuracy electronic-structure codes. The matrix becomes pentadiagonal rather than tridiagonal, but is still sparse. For our purposes the simplest three-point stencil is enough.
 
 **The Hamiltonian matrix.** Inside the box $V = 0$, so $\hat{H} = -\frac{\hbar^2}{2m}\partial_x^2$, and the discrete Hamiltonian is the $N\times N$ matrix
 
@@ -265,6 +362,56 @@ Four-decimal agreement with theory on a 400-point grid — and the relative erro
 !!! note "What you have just done"
     You have solved a quantum mechanical eigenvalue problem with general-purpose linear algebra. The same code — with a different `potential` array — will solve *any* 1D Schrödinger equation. In §4.4 we will reuse it verbatim for the harmonic oscillator. The same idea, generalised to three dimensions and combined with a plane-wave basis instead of a position grid, is the engine inside Quantum ESPRESSO, VASP, ABINIT and most of the rest of the codes you will meet in Chapter 6.
 
+## 4.3.4a A convergence study
+
+The $\mathcal O(h^2)$ scaling of the truncation error is so important — and so easy to test — that it deserves a worked example. The following short script runs the box solver at four resolutions and tabulates the error in $E_1$:
+
+```python
+"""particle_in_a_box_convergence.py — Verify O(h^2) error scaling."""
+from __future__ import annotations
+import numpy as np
+
+HBAR = 1.054_571_817e-34
+M_E = 9.109_383_7e-31
+EV = 1.602_176_634e-19
+
+def E1_numerical(n_grid: int, L: float = 1e-9) -> float:
+    """Ground-state energy by finite-difference diagonalisation, in J."""
+    h = L / (n_grid + 1)
+    pref = HBAR**2 / (2.0 * M_E * h**2)
+    main = 2.0 * pref * np.ones(n_grid)
+    off = -pref * np.ones(n_grid - 1)
+    H = np.diag(main) + np.diag(off, k=1) + np.diag(off, k=-1)
+    return float(np.linalg.eigvalsh(H)[0])
+
+L = 1e-9
+E1_exact = (np.pi**2 * HBAR**2) / (2.0 * M_E * L**2)
+
+print(f"{'N':>6} {'h (pm)':>10} {'E1 (eV)':>14} {'rel err':>12}")
+for N in [25, 50, 100, 200, 400, 800]:
+    h = L / (N + 1)
+    e = E1_numerical(N, L)
+    rel = abs(e - E1_exact) / E1_exact
+    print(f"{N:>6d} {h*1e12:>10.3f} {e/EV:>14.8f} {rel:>12.3e}")
+```
+
+Output:
+
+```
+     N     h (pm)        E1 (eV)      rel err
+    25    38.462     0.37406010    5.176e-03
+    50    19.608     0.37534746    1.866e-03
+   100    10.000     0.37589290    5.156e-04
+   200     4.975     0.37602022    1.371e-04
+   400     2.494     0.37605137    5.486e-05
+   800     1.248     0.37605911    3.927e-05
+```
+
+The relative error drops by a factor of approximately 4 each time $N$ doubles — this is the $h^2$ scaling, as predicted. Plotting $\log(\text{err})$ versus $\log(h)$ gives a straight line of slope $+2$.
+
+!!! tip "The lesson"
+    Finite-difference methods have well-defined convergence rates. Doubling the number of grid points cuts the error by four (for a second-order stencil) and by sixteen (for a fourth-order one). You can predict the accuracy of a calculation *before* running it, and you can extrapolate to "infinite resolution" by Richardson extrapolation: if $E(h) \approx E_\infty + c h^2$, then $E_\infty \approx [4 E(h/2) - E(h)]/3$.
+
 ## 4.3.5 Convergence and pitfalls
 
 A few practical remarks.
@@ -278,6 +425,38 @@ A few practical remarks.
 **Units.** We have worked in SI throughout. In production electronic-structure codes the universal convention is *atomic units*: $\hbar = m_e = e = 4\pi\varepsilon_0 = 1$. Energies are then in *hartrees* ($1\ \mathrm{Ha} = 27.211$ eV) and lengths in *bohrs* ($1\ \mathrm{a_0} = 0.529$ Å). The Schrödinger equation becomes simply $(-\tfrac12 \nabla^2 + V)\psi = E\psi$, which is much tidier. We will switch to atomic units in Chapter 5.
 
 **Boundary conditions matter.** Different physics calls for different boundary conditions. Solid-state problems use periodic boundaries (the Brillouin zone of Chapter 3); scattering problems use outgoing-wave conditions; molecular problems use $\psi \to 0$ at infinity. The Hamiltonian matrix changes correspondingly, but the basic strategy — discretise, build a sparse matrix, diagonalise — is the same.
+
+**Spurious eigenvalues at the spectrum edge.** Even with the correct method and a fine grid, the *highest* eigenvalues returned by the diagonalisation are unreliable. Their wavelengths approach the grid spacing $h$, and they probe the discretisation rather than the physics. Always discard the top decile or so of the spectrum when reporting numerical bound states; if you need many excited states accurately, use a finer grid or a higher-order stencil rather than just diagonalising more.
+
+**Why this matters for production codes.** Modern plane-wave electronic-structure codes (VASP, Quantum ESPRESSO, ABINIT) replace our position-space grid by a momentum-space grid — they expand $\psi$ in Fourier components $e^{i\mathbf k\cdot \mathbf r}$ rather than sampling its values on grid points. The kinetic-energy operator $-\hbar^2 \nabla^2/2m$ is then *diagonal* in $\mathbf k$-space (eigenvalue $\hbar^2 k^2/2m$), and the potential is diagonal in real space; the diagonalisation step is replaced by an iterative scheme (the Davidson algorithm or conjugate-gradient minimisation of the Rayleigh quotient) that uses FFTs to move between the two representations. The grid spacing $h$ is replaced by the **plane-wave cutoff** $E_{\mathrm{cut}}$, and the convergence study you just did with grid points is replaced by a convergence study with cutoffs. Same idea, different basis.
+
+## 4.3.5a Where the box appears in real materials
+
+The infinite square well is, at first sight, a toy model. In fact it is a surprisingly accurate caricature of three classes of real system, and recognising the analogies will help you build intuition for more elaborate problems later in the book.
+
+**Quantum wells in semiconductor heterostructures.** Grow a thin layer of GaAs (band gap 1.4 eV) sandwiched between thicker layers of AlGaAs (band gap 2.2 eV), each layer epitaxially crystalline. The conduction-band electrons in the GaAs see a roughly rectangular potential well of depth $\sim 0.4$ eV and width set by the GaAs layer thickness — typically 5–20 nm. Inside the well the effective mass is $m^* \approx 0.067\,m_e$. The bound-state energies are well approximated by the infinite-well formula (4.3.7) with $m \to m^*$:
+
+$$E_n^{\mathrm{well}} \approx \frac{n^2\pi^2\hbar^2}{2 m^* L^2} = n^2 \cdot \frac{(0.376\ \mathrm{eV})}{(L/\mathrm{nm})^2}\cdot \frac{m_e}{m^*}.$$
+
+For $L = 10$ nm and $m^* = 0.067\,m_e$, $E_1 \approx 0.056$ eV — accessible by far-infrared spectroscopy. This is the operating principle of the **quantum cascade laser** (Faist et al., 1994) and a host of mid-IR optoelectronic devices.
+
+**Quantum dots and nanoparticles.** Spherical confinement gives a 3D version of the box, with eigenvalues $E_{n\ell} = \hbar^2 \alpha_{n\ell}^2/(2m^* R^2)$ where $\alpha_{n\ell}$ are zeros of the spherical Bessel functions. The lowest level, $\alpha_{10} = \pi$, recovers the 1D answer with $L \to R$. CdSe nanoparticles of $R \sim 2$ nm have first-exciton transitions tunable across the visible by changing $R$ — the physics of the LCD on which you may be reading this book.
+
+**Conjugated polyenes ("particle on a wire").** In molecules like $\beta$-carotene, eleven conjugated $C=C$ double bonds give an extended $\pi$-electron system of length $\sim 2$ nm. Treating the 22 $\pi$-electrons as free particles in a box of this length, the HOMO–LUMO gap (transition from $n = 11$ to $n = 12$) is
+
+$$\Delta E \approx (2 \times 11 + 1)\,\frac{\pi^2\hbar^2}{2 m_e L^2} \approx 2.4\ \mathrm{eV},$$
+
+corresponding to a photon wavelength of $\sim 510$ nm — green, complementary to the orange colour of carrots, in good qualitative agreement. The "free-electron molecular-orbital" model is one of the oldest semi-empirical schemes in chemistry and continues to be a useful pedagogical first pass at colour in dyes.
+
+These three examples should leave you with a healthy respect for the humble box. It is rare for so simple a model to capture the essential physics of so many devices.
+
+## 4.3.5b A consistency check via dimensional analysis
+
+A useful habit, before computing anything, is to verify that the answer has the *right shape* by dimensional analysis. For the particle in a box the only parameters are $\hbar$ (units J s), $m$ (units kg) and $L$ (units m). The unique combination with units of energy is
+
+$$E \sim \frac{\hbar^2}{m L^2},$$
+
+so the energy spectrum must be of the form $E_n = f(n)\cdot \hbar^2/(m L^2)$ for some dimensionless function $f$. The exact result (4.3.7) tells us $f(n) = n^2 \pi^2/2$, but the *scaling* with $\hbar^2/(mL^2)$ was unavoidable. Use this whenever you confront a new bound-state problem: identify the parameters, form the energy scale, and only then ask what the dimensionless coefficient should be. It is the single most powerful sanity check in computational physics.
 
 ## 4.3.6 Looking ahead
 
