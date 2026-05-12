@@ -1,8 +1,18 @@
 # 5.6 Where DFT Fails
 
+!!! note "Why does this chapter exist?"
+    Every powerful tool has a comfort zone and a failure zone. A hammer drives nails magnificently but is hopeless for screws; a microscope reveals cells but cannot see atoms. Kohn–Sham DFT is the same: extraordinary inside its comfort zone, dangerous outside. The comfort zone is *most of materials science* — bond lengths, lattice parameters, vibrational spectra, cohesive energies of typical materials. The failure zone is a long, dispiriting list: van der Waals interactions, band gaps, Mott insulators, charge transfer, excited states, dissociation curves of stretched bonds.
+    
+    What makes this chapter important is that the failures are not random. They cluster around well-understood physical mechanisms — *self-interaction error*, *missing non-locality*, *derivative discontinuity* of the exact potential, *static correlation*. If you can recognise the symptoms (PBE predicting graphite to float, PBE predicting NiO to be a metal, PBE collapsing the dissociation of H$_2^{+}$), you can diagnose the cause and reach for the right remedy: DFT+U for Mott systems, hybrids for band gaps, vdW corrections for dispersion, GW for quasiparticle energies, DMFT for strong correlation.
+    
+    A useful analogy. A general practitioner can treat 90% of medical complaints; for the other 10% you need a specialist. DFT is the general practitioner of materials science; this section is your reference for when to call the specialist (CCSD(T), QMC, GW+BSE, DMFT) and what they cost. The crucial skill is knowing what your tool cannot do — and being honest about it in your published work.
+
 DFT is the workhorse of computational materials science because it is, on the whole, *good enough* — it gets bond lengths within a few per cent, cohesive energies within tens of kJ/mol, vibrational frequencies within 10%, and the qualitative ground-state physics right for the vast majority of systems. But "the vast majority" leaves a long tail of systems and properties where standard Kohn–Sham DFT, in any practical approximation, is simply wrong. Some of these failures are technical (chosen functional too crude); others are fundamental (no semi-local functional can fix them).
 
 This section gives an honest tour. Knowing where DFT breaks is the difference between a trustworthy calculation and a published mistake. For each failure mode we identify the symptom, the underlying physics, and the higher-level methods one reaches for instead.
+
+!!! abstract "Key idea (Chapter 5.6)"
+    Approximate Kohn–Sham DFT fails for a small but important set of systems and properties: band gaps (LDA/GGA underestimate by 30–100%); van der Waals binding (no $-C_6/R^{6}$ tail); strongly correlated electrons (Mott insulators predicted as metals); charge-transfer states (fractional charges at dissociation); excited states (a fundamentally ground-state theory). Each failure has a known physical mechanism — self-interaction error, missing derivative discontinuity, missing non-local correlation — and a known remedy: hybrids, DFT+U, GW, DMFT, CCSD(T). Knowing the failure modes is as important as knowing the theory.
 
 ## 5.6.1 Band gap underestimation
 
@@ -40,6 +50,20 @@ Even setting aside the derivative discontinuity, LDA/GGA *Kohn–Sham gaps thems
 - **GW** (Green's function method, named after the product of the Green's function $G$ and the screened interaction $W$ in Hedin's equations) is the next step up: a many-body perturbation theory correction to the KS quasiparticle energies. $G_0 W_0$ on top of a PBE calculation typically gives gaps within 0.1–0.3 eV of experiment. Cost is $\mathcal O(N^{4})$.
 - **Δ-SCF** for small molecules: separately compute the $(N\!-\!1)$ and $(N\!+\!1)$ systems and take the energy difference. Cheap; surprisingly accurate.
 
+!!! example "Worked example: TiO$_2$ rutile gap"
+    Experimental optical gap: $E_g\approx 3.03\;\text{eV}$.
+    
+    | Method | $E_g$ (eV) | Cost (rel. PBE) |
+    |---|---|---|
+    | LDA | $\sim 1.7$ | 0.9 |
+    | PBE | $\sim 2.0$ | 1 |
+    | SCAN | $\sim 2.3$ | 1.5 |
+    | HSE06 | $\sim 2.7$ | 20 |
+    | $G_0W_0$@PBE | $\sim 3.3$ | 100 |
+    | scGW@PBE | $\sim 3.1$ | 500 |
+    
+    The PBE gap error of $\sim 1\;\text{eV}$ is roughly half attributable to the derivative discontinuity (which PBE sets to zero) and half to self-interaction error in the Ti $3d$ states. HSE06 fixes about $70\%$ of the gap error through its 25% exact exchange; $G_0W_0$ corrects the remainder via dynamical screening. The price is a $\sim 100\times$ cost increase for $G_0W_0$ relative to PBE.
+
 !!! warning "Do not over-interpret PBE band gaps"
     A PBE band gap is not "the band gap". It is the Kohn–Sham gap of a particular approximate functional. For predictions of optical or transport gaps, use HSE06 or GW; for ordering of mid-band features, PBE often suffices. Always state the functional alongside the gap.
 
@@ -59,6 +83,31 @@ Or: try a benzene dimer. PBE gives no binding. Or: rare-gas dimers — argon, kr
 
 For materials with non-bonded fragments — molecular crystals, layered materials, surface adsorption, polymers, biomolecules — *not* including a vdW correction in DFT is a methodological error. Modern best practice always includes one.
 
+!!! example "Worked example: graphite interlayer spacing"
+    Experimental: $c$-axis layer spacing $\approx 3.35\;\text{Å}$, binding energy $\approx 50\;\text{meV/atom}$.
+    
+    | Method | $c$ (Å) | $E_b$ (meV/atom) |
+    |---|---|---|
+    | PBE | $4.4$ (no minimum) | $\sim 1$ |
+    | LDA | $3.32$ | $20$ (accidental binding) |
+    | PBE+D3 | $3.30$ | $70$ (slight overbind) |
+    | optB88-vdW | $3.34$ | $55$ |
+    | SCAN+rVV10 | $3.33$ | $52$ |
+    | RPA | $3.35$ | $50$ |
+    | DMC | $3.35$ | $48\pm 2$ |
+    
+    Pure PBE is *qualitatively wrong*: it predicts essentially no binding and a layer spacing $\sim 30\%$ too large. LDA accidentally binds graphite at the right spacing because its overbinding bias compensates for its lack of dispersion — a coincidence, not a virtue. Modern vdW-corrected functionals (D3, vdW-DF, rVV10) give the right answer; the gold-standard RPA and DMC confirm them.
+
+### Q&A: when is a PBE gap "good enough"?
+
+*Q: My collaborator runs PBE on a series of perovskites and orders them by band gap. The absolute values are wrong, but the trend looks sensible. Can I trust the ordering?*
+
+A: Often, but with caveats. PBE's systematic underestimate is *roughly constant* (often $\sim 1\;\text{eV}$ across a chemical family) so the *relative* ordering of gaps within a family is usually preserved. But two cautions: (i) when the underestimate flips the qualitative result (PBE metal where experiment is insulator, or PBE direct gap where experiment is indirect), the ordering breaks. (ii) For materials at the metal–insulator transition, the absolute error can flip across the threshold. Best practice: confirm a few key compounds with HSE06 to anchor the trend.
+
+*Q: I see papers reporting "PBE band gap of 3 eV". Is this OK?*
+
+A: It depends on what is claimed. Stating "the PBE Kohn–Sham gap is X eV" is fine and reproducible. Claiming "the band gap is X eV" without specifying the method is sloppy. The fundamental gap, the optical gap, and the KS gap are three different numbers in general; conflating them is one of the most common mistakes in DFT papers.
+
 ## 5.6.3 Strongly correlated electrons
 
 **The symptom.** Apply PBE to FeO, CoO, NiO. PBE predicts all three to be metals. Experimentally, all three are antiferromagnetic insulators with gaps of 2–4 eV. Apply PBE to cerium oxide: the famous Ce $4f$ electrons come out delocalised, when in CeO$_2$ they are localised on cerium sites.
@@ -74,11 +123,38 @@ For materials with non-bonded fragments — molecular crystals, layered material
 
 Strong correlation is the area where DFT is most likely to be qualitatively wrong, and where one most needs a higher-level method. The 2010s and 2020s have seen rapid development of DFT+DMFT codes (TRIQS, EDMFT) that automate the process.
 
+!!! example "Worked example: NiO band gap and magnetism"
+    NiO is a classic late transition-metal antiferromagnetic insulator. Experiment: AFM-II ground state, gap $\sim 4.0\;\text{eV}$, local moment $\sim 1.9\;\mu_B$ per Ni. DFT predictions:
+    
+    | Method | Gap (eV) | Moment ($\mu_B$) | Ground state |
+    |---|---|---|---|
+    | PBE (NM) | 0 | 0 | metal (wrong) |
+    | PBE+SP | $\sim 0.5$ | $1.4$ | AFM metal (wrong) |
+    | PBE+U ($U=6$) | $\sim 3.2$ | $1.7$ | AFM insulator |
+    | HSE06 | $\sim 4.1$ | $1.8$ | AFM insulator |
+    | DFT+DMFT | $\sim 4.0$ | $1.9$ | AFM insulator |
+    
+    Without any Hubbard correction or hybrid mixing, PBE predicts NiO to be a *metal* — a qualitative failure. Adding a Hubbard $U$ on the Ni $3d$ states penalises double occupation and opens the gap; HSE06 achieves the same effect through its 25% exact exchange. DMFT captures the full local correlation physics including spectral weight transfer to the upper Hubbard band, at the cost of an impurity solver.
+
 ## 5.6.4 Self-interaction error and charge transfer
 
 We met self-interaction in §5.4: approximate exchange-correlation functionals do not cancel the spurious self-Hartree term, with the result that electrons artificially delocalise. Two consequences are worth singling out.
 
 **Fractional charges in dissociation.** Take H$_2^{+}$, one electron, two protons. Stretch the bond to infinity. The correct answer is one electron localised on *one* of the protons (the other proton is a bare H$^{+}$). PBE instead delocalises the electron equally over both protons, giving a fractionally charged H$^{0.5+}$ — H$^{0.5+}$ configuration at infinite separation. The total energy is too low by tens of kcal/mol.
+
+!!! example "Worked example: H$_2^{+}$ at infinite separation"
+    For H$_2^{+}$ with one electron, the exact dissociation energy is $E(\mathrm H_2^{+}\to \mathrm H + \mathrm H^{+}) = -0.5\;\text{Ha}$ (the bound 1s electron on the remaining H atom). DFT calculations at $R = 10\;a_0$ (effectively infinite separation):
+    
+    | Method | $E$ (Ha) | Charge on each H |
+    |---|---|---|
+    | Exact / FCI | $-0.5000$ | 1.0 / 0.0 (symmetry-broken) |
+    | Hartree–Fock | $-0.5000$ | 0.5 / 0.5 (incorrect delocalisation, but exchange exact) |
+    | LDA | $-0.4523$ | 0.5 / 0.5 |
+    | PBE | $-0.4567$ | 0.5 / 0.5 |
+    | HSE06 (25% HF) | $-0.4823$ | 0.5 / 0.5 |
+    | LC-$\omega$PBE (100% HF at LR) | $-0.4998$ | symmetry-broken |
+    
+    All semi-local functionals delocalise the electron equally over both protons because of self-interaction error — they prefer to spread the density to lower the (artificially included) self-Hartree. Only functionals with 100% exact exchange at long range cure this, by exactly cancelling the spurious self-repulsion at any separation.
 
 **Charge transfer excitations.** Time-dependent DFT (TDDFT) with semi-local functionals notoriously fails for excited states involving long-range charge transfer (e.g., between a donor and an acceptor in a complex). The TDDFT excitation energy collapses to nearly the KS HOMO–LUMO gap — far below the true excitation energy, which should include the Coulomb attraction $-1/R$ of the resulting electron–hole pair.
 
@@ -149,6 +225,30 @@ A few rules:
 4. **DMFT** is the standard for strongly correlated materials; needs an impurity solver and considerable expertise.
 5. **Machine learning interatomic potentials** (Chapter 9) cannot save you from a bad reference: a model trained on DFT data inherits DFT's errors. If DFT is wrong for your system, an ML potential trained on DFT will be wrong in the same way.
 
+### Escalation table: cost ratios for higher-level methods
+
+For a system of $N$ atoms (and a fixed basis), approximate cost scalings:
+
+| Method | Scaling | Cost vs. PBE | When to use |
+|---|---|---|---|
+| LDA, PBE | $\mathcal O(N^{3})$ | 1 | High-throughput, screening |
+| SCAN | $\mathcal O(N^{3})$ | 1.5 | Improved binding, no exact exchange |
+| HSE06 | $\mathcal O(N^{3})$ (large prefactor) | 20 | Band gaps, defects in semiconductors |
+| DFT+U | $\mathcal O(N^{3})$ | 1.2 | Transition metal oxides, $f$-electrons |
+| $G_0W_0$ | $\mathcal O(N^{4})$ | 100 | Quasiparticle band structures |
+| Self-consistent GW | $\mathcal O(N^{4})$ | 500 | When $G_0W_0$ starting-point sensitivity matters |
+| GW+BSE | $\mathcal O(N^{4})$–$\mathcal O(N^{6})$ | 200–2000 | Optical absorption with excitons |
+| RPA correlation | $\mathcal O(N^{5})$ | 200 | Total energies of vdW systems |
+| MP2 | $\mathcal O(N^{5})$ | 50 | Reasonable cost weakly-correlated chemistry |
+| CCSD | $\mathcal O(N^{6})$ | 500 | Single-reference systems, small molecules |
+| CCSD(T) | $\mathcal O(N^{7})$ | 5000 | "Gold standard" for small molecules |
+| DLPNO-CCSD(T) | $\mathcal O(N)$ (with constant) | 100–1000 | Local correlation for larger systems |
+| FCI / DMRG | exponential | $10^{6}$+ | Tiny systems, benchmarks only |
+| DMFT (CT-QMC impurity) | depends | 100–10000 | Strong correlation |
+| QMC (DMC) | $\mathcal O(N^{3})$ large prefactor | $10^{4}$–$10^{6}$ | Benchmarks; cohesive energies |
+
+A few orientation points: $G_0W_0$ on a PBE starting point is the most-used post-DFT method for quasiparticle gaps and adds about two orders of magnitude to the cost. CCSD(T) is the gold standard for molecules up to ~50 atoms; beyond that, local approximations (DLPNO) are essential. QMC is used as a benchmark — accurate to ~1 meV/atom for cohesive energies — but is rarely the first-line method because of its prefactor.
+
 ## 5.6.7 An honest assessment
 
 DFT is, for an extraordinary range of systems, the right tool: fast enough for high-throughput screening, accurate enough for materials prediction, and based on a rigorous theoretical foundation. It is the engine behind essentially every materials database, every ML-potential training set, every large-scale electronic-structure calculation done in industry. None of that is going to change soon.
@@ -160,3 +260,16 @@ But it is not magic. There is no single functional that is best for everything; 
 - **When** to escalate to a higher-level method.
 
 Chapter 6 turns to the practical business of running DFT calculations: plane waves, pseudopotentials, $k$-point sampling, convergence testing, and the choice of code. Chapter 7 covers the post-DFT methods touched on here — GW, BSE, DMFT — in more depth. The Hohenberg–Kohn–Kohn–Sham theorem is, in the end, an existence proof; the practical art begins with knowing how to use it well, and when to put it down.
+
+### Summary of §5.6 — what to remember in 3 months
+
+- **Band gaps**: LDA/GGA underestimate by 30–100%, due to missing derivative discontinuity + SIE. Use HSE06 (cheap fix) or GW (expensive correct).
+- **vdW**: semi-local functionals miss $-C_6/R^{6}$. Always include D3/D4 or use vdW-DF/SCAN+rVV10 when non-bonded fragments are present.
+- **Mott insulators**: PBE predicts metal for NiO/CoO/FeO. Use DFT+U, hybrid, or DMFT.
+- **Fractional charges**: stretched H$_2^{+}$ and similar; due to SIE. Use range-separated hybrids with 100% LR exact exchange.
+- **Excited states**: KS-DFT is ground-state only. Use TD-DFT (molecules) or GW+BSE (solids).
+- **Escalation methods**: HSE06 → GW → GW+BSE → CCSD(T) → DMFT/QMC. Each is roughly 10–100× more expensive than the previous.
+- **The rule of thumb**: never trust a single DFT calculation; compare functionals, compare with experiment, escalate when stakes are high.
+
+!!! note "Remark: ML potentials and DFT errors"
+    Machine-learning interatomic potentials inherit the errors of the DFT functional they are trained on, *exactly*. If you train a GAP or MACE model on PBE forces, it will reproduce PBE-overbound vdW interactions, PBE band gaps, PBE bond lengths. The model is at best a surrogate for the functional; it cannot exceed the accuracy of the training labels. This is the *garbage-in-garbage-out* principle of ML, made specific. In Chapter 9 we shall see how to choose training functionals appropriate to downstream tasks.
