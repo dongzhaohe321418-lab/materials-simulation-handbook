@@ -1,0 +1,36 @@
+name: matsim
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python>=3.11,<3.13
+  - numpy>=1.26
+  - scipy>=1.11
+  - matplotlib>=3.8
+  - jupyterlab
+  - pandas
+  - pytorch>=2.2,!=2.4.1
+  - ase>=3.23
+  - pymatgen>=2024.0
+  - spglib
+  - phonopy
+  - networkx
+  - scikit-learn
+  - pip
+  - pip:
+      # Core scientific Python + materials ML
+      - mace-torch>=0.3.14
+      - mace-models
+      - mp-api>=0.46
+      - torch-geometric>=2.5
+      - matminer
+      - gpytorch
+      - botorch
+      # Documentation toolchain
+      - mkdocs>=1.6
+      - mkdocs-material>=9.5
+      - mkdocs-jupyter
+      - pymdown-extensions>=10.7
+
+# Verification: after `conda env create -f environment.yml && conda activate matsim`,
+# run scripts/verify_install.py to confirm all imports work.

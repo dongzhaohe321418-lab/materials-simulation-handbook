@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "Materials Simulation Handbook"
+message: "If you use this handbook in research or teaching, please cite it."
+type: dataset
+authors:
+  - given-names: Zhaohe
+    family-names: Dong
+    email: dongzhaohe321418@gmail.com
+repository-code: "https://github.com/dongzhaohe321418-lab/materials-simulation-handbook"
+url: "https://dongzhaohe321418-lab.github.io/materials-simulation-handbook/"
+license: MIT
+license-url: "https://github.com/dongzhaohe321418-lab/materials-simulation-handbook/blob/main/LICENSE"
+date-released: 2026-05-12
+keywords:
+  - materials science
+  - density functional theory
+  - molecular dynamics
+  - machine learning interatomic potentials
+  - graph neural networks
+  - computational chemistry
+  - foundation models

@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# MkDocs
+site/
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Quantum ESPRESSO / LAMMPS scratch
+*.out
+*.wfc*
+*.save/
+*.xml
+*.dump
+*.lammps
+*.restart*
+tmp/
+scratch/
+
+# Data — keep examples small, don't commit large blobs
+data/*.h5
+data/*.hdf5
+data/checkpoints/
+data/raw/
+
+# Secrets
+*.env
+.env.*
+
+# Internal QA artifacts (audit reports from the build process)
+.cross-check-report.md
+.visual-check-report.md
+.pdf-build/
