@@ -15,11 +15,13 @@
 
 The *Materials Simulation Handbook* is a self-contained, open-source textbook with accompanying runnable code, through the core of computational materials science, and with some small projects for undergraduate/ graduate level. The book is built in three explicit tiers — *Prerequisites*,* Core*, *Research*. You can read it linearly as a textbook, skip the early tiers if you already have the background, or work backwards from one of five capstone projects.
 
+The ideas starts from a normal undergraduate student, who feels it hard and mist importantly, no guide into the computational simulation of materials. The structure of the handbook is self-designed, detailed contents are filled under human supervision using Claude. Minor mistakes might happen for thhe relevant graphs and plots (mainly using matplotlib). Feel free to leave any advice to this repo!
+
 ---
 
 ## Who is this for?
 
-The **prerequisite floor** is A-level (or international equivalent) mathematics and physics, plus a willingness to install Python and run code from the command line. Concretely: you can differentiate and integrate single-variable functions; you have seen matrices and vectors; you can read a graph of energy vs. distance; you know what a wavefunction is even if you have never solved Schrödinger's equation by yourself :)
+The **prerequisite floor** is A-level (or equivalent) mathematics and physics, plus a willingness to install Python and run code from the command line. Concretely: you can differentiate and integrate single-variable functions; you have seen matrices and vectors; you can read a graph of energy vs. distance; you know what a wavefunction is even if you have never solved Schrödinger's equation by yourself :)
 
 The **comfort zone** the textbook is primarily designed for undergraduates with relevant quantum chemistry/ quantum mechanics or material sicence background. You could use external LLMs, e.g. claude or gemini, to help you better understand the ideas you are less familiar with.
 
