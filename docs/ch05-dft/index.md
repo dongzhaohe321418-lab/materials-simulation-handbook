@@ -1,9 +1,9 @@
-# Chapter 5. Density Functional Theory
+# Chapter 5 — Density Functional Theory
 
 In Chapter 4 we faced an uncomfortable truth. The non-relativistic, Born–Oppenheimer many-electron Hamiltonian
 
 $$
-\hat H = -\frac{\hbar^2}{2m}\sum_{i=1}^{N}\nabla_i^{2}
+\hat{H} = -\frac{\hbar^2}{2m}\sum_{i=1}^{N}\nabla_i^{2}
 \;+\; \sum_{i=1}^{N} v_\mathrm{ext}(\mathbf r_i)
 \;+\; \frac{1}{2}\sum_{i\neq j}\frac{e^{2}}{4\pi\varepsilon_0\,|\mathbf r_i-\mathbf r_j|}
 $$

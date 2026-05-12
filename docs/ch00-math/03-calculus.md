@@ -232,10 +232,10 @@ A great deal of modern materials physics is phrased as a **variational principle
 A **functional** $E[\psi]$ assigns a number to each function $\psi$. The textbook example is
 
 $$
-E[\psi] \;=\; \int \psi^*(\mathbf{r})\, \hat H\, \psi(\mathbf{r})\, \mathrm{d}\tau, \tag{0.3.18}
+E[\psi] \;=\; \int \psi^*(\mathbf{r})\, \hat{H}\, \psi(\mathbf{r})\, \mathrm{d}\tau, \tag{0.3.18}
 $$
 
-the expectation value of the Hamiltonian $\hat H$ in the state $\psi$. The variational theorem states that the ground-state energy $E_0$ satisfies
+the expectation value of the Hamiltonian $\hat{H}$ in the state $\psi$. The variational theorem states that the ground-state energy $E_0$ satisfies
 
 $$
 E_0 \;=\; \min_{\psi} \frac{E[\psi]}{\int |\psi|^2 \, \mathrm{d}\tau}, \tag{0.3.19}
@@ -250,7 +250,7 @@ $$
 and require its **functional derivative** with respect to $\psi^*$ to vanish. The result is
 
 $$
-\hat H \psi = \lambda \, \psi, \tag{0.3.20}
+\hat{H} \psi = \lambda \, \psi, \tag{0.3.20}
 $$
 
 the time-independent Schrödinger equation with $\lambda$ identified as the eigenvalue $E$. The variational principle thus *derives* the eigenvalue problem of Section 0.2; the Lagrange multiplier *is* the energy. Pause to appreciate this: a question about the minimum of an integral becomes an eigenvalue problem for a linear operator. This is one of the deep bridges between calculus and linear algebra, and it underlies almost everything in Chapters 4 and 5.

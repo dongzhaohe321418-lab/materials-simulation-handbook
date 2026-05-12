@@ -39,7 +39,7 @@ Expand Bloch states in plane waves with the same $\mathbf k$ (different $\mathbf
 
 $$\psi_\mathbf k(\mathbf r) = \sum_\mathbf G c_{\mathbf k}(\mathbf G)\, e^{i(\mathbf k+\mathbf G)\cdot\mathbf r}. \tag{3b.2.5}$$
 
-Plug into $\hat H \psi = E \psi$ and project onto $e^{-i(\mathbf k + \mathbf G')\cdot\mathbf r}$. The kinetic operator gives $\hbar^2|\mathbf k+\mathbf G'|^2/(2m)\, c_\mathbf k(\mathbf G')$, and the potential mixes coefficients:
+Plug into $\hat{H} \psi = E \psi$ and project onto $e^{-i(\mathbf k + \mathbf G')\cdot\mathbf r}$. The kinetic operator gives $\hbar^2|\mathbf k+\mathbf G'|^2/(2m)\, c_\mathbf k(\mathbf G')$, and the potential mixes coefficients:
 
 $$\frac{\hbar^2|\mathbf k+\mathbf G'|^2}{2m}\, c_\mathbf k(\mathbf G') + \sum_\mathbf G V_{\mathbf G' - \mathbf G}\, c_\mathbf k(\mathbf G) = E\, c_\mathbf k(\mathbf G'). \tag{3b.2.6}$$
 

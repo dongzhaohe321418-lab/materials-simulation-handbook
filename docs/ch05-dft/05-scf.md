@@ -40,7 +40,7 @@ The textbook KS-SCF loop is:
 
 1. **Initial guess.** Construct an initial density $n^{(0)}(\mathbf r)$. Common choices: superposition of free-atom densities, the previous SCF solution at a nearby geometry, or — for very simple systems — the uniform density.
 2. **Build the potential.** Compute $v_\mathrm{KS}[n^{(k)}] = v_\mathrm{ext} + v_H[n^{(k)}] + v_{xc}[n^{(k)}]$.
-3. **Diagonalise.** Solve the eigenvalue problem $\hat H_\mathrm{KS}\phi_i = \varepsilon_i\phi_i$ for the lowest $N_\mathrm{occ}$ eigenpairs.
+3. **Diagonalise.** Solve the eigenvalue problem $\hat{H}_\mathrm{KS}\phi_i = \varepsilon_i\phi_i$ for the lowest $N_\mathrm{occ}$ eigenpairs.
 4. **Form the new density.** $n_\mathrm{out}^{(k)}(\mathbf r) = \sum_i^\mathrm{occ}|\phi_i(\mathbf r)|^{2}$.
 5. **Check convergence.** Compute residuals — change in density, change in energy, maximum force. If below tolerance, stop.
 6. **Mix.** $n^{(k+1)} = \mathcal M(n^{(k)}, n_\mathrm{out}^{(k)}; \text{history})$. Go to step 2.

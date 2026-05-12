@@ -117,10 +117,10 @@ print(abs(z))                  # 1.0
 The state of a quantum system is a **complex-valued** wavefunction $\psi(\mathbf{r}, t)$, evolving according to the time-dependent Schrödinger equation
 
 $$
-i \hbar \frac{\partial \psi}{\partial t} = \hat H \psi.
+i \hbar \frac{\partial \psi}{\partial t} = \hat{H} \psi.
 $$
 
-The $i$ on the left-hand side is not optional. If $\psi$ were forced to be real, $\hat H \psi$ would have to be purely imaginary at every instant, conflicting with the requirement that $\hat H$ — the energy — is a real-valued observable. The complex phase is what stores the dynamical information; the squared modulus $|\psi|^2$ is what we measure.
+The $i$ on the left-hand side is not optional. If $\psi$ were forced to be real, $\hat{H} \psi$ would have to be purely imaginary at every instant, conflicting with the requirement that $\hat{H}$ — the energy — is a real-valued observable. The complex phase is what stores the dynamical information; the squared modulus $|\psi|^2$ is what we measure.
 
 For a stationary state of energy $E$, the time dependence is a pure complex exponential,
 

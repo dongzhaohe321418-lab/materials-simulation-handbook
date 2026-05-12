@@ -108,7 +108,7 @@ the standard pitfalls. Light on theory, heavy on practice.
 Quantum Chemistry, 2013).** Introductory review article. Twelve
 pages, free online, and the best short introduction to the conceptual
 content of DFT we know. A surprising number of senior researchers
-have learned the essentials from this article.
+have learnt the essentials from this article.
 
 ---
 

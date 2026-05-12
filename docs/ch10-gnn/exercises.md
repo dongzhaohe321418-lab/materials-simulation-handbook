@@ -236,7 +236,7 @@ model = train_cgcnn(
 ```
 
 After 500 epochs the validation MAE drops to under 1, against targets
-in the range 110–170. This confirms the model has learned the
+in the range 110–170. This confirms the model has learnt the
 chemistry-from-position pattern: even though the labels are entirely
 fictitious, the message-passing framework has found a representation
 that maps each cation-anion combination to the right label.

@@ -140,19 +140,19 @@ with $V_0 = 1.0$ eV and $a = 0.5$ nm. Plot the lowest four eigenstates and their
 
 ## Exercise 4.7 — Energies via Hellmann–Feynman ($\star\star$)
 
-For a normalised energy eigenstate $|\psi_\lambda\rangle$ of a Hamiltonian $\hat H(\lambda)$ depending on a parameter $\lambda$, prove the Hellmann–Feynman theorem:
+For a normalised energy eigenstate $|\psi_\lambda\rangle$ of a Hamiltonian $\hat{H}(\lambda)$ depending on a parameter $\lambda$, prove the Hellmann–Feynman theorem:
 
-$$\frac{dE(\lambda)}{d\lambda} = \langle\psi_\lambda | \frac{\partial \hat H}{\partial \lambda} | \psi_\lambda\rangle.$$
+$$\frac{dE(\lambda)}{d\lambda} = \langle\psi_\lambda | \frac{\partial \hat{H}}{\partial \lambda} | \psi_\lambda\rangle.$$
 
 ??? success "Solution"
-    By assumption, $\hat H(\lambda)|\psi_\lambda\rangle = E(\lambda)|\psi_\lambda\rangle$ with $\langle\psi_\lambda|\psi_\lambda\rangle = 1$. Take the inner product with $\langle\psi_\lambda|$:
-    $$E(\lambda) = \langle\psi_\lambda | \hat H | \psi_\lambda\rangle.$$
+    By assumption, $\hat{H}(\lambda)|\psi_\lambda\rangle = E(\lambda)|\psi_\lambda\rangle$ with $\langle\psi_\lambda|\psi_\lambda\rangle = 1$. Take the inner product with $\langle\psi_\lambda|$:
+    $$E(\lambda) = \langle\psi_\lambda | \hat{H} | \psi_\lambda\rangle.$$
     Differentiate with respect to $\lambda$:
-    $$\frac{dE}{d\lambda} = \langle \partial_\lambda \psi_\lambda | \hat H | \psi_\lambda\rangle + \langle\psi_\lambda | \partial_\lambda \hat H | \psi_\lambda\rangle + \langle\psi_\lambda | \hat H | \partial_\lambda \psi_\lambda\rangle.$$
-    Use the eigenvalue equation in the first and third terms, and the Hermiticity of $\hat H$:
-    $$\langle \partial_\lambda \psi_\lambda | \hat H | \psi_\lambda\rangle + \langle\psi_\lambda | \hat H | \partial_\lambda \psi_\lambda\rangle = E(\lambda)\bigl[\langle \partial_\lambda \psi_\lambda | \psi_\lambda\rangle + \langle\psi_\lambda | \partial_\lambda \psi_\lambda\rangle\bigr] = E(\lambda)\, \partial_\lambda \langle\psi_\lambda|\psi_\lambda\rangle = E(\lambda)\cdot 0 = 0,$$
+    $$\frac{dE}{d\lambda} = \langle \partial_\lambda \psi_\lambda | \hat{H} | \psi_\lambda\rangle + \langle\psi_\lambda | \partial_\lambda \hat{H} | \psi_\lambda\rangle + \langle\psi_\lambda | \hat{H} | \partial_\lambda \psi_\lambda\rangle.$$
+    Use the eigenvalue equation in the first and third terms, and the Hermiticity of $\hat{H}$:
+    $$\langle \partial_\lambda \psi_\lambda | \hat{H} | \psi_\lambda\rangle + \langle\psi_\lambda | \hat{H} | \partial_\lambda \psi_\lambda\rangle = E(\lambda)\bigl[\langle \partial_\lambda \psi_\lambda | \psi_\lambda\rangle + \langle\psi_\lambda | \partial_\lambda \psi_\lambda\rangle\bigr] = E(\lambda)\, \partial_\lambda \langle\psi_\lambda|\psi_\lambda\rangle = E(\lambda)\cdot 0 = 0,$$
     using normalisation. Hence
-    $$\frac{dE}{d\lambda} = \langle\psi_\lambda | \partial_\lambda \hat H | \psi_\lambda\rangle. \quad\blacksquare$$
+    $$\frac{dE}{d\lambda} = \langle\psi_\lambda | \partial_\lambda \hat{H} | \psi_\lambda\rangle. \quad\blacksquare$$
     **Application.** Taking $\lambda \to \mathbf R_I$ (a nuclear position) gives the force formula (4.6.14) that we used in the BO section. The force on a nucleus is the expectation value of the gradient of the Hamiltonian — no need to differentiate the wavefunction, which is the gift that makes ab-initio MD feasible.
 
 ---

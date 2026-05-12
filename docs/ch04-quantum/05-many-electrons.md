@@ -8,7 +8,7 @@ The "many-body problem" is the central computational difficulty of quantum chemi
 
 Consider an arbitrary molecule or solid: $N_{\mathrm e}$ electrons (mass $m_{\mathrm e}$, charge $-e$, positions $\mathbf r_i$) and $N_{\mathrm n}$ nuclei (mass $M_I$, charge $+Z_I e$, positions $\mathbf R_I$). The non-relativistic Hamiltonian, in Gaussian units for compactness, is
 
-$$\hat H = \hat T_{\mathrm e} + \hat T_{\mathrm n} + \hat V_{\mathrm{ee}} + \hat V_{\mathrm{en}} + \hat V_{\mathrm{nn}}, \tag{4.5.1}$$
+$$\hat{H} = \hat T_{\mathrm e} + \hat T_{\mathrm n} + \hat V_{\mathrm{ee}} + \hat V_{\mathrm{en}} + \hat V_{\mathrm{nn}}, \tag{4.5.1}$$
 
 with the five terms
 
@@ -16,7 +16,7 @@ $$\hat T_{\mathrm e} = -\frac{\hbar^2}{2m_{\mathrm e}}\sum_{i=1}^{N_{\mathrm e}}
 
 $$\hat V_{\mathrm{ee}} = \frac{1}{2}\sum_{i\neq j} \frac{e^2}{|\mathbf r_i - \mathbf r_j|}, \qquad \hat V_{\mathrm{en}} = -\sum_{i, I}\frac{Z_I e^2}{|\mathbf r_i - \mathbf R_I|}, \qquad \hat V_{\mathrm{nn}} = \frac{1}{2}\sum_{I\neq J}\frac{Z_I Z_J e^2}{|\mathbf R_I - \mathbf R_J|}. \tag{4.5.3}$$
 
-That is it. *Every* property of every material — bond lengths, lattice constants, elastic moduli, band gaps, magnetisation, superconductivity, ferroelectricity, thermal conductivity — is encoded in solving the eigenvalue equation $\hat H \Psi = E \Psi$ for this operator. Dirac, having written down a similar Hamiltonian in 1929, declared:
+That is it. *Every* property of every material — bond lengths, lattice constants, elastic moduli, band gaps, magnetisation, superconductivity, ferroelectricity, thermal conductivity — is encoded in solving the eigenvalue equation $\hat{H} \Psi = E \Psi$ for this operator. Dirac, having written down a similar Hamiltonian in 1929, declared:
 
 > "The underlying physical laws necessary for the mathematical theory of a large part of physics and the whole of chemistry are thus completely known, and the difficulty is only that the exact application of these laws leads to equations much too complicated to be soluble."
 
@@ -51,7 +51,7 @@ Let us put numbers on it. Take a coarse spatial grid of $N_g = 10$ points per di
 The third row, three electrons, already gives a billion-dimensional Hilbert space. The fifth row, ten electrons — roughly a water molecule — gives $10^{30}$ basis functions. A single double-precision complex number occupies 16 bytes, so storing $\Psi$ for ten electrons on a 10×10×10 grid would require $1.6 \times 10^{31}$ bytes. The total digital data created by humanity to date is approximately $10^{23}$ bytes. Just *writing down* the wavefunction of ten electrons on a coarse 1000-point grid would require **a hundred million times the entire world's data storage**.
 
 !!! warning "It gets worse"
-    Even if we could store $\Psi$, we would still need to diagonalise the Hamiltonian. Dense diagonalisation costs $\mathcal O(D^3)$ operations for a $D\times D$ matrix; sparse Lanczos methods can reach $\mathcal O(D \cdot \text{iterations})$ but still need to apply $\hat H$ to a vector of length $D$. For our ten-electron problem, $D = 10^{30}$ — and the fastest supercomputers in 2026 perform of order $10^{18}$ floating-point operations per second. A single matrix–vector product would take $10^{12}$ seconds, roughly thirty thousand years.
+    Even if we could store $\Psi$, we would still need to diagonalise the Hamiltonian. Dense diagonalisation costs $\mathcal O(D^3)$ operations for a $D\times D$ matrix; sparse Lanczos methods can reach $\mathcal O(D \cdot \text{iterations})$ but still need to apply $\hat{H}$ to a vector of length $D$. For our ten-electron problem, $D = 10^{30}$ — and the fastest supercomputers in 2026 perform of order $10^{18}$ floating-point operations per second. A single matrix–vector product would take $10^{12}$ seconds, roughly thirty thousand years.
 
 This is **not** a problem that will be solved by Moore's law. Doubling our compute power every two years lets us add one electron to the calculation every six years or so. At that rate, going from 10 electrons to 30 (a small organic molecule) would take 120 years of hardware improvement. The Schrödinger equation must be tackled differently.
 

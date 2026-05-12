@@ -446,7 +446,7 @@ few training examples; the breakdown makes the imbalance visible.
 embeddings from `model.embedding.weight` and project them with t-SNE or
 UMAP (Chapter 0 has the relevant background). The expectation: alkali
 metals cluster together, transition metals cluster, halogens cluster.
-This is a quick sanity check that the model has learned chemistry rather
+This is a quick sanity check that the model has learnt chemistry rather
 than memorising labels.
 
 These diagnostics are spelled out in the exercises (Exercise 10.7).

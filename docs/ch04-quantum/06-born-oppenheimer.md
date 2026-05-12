@@ -22,19 +22,19 @@ This is the same logic that lets us treat a slow-moving ship as instantaneously 
 
 We write the full molecular/solid Hamiltonian (4.5.1) as
 
-$$\hat H = \hat T_{\mathrm n}(\mathbf R) + \hat H_{\mathrm e}(\mathbf r; \mathbf R), \tag{4.6.2}$$
+$$\hat{H} = \hat T_{\mathrm n}(\mathbf R) + \hat{H}_{\mathrm e}(\mathbf r; \mathbf R), \tag{4.6.2}$$
 
 where $\hat T_{\mathrm n}(\mathbf R) = -\sum_I \hbar^2 \nabla_I^2/(2M_I)$ is the nuclear kinetic energy and
 
-$$\hat H_{\mathrm e}(\mathbf r; \mathbf R) = \hat T_{\mathrm e} + \hat V_{\mathrm{ee}} + \hat V_{\mathrm{en}}(\mathbf r, \mathbf R) + \hat V_{\mathrm{nn}}(\mathbf R) \tag{4.6.3}$$
+$$\hat{H}_{\mathrm e}(\mathbf r; \mathbf R) = \hat T_{\mathrm e} + \hat V_{\mathrm{ee}} + \hat V_{\mathrm{en}}(\mathbf r, \mathbf R) + \hat V_{\mathrm{nn}}(\mathbf R) \tag{4.6.3}$$
 
 is everything else. We have grouped $\hat V_{\mathrm{nn}}$ with the electronic part because it depends on $\mathbf R$ only (not on $\mathbf r$); it contributes a constant for any fixed nuclear configuration, simply shifting the electronic eigenvalues.
 
 **Step 1: the electronic problem at fixed nuclei.** For each nuclear configuration $\mathbf R \equiv (\mathbf R_1, \ldots, \mathbf R_{N_{\mathrm n}})$, solve the *electronic* eigenvalue equation
 
-$$\boxed{\; \hat H_{\mathrm e}(\mathbf r; \mathbf R)\, \psi_k(\mathbf r; \mathbf R) = E_k(\mathbf R)\, \psi_k(\mathbf r; \mathbf R). \;} \tag{4.6.4}$$
+$$\boxed{\; \hat{H}_{\mathrm e}(\mathbf r; \mathbf R)\, \psi_k(\mathbf r; \mathbf R) = E_k(\mathbf R)\, \psi_k(\mathbf r; \mathbf R). \;} \tag{4.6.4}$$
 
-Here the nuclear coordinates $\mathbf R$ appear as parameters (note the semicolon): $\hat H_{\mathrm e}$ depends on them but does not differentiate with respect to them. For each $\mathbf R$ this is a many-electron problem of the kind discussed in §4.5, with $\mathbf R$-dependent external potential and Coulomb repulsion. The eigenfunctions $\psi_k(\mathbf r; \mathbf R)$ are called the **electronic states** at nuclear configuration $\mathbf R$.
+Here the nuclear coordinates $\mathbf R$ appear as parameters (note the semicolon): $\hat{H}_{\mathrm e}$ depends on them but does not differentiate with respect to them. For each $\mathbf R$ this is a many-electron problem of the kind discussed in §4.5, with $\mathbf R$-dependent external potential and Coulomb repulsion. The eigenfunctions $\psi_k(\mathbf r; \mathbf R)$ are called the **electronic states** at nuclear configuration $\mathbf R$.
 
 For each $k$, the eigenvalue $E_k(\mathbf R)$, considered as a function of $\mathbf R$, is the **Born–Oppenheimer potential energy surface** of the $k$th electronic state. The ground-state PES $E_0(\mathbf R)$ is what we normally mean when we say "the energy of the molecule as a function of geometry"; it is what gets optimised, sampled by molecular dynamics, and learned by interatomic potentials.
 
@@ -46,13 +46,13 @@ where $\chi(\mathbf R)$ is a nuclear wavefunction yet to be determined.
 
 ## 4.6.3 Deriving the nuclear equation
 
-Substitute (4.6.5) into the full time-independent Schrödinger equation $\hat H \Psi = E \Psi$:
+Substitute (4.6.5) into the full time-independent Schrödinger equation $\hat{H} \Psi = E \Psi$:
 
-$$\left[\hat T_{\mathrm n} + \hat H_{\mathrm e}\right] \chi(\mathbf R) \psi_0(\mathbf r; \mathbf R) = E\, \chi(\mathbf R) \psi_0(\mathbf r; \mathbf R). \tag{4.6.6}$$
+$$\left[\hat T_{\mathrm n} + \hat{H}_{\mathrm e}\right] \chi(\mathbf R) \psi_0(\mathbf r; \mathbf R) = E\, \chi(\mathbf R) \psi_0(\mathbf r; \mathbf R). \tag{4.6.6}$$
 
-The electronic part is straightforward, since $\psi_0$ is an eigenstate of $\hat H_{\mathrm e}$:
+The electronic part is straightforward, since $\psi_0$ is an eigenstate of $\hat{H}_{\mathrm e}$:
 
-$$\hat H_{\mathrm e}\, \chi(\mathbf R)\, \psi_0(\mathbf r; \mathbf R) = E_0(\mathbf R)\, \chi(\mathbf R)\, \psi_0(\mathbf r; \mathbf R). \tag{4.6.7}$$
+$$\hat{H}_{\mathrm e}\, \chi(\mathbf R)\, \psi_0(\mathbf r; \mathbf R) = E_0(\mathbf R)\, \chi(\mathbf R)\, \psi_0(\mathbf r; \mathbf R). \tag{4.6.7}$$
 
 The nuclear kinetic term needs care. The nuclear Laplacian acts on *both* factors of (4.6.5):
 
@@ -86,7 +86,7 @@ Three statements summarise the achievement.
 
 1. **The full $\Psi(\mathbf r, \mathbf R)$ has been factorised** into an electronic part $\psi_0(\mathbf r; \mathbf R)$ (the ground-state electron cloud at fixed nuclei) and a nuclear part $\chi(\mathbf R)$ (the wavefunction of the nuclei moving on the BO surface).
 
-2. **The electronic problem becomes parametric.** We solve $\hat H_{\mathrm e}\psi_0 = E_0 \psi_0$ once for each nuclear configuration. We never need to track time-dependence of the electronic state; it follows the nuclei adiabatically.
+2. **The electronic problem becomes parametric.** We solve $\hat{H}_{\mathrm e}\psi_0 = E_0 \psi_0$ once for each nuclear configuration. We never need to track time-dependence of the electronic state; it follows the nuclei adiabatically.
 
 3. **The PES $E_0(\mathbf R)$ becomes a function of the $3N_{\mathrm n}$ nuclear coordinates only.** This is the central object of atomistic simulation. Geometry optimisation = find a local minimum of $E_0(\mathbf R)$. MD = integrate Newton's equations $M_I \ddot{\mathbf R}_I = -\nabla_I E_0(\mathbf R)$. Reaction pathways = trace minimum-energy paths on $E_0$. Vibrational analysis = diagonalise $\nabla\nabla E_0$ at a minimum (recall §4.4.5). Machine-learning potentials = learn $E_0(\mathbf R)$ from training data.
 
@@ -102,9 +102,9 @@ This is the Born–Oppenheimer molecular dynamics equation — Newton's second l
 
 The forces $\mathbf F_I = -\nabla_I E_0(\mathbf R)$ can be computed efficiently using the **Hellmann–Feynman theorem**: for a normalised electronic eigenstate $\psi_0$,
 
-$$\nabla_I E_0(\mathbf R) = \int \psi_0^*\, (\nabla_I \hat H_{\mathrm e})\, \psi_0\, d\mathbf r. \tag{4.6.14}$$
+$$\nabla_I E_0(\mathbf R) = \int \psi_0^*\, (\nabla_I \hat{H}_{\mathrm e})\, \psi_0\, d\mathbf r. \tag{4.6.14}$$
 
-The gradient acts only on the explicit $\mathbf R$-dependence of $\hat H_{\mathrm e}$ (the electron–nucleus and nucleus–nucleus terms), not on the wavefunction. This is what makes BOMD tractable: forces are computed as expectation values, not by numerical differentiation of the energy. We revisit Hellmann–Feynman in §5.5.
+The gradient acts only on the explicit $\mathbf R$-dependence of $\hat{H}_{\mathrm e}$ (the electron–nucleus and nucleus–nucleus terms), not on the wavefunction. This is what makes BOMD tractable: forces are computed as expectation values, not by numerical differentiation of the energy. We revisit Hellmann–Feynman in §5.5.
 
 For light nuclei (hydrogen, deuterium) the classical approximation can fail measurably, and one must keep the nuclear quantum problem (4.6.12). Quantum effects on nuclear motion show up as zero-point energies, tunnelling, and isotope effects; methods such as path-integral molecular dynamics (PIMD) preserve nuclear quantum effects while still using the BO surface.
 

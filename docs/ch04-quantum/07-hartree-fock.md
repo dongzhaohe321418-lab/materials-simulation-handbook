@@ -2,7 +2,7 @@
 
 Within the Born–Oppenheimer approximation the central remaining task is to solve the electronic Schrödinger equation
 
-$$\hat H_{\mathrm e}(\mathbf r; \mathbf R)\, \psi(\mathbf r; \mathbf R) = E(\mathbf R)\, \psi(\mathbf r; \mathbf R), \tag{4.7.1}$$
+$$\hat{H}_{\mathrm e}(\mathbf r; \mathbf R)\, \psi(\mathbf r; \mathbf R) = E(\mathbf R)\, \psi(\mathbf r; \mathbf R), \tag{4.7.1}$$
 
 for a system of $N$ interacting electrons in the external potential of fixed nuclei. As we saw in §4.5, this problem is exponentially hard. Hartree–Fock (HF) is the simplest serious attempt to make it polynomial. The idea, conceptually, is breathtaking: assume the many-electron wavefunction is a *single* Slater determinant built from $N$ one-electron orbitals, then variationally choose those orbitals to minimise the energy. The result is a set of self-consistent one-electron equations of remarkable structure — they capture exchange exactly but neglect correlation entirely. HF is rarely used as a final method in modern materials science, but it is the conceptual scaffold on which density functional theory (Chapter 5) is built, and every electronic-structure code in the world traces some lineage to it.
 
@@ -12,15 +12,15 @@ This section sketches the HF construction. We will not derive the equations in f
 
 The mathematical engine of HF (and DFT, and many other electronic-structure methods) is the **variational principle**: for any normalised trial wavefunction $\Psi$,
 
-$$\langle \Psi | \hat H | \Psi \rangle \geq E_0, \tag{4.7.2}$$
+$$\langle \Psi | \hat{H} | \Psi \rangle \geq E_0, \tag{4.7.2}$$
 
 with equality if and only if $\Psi$ is the exact ground state. We met this idea in Chapter 0.3 in the context of finding minimum-energy configurations; here it becomes the cornerstone of approximate quantum mechanics.
 
-**Proof sketch.** Expand $|\Psi\rangle$ in the orthonormal eigenbasis $\{|\Phi_n\rangle\}$ of $\hat H$, $|\Psi\rangle = \sum_n c_n |\Phi_n\rangle$, with eigenvalues $E_0 \leq E_1 \leq E_2 \leq \ldots$. Normalisation gives $\sum_n |c_n|^2 = 1$. Then
+**Proof sketch.** Expand $|\Psi\rangle$ in the orthonormal eigenbasis $\{|\Phi_n\rangle\}$ of $\hat{H}$, $|\Psi\rangle = \sum_n c_n |\Phi_n\rangle$, with eigenvalues $E_0 \leq E_1 \leq E_2 \leq \ldots$. Normalisation gives $\sum_n |c_n|^2 = 1$. Then
 
-$$\langle \Psi|\hat H|\Psi\rangle = \sum_n |c_n|^2 E_n \geq E_0 \sum_n |c_n|^2 = E_0. \quad\blacksquare$$
+$$\langle \Psi|\hat{H}|\Psi\rangle = \sum_n |c_n|^2 E_n \geq E_0 \sum_n |c_n|^2 = E_0. \quad\blacksquare$$
 
-The strategy: choose a parameterised family $\Psi_\lambda$ of trial wavefunctions, compute $E(\lambda) = \langle\Psi_\lambda|\hat H|\Psi_\lambda\rangle$, and minimise over $\lambda$. The minimum is an upper bound on the true ground-state energy, and a *good* family produces a tight bound. The art is choosing a family that is rich enough to capture the relevant physics but simple enough to be computationally tractable.
+The strategy: choose a parameterised family $\Psi_\lambda$ of trial wavefunctions, compute $E(\lambda) = \langle\Psi_\lambda|\hat{H}|\Psi_\lambda\rangle$, and minimise over $\lambda$. The minimum is an upper bound on the true ground-state energy, and a *good* family produces a tight bound. The art is choosing a family that is rich enough to capture the relevant physics but simple enough to be computationally tractable.
 
 ## 4.7.2 The Hartree approximation
 
@@ -30,7 +30,7 @@ $$\Psi_{\mathrm H}(\mathbf r_1, \ldots, \mathbf r_N) = \phi_1(\mathbf r_1)\, \ph
 
 This is the **Hartree ansatz**. Each electron lives in its own orbital, and the orbitals are determined self-consistently by demanding that each $\phi_i$ feels the average ("mean-field") Coulomb repulsion from all the others.
 
-Substituting (4.7.3) into the energy expectation value $\langle\hat H_{\mathrm e}\rangle$ and minimising with respect to each $\phi_i$ (subject to orthonormality) gives the **Hartree equations**:
+Substituting (4.7.3) into the energy expectation value $\langle\hat{H}_{\mathrm e}\rangle$ and minimising with respect to each $\phi_i$ (subject to orthonormality) gives the **Hartree equations**:
 
 $$\left[-\frac{\hbar^2}{2m_{\mathrm e}}\nabla^2 + v_{\mathrm{ext}}(\mathbf r) + v_{\mathrm H}^{(i)}(\mathbf r)\right] \phi_i(\mathbf r) = \varepsilon_i\, \phi_i(\mathbf r), \tag{4.7.4}$$
 
@@ -52,7 +52,7 @@ $$\Psi_{\mathrm{HF}}(\mathbf x_1, \ldots, \mathbf x_N) = \frac{1}{\sqrt{N!}}\det
 
 The determinant changes sign under exchange of any two electrons (rows), satisfying (4.5.6); it vanishes if any two spin-orbitals are equal (columns), enforcing exclusion.
 
-Now compute the energy expectation value $E_{\mathrm{HF}} = \langle\Psi_{\mathrm{HF}}|\hat H_{\mathrm e}|\Psi_{\mathrm{HF}}\rangle$. The calculation is tedious but elementary; the result is
+Now compute the energy expectation value $E_{\mathrm{HF}} = \langle\Psi_{\mathrm{HF}}|\hat{H}_{\mathrm e}|\Psi_{\mathrm{HF}}\rangle$. The calculation is tedious but elementary; the result is
 
 $$E_{\mathrm{HF}} = \sum_i h_{ii} + \frac{1}{2}\sum_{ij}\bigl(J_{ij} - K_{ij}\bigr), \tag{4.7.7}$$
 
@@ -126,7 +126,7 @@ We will not actually *run* Hartree–Fock calculations in this book — DFT (Cha
 2. **The SCF cycle is universal.** Every electronic-structure code you will encounter — from a hand-written `pyscf` script to a national-laboratory plane-wave code — runs an SCF loop with essentially the same logic as §4.7.4.
 
 3. **The Fock operator splits naturally into kinetic, external, Hartree (classical Coulomb) and exchange parts.** This same partitioning structures the Kohn–Sham Hamiltonian, with the addition of a *correlation* term:
-$$\hat H_{\mathrm{KS}} = -\tfrac12 \nabla^2 + v_{\mathrm{ext}} + v_{\mathrm H} + v_{\mathrm{xc}}.$$
+$$\hat{H}_{\mathrm{KS}} = -\tfrac12 \nabla^2 + v_{\mathrm{ext}} + v_{\mathrm H} + v_{\mathrm{xc}}.$$
 The first three pieces are the same as in HF (the Hartree part now including self-interaction, since we represent the system by a density, not orbitals); the last is the **exchange–correlation potential**, where the magic of DFT lives.
 
 4. **Exchange is essentially free; correlation is hard.** HF treats exchange exactly. DFT, in approximate functionals, treats both exchange and correlation approximately — but does so in a way that captures most of the correlation as well, at HF cost.

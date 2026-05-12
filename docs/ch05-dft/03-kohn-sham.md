@@ -11,11 +11,11 @@ This is the Kohn–Sham (KS) construction. It is the basis of every practical DF
 Consider a fictitious system of $N$ **non-interacting** electrons moving in a one-body potential $v_s(\mathbf r)$. The Hamiltonian is
 
 $$
-\hat H_s = -\tfrac{1}{2}\sum_i \nabla_i^{2} \;+\; \sum_i v_s(\mathbf r_i).
+\hat{H}_s = -\tfrac{1}{2}\sum_i \nabla_i^{2} \;+\; \sum_i v_s(\mathbf r_i).
 \tag{5.20}
 $$
 
-Because the electrons do not interact, the eigenstates of $\hat H_s$ are antisymmetrised products of single-particle orbitals $\phi_i(\mathbf r)$ — Slater determinants. The orbitals satisfy
+Because the electrons do not interact, the eigenstates of $\hat{H}_s$ are antisymmetrised products of single-particle orbitals $\phi_i(\mathbf r)$ — Slater determinants. The orbitals satisfy
 
 $$
 \Big[-\tfrac{1}{2}\nabla^{2} + v_s(\mathbf r)\Big]\phi_i(\mathbf r) = \varepsilon_i\,\phi_i(\mathbf r).

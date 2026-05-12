@@ -198,6 +198,6 @@ These are not "bad" sections — they are background. The first-pass reader is t
 2. **Pick a target system early.** Choose one material — silicon, water, copper, a perovskite, whatever — and keep using it across chapters as your private benchmark. The exercises encourage this.
 3. **Do not optimise for completeness.** A reader who finishes Ch 9 having understood MACE and produced a working potential is in a better position than a reader who has skimmed Chs 0–12.
 4. **Use the prerequisites checker.** If you do not know which path to take, spend twenty minutes on the [Prerequisites Check](prerequisites-checker.md). It points to a specific starting chapter based on your score.
-5. **Re-read the index pages.** Every chapter's `index.md` is a one-page map of the chapter. Read it before starting, and again after finishing; the gap between the two is what you have learned.
+5. **Re-read the index pages.** Every chapter's `index.md` is a one-page map of the chapter. Read it before starting, and again after finishing; the gap between the two is what you have learnt.
 
 A good road through this book is the one that gets you to a research question you care about. Pick one of the three paths, choose a project, and start reading.

@@ -16,9 +16,9 @@ $$V(\mathbf r + \mathbf R) = V(\mathbf r) \quad \text{for every lattice vector }
 
 The single-particle Hamiltonian is therefore
 
-$$\hat H = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r), \qquad V(\mathbf r + \mathbf R) = V(\mathbf r). \tag{3b.1.3}$$
+$$\hat{H} = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r), \qquad V(\mathbf r + \mathbf R) = V(\mathbf r). \tag{3b.1.3}$$
 
-We want the eigenstates of $\hat H$. Naively this is hopeless: $V(\mathbf r)$ is defined on an infinite domain. Bloch saw that the *symmetry* of $V$ does almost all of the work for us.
+We want the eigenstates of $\hat{H}$. Naively this is hopeless: $V(\mathbf r)$ is defined on an infinite domain. Bloch saw that the *symmetry* of $V$ does almost all of the work for us.
 
 ## 3b.1.2 The translation operator
 
@@ -32,24 +32,24 @@ $$\hat T_\mathbf R \hat T_{\mathbf R'} = \hat T_{\mathbf R + \mathbf R'} = \hat 
 
 So the set of lattice translations $\{\hat T_\mathbf R\}_{\mathbf R}$ forms an *abelian group*.
 
-## 3b.1.3 $\hat T_\mathbf R$ commutes with $\hat H$
+## 3b.1.3 $\hat T_\mathbf R$ commutes with $\hat{H}$
 
-Here is the key calculation. Apply $\hat T_\mathbf R \hat H$ to an arbitrary state $\psi$:
+Here is the key calculation. Apply $\hat T_\mathbf R \hat{H}$ to an arbitrary state $\psi$:
 
-$$(\hat T_\mathbf R \hat H \psi)(\mathbf r) = (\hat H \psi)(\mathbf r + \mathbf R) = -\frac{\hbar^2}{2m}\nabla^2 \psi(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R). \tag{3b.1.6}$$
+$$(\hat T_\mathbf R \hat{H} \psi)(\mathbf r) = (\hat{H} \psi)(\mathbf r + \mathbf R) = -\frac{\hbar^2}{2m}\nabla^2 \psi(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R). \tag{3b.1.6}$$
 
 The Laplacian is translation-invariant: $\nabla^2_{\mathbf r}\, \psi(\mathbf r + \mathbf R) = (\nabla^2 \psi)(\mathbf r + \mathbf R)$, because a constant shift does not change the second derivatives. And by (3b.1.2), $V(\mathbf r + \mathbf R) = V(\mathbf r)$. Hence
 
-$$(\hat T_\mathbf R \hat H \psi)(\mathbf r) = -\frac{\hbar^2}{2m}\nabla^2 \psi(\mathbf r + \mathbf R) + V(\mathbf r)\, \psi(\mathbf r + \mathbf R) = (\hat H \hat T_\mathbf R \psi)(\mathbf r). \tag{3b.1.7}$$
+$$(\hat T_\mathbf R \hat{H} \psi)(\mathbf r) = -\frac{\hbar^2}{2m}\nabla^2 \psi(\mathbf r + \mathbf R) + V(\mathbf r)\, \psi(\mathbf r + \mathbf R) = (\hat{H} \hat T_\mathbf R \psi)(\mathbf r). \tag{3b.1.7}$$
 
 Since this holds for any $\psi$,
 
-$$\boxed{\; [\hat H, \hat T_\mathbf R] = 0 \quad \text{for every lattice vector } \mathbf R. \;} \tag{3b.1.8}$$
+$$\boxed{\; [\hat{H}, \hat T_\mathbf R] = 0 \quad \text{for every lattice vector } \mathbf R. \;} \tag{3b.1.8}$$
 
 This is the cleanest statement of translational symmetry. We exploited only two facts: the kinetic operator is translation-invariant, and the potential is lattice-periodic.
 
 !!! note "Why we wanted commutation"
-    In Chapter 4 you learned that two commuting Hermitian operators can be simultaneously diagonalised: there exists an orthonormal basis in which both operators are diagonal. Here $\hat T_\mathbf R$ is not Hermitian (it is unitary), but the same logic works for any pair of *commuting normal operators*. The plan is therefore: diagonalise $\hat T_\mathbf R$ first — which is trivial, since it acts on functions by translation — and then within each eigenspace diagonalise $\hat H$. The first step is symmetry; the second step is dynamics.
+    In Chapter 4 you learnt that two commuting Hermitian operators can be simultaneously diagonalised: there exists an orthonormal basis in which both operators are diagonal. Here $\hat T_\mathbf R$ is not Hermitian (it is unitary), but the same logic works for any pair of *commuting normal operators*. The plan is therefore: diagonalise $\hat T_\mathbf R$ first — which is trivial, since it acts on functions by translation — and then within each eigenspace diagonalise $\hat{H}$. The first step is symmetry; the second step is dynamics.
 
 ## 3b.1.4 Eigenvalues of $\hat T_\mathbf R$
 
@@ -92,7 +92,7 @@ There are exactly $N$ inequivalent values of $\mathbf k$ in one reciprocal unit 
 We are now ready to state and prove the theorem in its standard form.
 
 !!! example "Bloch's theorem"
-    Let $\hat H$ be a single-particle Hamiltonian with a lattice-periodic potential $V(\mathbf r + \mathbf R) = V(\mathbf r)$ and Born–von Kármán boundary conditions. Then there is an orthonormal basis of eigenstates of the form
+    Let $\hat{H}$ be a single-particle Hamiltonian with a lattice-periodic potential $V(\mathbf r + \mathbf R) = V(\mathbf r)$ and Born–von Kármán boundary conditions. Then there is an orthonormal basis of eigenstates of the form
     $$\boxed{\; \psi_{n\mathbf k}(\mathbf r) = e^{i\mathbf k\cdot\mathbf r}\, u_{n\mathbf k}(\mathbf r), \qquad u_{n\mathbf k}(\mathbf r + \mathbf R) = u_{n\mathbf k}(\mathbf r). \;} \tag{3b.1.15}$$
     The label $\mathbf k$ runs over the first Brillouin zone; $n$ is a discrete band index.
 
@@ -100,7 +100,7 @@ We are now ready to state and prove the theorem in its standard form.
 
 $$\psi(\mathbf r + \mathbf R) = e^{i\mathbf k \cdot \mathbf R}\, \psi(\mathbf r). \tag{3b.1.16}$$
 
-Because $[\hat H, \hat T_\mathbf R]=0$, we may choose the eigenbasis of $\hat H$ to *also* be an eigenbasis of every $\hat T_\mathbf R$. Hence the eigenstates of $\hat H$ satisfy (3b.1.16).
+Because $[\hat{H}, \hat T_\mathbf R]=0$, we may choose the eigenbasis of $\hat{H}$ to *also* be an eigenbasis of every $\hat T_\mathbf R$. Hence the eigenstates of $\hat{H}$ satisfy (3b.1.16).
 
 Now *define*
 
@@ -118,7 +118,7 @@ which is Bloch's theorem in the form (3b.1.15). The discrete index $n$ arises be
 
 ## 3b.1.6 The Bloch equation on the unit cell
 
-Bloch's theorem reduces the problem to: find $u_{n\mathbf k}(\mathbf r)$ that is periodic on the unit cell. Plug (3b.1.15) into the Schrödinger equation $\hat H \psi = E \psi$:
+Bloch's theorem reduces the problem to: find $u_{n\mathbf k}(\mathbf r)$ that is periodic on the unit cell. Plug (3b.1.15) into the Schrödinger equation $\hat{H} \psi = E \psi$:
 
 $$-\frac{\hbar^2}{2m}\nabla^2 \left[e^{i\mathbf k\cdot\mathbf r} u\right] + V(\mathbf r)\, e^{i\mathbf k\cdot\mathbf r} u = E\, e^{i\mathbf k\cdot\mathbf r} u. \tag{3b.1.20}$$
 
@@ -128,7 +128,7 @@ $$\left[ -\frac{\hbar^2}{2m}(\nabla + i\mathbf k)^2 + V(\mathbf r)\right] u_{n\m
 
 This is the *cell-periodic Bloch equation*: a Hermitian eigenvalue problem for $u_{n\mathbf k}$ defined on a single unit cell, with periodic boundary conditions. The Hamiltonian on the unit cell is
 
-$$\hat H_\mathbf k = -\frac{\hbar^2}{2m}(\nabla + i\mathbf k)^2 + V(\mathbf r). \tag{3b.1.22}$$
+$$\hat{H}_\mathbf k = -\frac{\hbar^2}{2m}(\nabla + i\mathbf k)^2 + V(\mathbf r). \tag{3b.1.22}$$
 
 For each $\mathbf k$ there are countably many eigenvalues $E_{1\mathbf k} \le E_{2\mathbf k} \le \cdots$. The function $\mathbf k \mapsto E_{n\mathbf k}$ is the $n$-th *band* and the whole collection $\{E_{n\mathbf k}\}$ is the *band structure*. This is precisely the object you will plot in Chapter 6.
 

@@ -9,21 +9,21 @@ Solutions are folded into `??? success` admonitions immediately after each probl
 
 ---
 
-## Exercise 3b.8.1 — Commutation of $\hat H$ and $\hat T_\mathbf R$
+## Exercise 3b.8.1 — Commutation of $\hat{H}$ and $\hat T_\mathbf R$
 <span class="diff-easy">★</span>
 
-Prove from first principles that, for any single-particle Hamiltonian $\hat H = -\hbar^2\nabla^2/(2m) + V(\mathbf r)$ with $V(\mathbf r + \mathbf R) = V(\mathbf r)$, the commutator $[\hat H, \hat T_\mathbf R]$ vanishes on all wavefunctions. State explicitly which property of the Laplacian and which property of $V$ you use.
+Prove from first principles that, for any single-particle Hamiltonian $\hat{H} = -\hbar^2\nabla^2/(2m) + V(\mathbf r)$ with $V(\mathbf r + \mathbf R) = V(\mathbf r)$, the commutator $[\hat{H}, \hat T_\mathbf R]$ vanishes on all wavefunctions. State explicitly which property of the Laplacian and which property of $V$ you use.
 
 ??? success "Solution 3b.8.1"
     Act on an arbitrary state $\psi$ with both orderings.
 
-    First $\hat T_\mathbf R \hat H \psi$. By definition $(\hat T_\mathbf R \phi)(\mathbf r) = \phi(\mathbf r + \mathbf R)$, so
+    First $\hat T_\mathbf R \hat{H} \psi$. By definition $(\hat T_\mathbf R \phi)(\mathbf r) = \phi(\mathbf r + \mathbf R)$, so
 
-    $$(\hat T_\mathbf R \hat H \psi)(\mathbf r) = (\hat H\psi)(\mathbf r + \mathbf R) = -\frac{\hbar^2}{2m}(\nabla^2 \psi)(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R).$$
+    $$(\hat T_\mathbf R \hat{H} \psi)(\mathbf r) = (\hat{H}\psi)(\mathbf r + \mathbf R) = -\frac{\hbar^2}{2m}(\nabla^2 \psi)(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R).$$
 
-    Now $\hat H \hat T_\mathbf R \psi$. Compute $\hat T_\mathbf R\psi$ first, $(\hat T_\mathbf R \psi)(\mathbf r) = \psi(\mathbf r+\mathbf R)$, and apply $\hat H$:
+    Now $\hat{H} \hat T_\mathbf R \psi$. Compute $\hat T_\mathbf R\psi$ first, $(\hat T_\mathbf R \psi)(\mathbf r) = \psi(\mathbf r+\mathbf R)$, and apply $\hat{H}$:
 
-    $$(\hat H \hat T_\mathbf R\psi)(\mathbf r) = -\frac{\hbar^2}{2m}\nabla^2_\mathbf r\, \psi(\mathbf r + \mathbf R) + V(\mathbf r)\, \psi(\mathbf r + \mathbf R).$$
+    $$(\hat{H} \hat T_\mathbf R\psi)(\mathbf r) = -\frac{\hbar^2}{2m}\nabla^2_\mathbf r\, \psi(\mathbf r + \mathbf R) + V(\mathbf r)\, \psi(\mathbf r + \mathbf R).$$
 
     Two facts are now needed:
 
@@ -33,9 +33,9 @@ Prove from first principles that, for any single-particle Hamiltonian $\hat H = 
 
     Combining the two:
 
-    $$(\hat H \hat T_\mathbf R\psi)(\mathbf r) = -\frac{\hbar^2}{2m}(\nabla^2\psi)(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R) = (\hat T_\mathbf R \hat H \psi)(\mathbf r).$$
+    $$(\hat{H} \hat T_\mathbf R\psi)(\mathbf r) = -\frac{\hbar^2}{2m}(\nabla^2\psi)(\mathbf r + \mathbf R) + V(\mathbf r + \mathbf R)\, \psi(\mathbf r + \mathbf R) = (\hat T_\mathbf R \hat{H} \psi)(\mathbf r).$$
 
-    Since $\psi$ was arbitrary, $[\hat H, \hat T_\mathbf R] = 0$. $\blacksquare$
+    Since $\psi$ was arbitrary, $[\hat{H}, \hat T_\mathbf R] = 0$. $\blacksquare$
 
 ---
 

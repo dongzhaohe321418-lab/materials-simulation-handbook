@@ -294,10 +294,10 @@ print(eigvecs)
 Quantum mechanics is, at the level of computation, the eigenvalue problem
 
 $$
-\hat H \,\psi_n = E_n \, \psi_n,
+\hat{H} \,\psi_n = E_n \, \psi_n,
 $$
 
-where $\hat H$ is the Hamiltonian operator, $E_n$ are the allowed energies, and $\psi_n$ are the stationary states. In a finite basis the operator $\hat H$ becomes a matrix and the equation becomes (0.2.15). Diagonalising the Hamiltonian, in Chapter 4 for the hydrogen atom and Chapter 5 for the Kohn–Sham equations of DFT, is *the* central numerical task.
+where $\hat{H}$ is the Hamiltonian operator, $E_n$ are the allowed energies, and $\psi_n$ are the stationary states. In a finite basis the operator $\hat{H}$ becomes a matrix and the equation becomes (0.2.15). Diagonalising the Hamiltonian, in Chapter 4 for the hydrogen atom and Chapter 5 for the Kohn–Sham equations of DFT, is *the* central numerical task.
 
 Eigenvalue problems are equally pervasive in classical materials science. The vibrational frequencies of a crystal are eigenvalues of the dynamical matrix (Chapter 8). The principal axes of a stress or strain tensor are its eigenvectors. The leading principal components of a feature matrix in machine learning are again eigenvectors. Get comfortable with (0.2.15); it will pay back the effort hundreds of times.
 

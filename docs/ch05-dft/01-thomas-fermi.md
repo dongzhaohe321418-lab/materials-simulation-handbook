@@ -177,7 +177,7 @@ This is fatal. Materials science is the science of bonds — covalent, metallic,
 !!! warning "Why this matters"
     Modern *orbital-free DFT* is essentially Thomas–Fermi with better kinetic functionals, and it is an active research area: it has the unbeatable property of scaling linearly with system size and being trivially parallelisable. But for general systems no kinetic functional accurate enough to compete with Kohn–Sham has yet been found. The kinetic energy is, in a precise sense, the hardest part of the energy to write as an explicit functional of $n$.
 
-## 5.1.7 What we have learned, and what comes next
+## 5.1.7 What we have learnt, and what comes next
 
 Thomas and Fermi taught us three things:
 

@@ -228,10 +228,10 @@ Take $f(x) = e^{-x^2/(2 \sigma^2)}$ with $\sigma = 1$, sampled on $x \in [-10, 1
 A trial wavefunction $\psi$ in a two-dimensional Hilbert space is expanded in an orthonormal basis $\{\phi_1, \phi_2\}$ as $\psi = c_1 \phi_1 + c_2 \phi_2$ with $c_1, c_2 \in \mathbb{C}$. Define the energy functional
 
 $$
-E[\psi] = \frac{\langle \psi | \hat H | \psi \rangle}{\langle \psi | \psi \rangle}.
+E[\psi] = \frac{\langle \psi | \hat{H} | \psi \rangle}{\langle \psi | \psi \rangle}.
 $$
 
-(a) Let $H_{ij} = \langle \phi_i | \hat H | \phi_j \rangle$ be the matrix elements of a Hermitian Hamiltonian ($H_{ji} = \overline{H_{ij}}$). Write $E$ as a function of $c_1, c_2$ in terms of the $H_{ij}$.
+(a) Let $H_{ij} = \langle \phi_i | \hat{H} | \phi_j \rangle$ be the matrix elements of a Hermitian Hamiltonian ($H_{ji} = \overline{H_{ij}}$). Write $E$ as a function of $c_1, c_2$ in terms of the $H_{ij}$.
 
 (b) Minimise $E$ over $c_1, c_2$ subject to the constraint $|c_1|^2 + |c_2|^2 = 1$. Show that the stationary points are eigenvectors of the matrix $H = (H_{ij})$ and that the corresponding stationary values are its eigenvalues.
 
@@ -240,7 +240,7 @@ $$
 ??? success "Solution"
     (a) The numerator is
     $$
-    \langle \psi | \hat H | \psi \rangle = \sum_{i,j} \overline{c_i} c_j H_{ij},
+    \langle \psi | \hat{H} | \psi \rangle = \sum_{i,j} \overline{c_i} c_j H_{ij},
     $$
     which in matrix form is $\mathbf{c}^\dagger H \mathbf{c}$ with $\mathbf{c} = (c_1, c_2)^\top$. The denominator is $\mathbf{c}^\dagger \mathbf{c} = |c_1|^2 + |c_2|^2$. So
     $$

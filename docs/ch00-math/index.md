@@ -35,7 +35,7 @@ The five core sections are arranged so that each provides a tool used by the nex
 Each section ends with a one-line preview of the chapter that consumes it.
 
 !!! note "On notation"
-    We use bold lower-case letters $\mathbf{v}$ for vectors, capital letters $A$ for matrices, and a hat $\hat H$ for operators. Greek letters carry their conventional physical meanings: $\psi$ for wavefunctions, $\rho$ for density, $\beta = 1/(k_\mathrm{B} T)$ for inverse temperature. Spelling is British English throughout.
+    We use bold lower-case letters $\mathbf{v}$ for vectors, capital letters $A$ for matrices, and a hat $\hat{H}$ for operators. Greek letters carry their conventional physical meanings: $\psi$ for wavefunctions, $\rho$ for density, $\beta = 1/(k_\mathrm{B} T)$ for inverse temperature. Spelling is British English throughout.
 
 !!! warning "What this chapter is not"
     This is not a substitute for a proper course. We skip almost all proofs of existence and uniqueness, and we are cavalier about convergence. If you want rigour, Axler's *Linear Algebra Done Right* and Spivak's *Calculus* are the classics. Our goal is operational fluency, not formal completeness.

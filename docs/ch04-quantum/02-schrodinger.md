@@ -6,11 +6,11 @@ We now state the central equation of non-relativistic quantum mechanics. Everyth
 
 For a single non-relativistic particle of mass $m$ moving in a potential $V(\mathbf r, t)$, the state is described by a complex-valued wavefunction $\psi(\mathbf r, t)$, and the wavefunction evolves according to the **time-dependent Schrödinger equation** (TDSE):
 
-$$\boxed{\; i\hbar \frac{\partial \psi(\mathbf r, t)}{\partial t} = \hat H\, \psi(\mathbf r, t) \;} \tag{4.2.1}$$
+$$\boxed{\; i\hbar \frac{\partial \psi(\mathbf r, t)}{\partial t} = \hat{H}\, \psi(\mathbf r, t) \;} \tag{4.2.1}$$
 
-where $\hat H$ is the *Hamiltonian operator*,
+where $\hat{H}$ is the *Hamiltonian operator*,
 
-$$\hat H = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r, t). \tag{4.2.2}$$
+$$\hat{H} = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r, t). \tag{4.2.2}$$
 
 Several features deserve immediate comment.
 
@@ -56,11 +56,11 @@ $$\psi(\mathbf r, t) = \phi(\mathbf r)\, f(t),$$
 
 and substitute into (4.2.1) with a time-independent potential $V(\mathbf r)$. The TDSE becomes
 
-$$i\hbar\, \phi(\mathbf r)\, \dot f(t) = f(t)\, \hat H \phi(\mathbf r),$$
+$$i\hbar\, \phi(\mathbf r)\, \dot f(t) = f(t)\, \hat{H} \phi(\mathbf r),$$
 
 and dividing by $\phi f$,
 
-$$i\hbar\, \frac{\dot f(t)}{f(t)} = \frac{\hat H \phi(\mathbf r)}{\phi(\mathbf r)}.$$
+$$i\hbar\, \frac{\dot f(t)}{f(t)} = \frac{\hat{H} \phi(\mathbf r)}{\phi(\mathbf r)}.$$
 
 The left side depends only on $t$, the right only on $\mathbf r$; both must therefore equal a common constant, which we call $E$. This gives two equations. The time part is solved immediately,
 
@@ -68,9 +68,9 @@ $$f(t) = e^{-iEt/\hbar}, \tag{4.2.5}$$
 
 and the spatial part is the **time-independent Schrödinger equation** (TISE):
 
-$$\boxed{\; \hat H\, \phi(\mathbf r) = E\, \phi(\mathbf r) \;} \tag{4.2.6}$$
+$$\boxed{\; \hat{H}\, \phi(\mathbf r) = E\, \phi(\mathbf r) \;} \tag{4.2.6}$$
 
-with $\hat H = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r)$.
+with $\hat{H} = -\frac{\hbar^2}{2m}\nabla^2 + V(\mathbf r)$.
 
 Equation (4.2.6) is an **eigenvalue equation**: we seek functions $\phi$ that are mapped, by the Hamiltonian, into multiples of themselves. The multipliers $E$ are the allowed *energies* of the system. For typical bound-state problems they form a discrete set $\{E_0, E_1, E_2, \ldots\}$, the spectrum of the Hamiltonian.
 
@@ -97,7 +97,7 @@ The integral is over all space, and $\psi$ is assumed normalised. This is the **
 - Momentum: $\hat{\mathbf p} = -i\hbar \nabla$, so $\langle p_x\rangle = -i\hbar\int \psi^* \partial_x \psi \,d^3r$.
 - Kinetic energy: $\hat T = \hat p^2/2m = -\frac{\hbar^2}{2m}\nabla^2$.
 - Potential energy: $\hat V = V(\mathbf r)$ (multiplication).
-- Total energy: $\hat H = \hat T + \hat V$.
+- Total energy: $\hat{H} = \hat T + \hat V$.
 
 !!! warning "Operators do not commute"
     Unlike numbers, operators in general satisfy $\hat A \hat B \neq \hat B \hat A$. The canonical example is position and momentum:
@@ -186,9 +186,9 @@ $$|\psi\rangle = \sum_n c_n |\phi_n\rangle, \quad c_n = \langle\phi_n|\psi\rangl
 
 is then a one-line consequence of (4.2.15).
 
-The eigenvalue equation $\hat H \phi_n = E_n \phi_n$ becomes
+The eigenvalue equation $\hat{H} \phi_n = E_n \phi_n$ becomes
 
-$$\hat H |n\rangle = E_n |n\rangle, \tag{4.2.16}$$
+$$\hat{H} |n\rangle = E_n |n\rangle, \tag{4.2.16}$$
 
 where we have shortened $|\phi_n\rangle$ to $|n\rangle$.
 
@@ -197,11 +197,11 @@ where we have shortened $|\phi_n\rangle$ to $|n\rangle$.
 In the space of a few pages we have constructed the entire algebraic framework of non-relativistic quantum mechanics.
 
 - States live in a Hilbert space; in position representation they are square-integrable complex functions $\psi(\mathbf r)$.
-- Time evolution is governed by the Schrödinger equation (4.2.1); for time-independent $V$, the dynamics is determined by the eigenstates and eigenvalues of $\hat H$.
+- Time evolution is governed by the Schrödinger equation (4.2.1); for time-independent $V$, the dynamics is determined by the eigenstates and eigenvalues of $\hat{H}$.
 - Observables correspond to Hermitian operators; their measurement statistics are encoded by (4.2.7), or in bra-ket form (4.2.12).
 - The eigenvalues of a Hermitian operator are real, and the eigenstates belonging to distinct eigenvalues are orthogonal — proved above by direct calculation.
-- The mathematical fact that the eigenstates of $\hat H$ form a complete basis reduces the entire problem of quantum dynamics to a *spectral problem*: find the eigenvalues and eigenvectors of $\hat H$.
+- The mathematical fact that the eigenstates of $\hat{H}$ form a complete basis reduces the entire problem of quantum dynamics to a *spectral problem*: find the eigenvalues and eigenvectors of $\hat{H}$.
 
 The rest of the chapter is the systematic exploration of that spectral problem in increasingly realistic settings. In §4.3 we solve it for a single particle in a 1D box — analytically and on the computer. In §4.4 we do the same for the harmonic oscillator. In §4.5 we write down the Hamiltonian for a real solid, and discover that the spectral problem is, in practice, hopeless. The remaining sections of the chapter — and indeed the rest of the book — are devoted to the approximations that put it within reach.
 
-A computational footnote before moving on. Equation (4.2.6) is a *linear* eigenvalue problem — the same kind of problem you met in Chapter 0.3 when diagonalising a 3×3 symmetric matrix. The only essential difference is that the operator $\hat H$ acts on an infinite-dimensional function space rather than a finite-dimensional vector space. In §4.3 we will *discretise* the position coordinate onto a finite grid, at which point $\hat H$ becomes a literal matrix and the Schrödinger equation becomes a problem for `scipy.linalg.eigh`. That is the bridge from quantum mechanics to computational quantum mechanics, and it is shorter than you might think.
+A computational footnote before moving on. Equation (4.2.6) is a *linear* eigenvalue problem — the same kind of problem you met in Chapter 0.3 when diagonalising a 3×3 symmetric matrix. The only essential difference is that the operator $\hat{H}$ acts on an infinite-dimensional function space rather than a finite-dimensional vector space. In §4.3 we will *discretise* the position coordinate onto a finite grid, at which point $\hat{H}$ becomes a literal matrix and the Schrödinger equation becomes a problem for `scipy.linalg.eigh`. That is the bridge from quantum mechanics to computational quantum mechanics, and it is shorter than you might think.

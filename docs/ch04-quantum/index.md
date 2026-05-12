@@ -23,7 +23,7 @@ This chapter is the bridge between the descriptive materials science of Chapter 
 
 The chapter has a single overarching aim: to take a reader who has never seen quantum mechanics formally, and bring them to a point where the statement
 
-$$\hat H \Psi(\mathbf r_1, \ldots, \mathbf r_N) = E\, \Psi(\mathbf r_1, \ldots, \mathbf r_N)$$
+$$\hat{H} \Psi(\mathbf r_1, \ldots, \mathbf r_N) = E\, \Psi(\mathbf r_1, \ldots, \mathbf r_N)$$
 
 is not merely symbols on a page but a concrete computational problem whose intractability the reader can both *prove* and *feel*. Everything from Chapter 5 onwards is an approximation to this equation, so understanding why it is hopeless is the most important pedagogical step in the book.
 

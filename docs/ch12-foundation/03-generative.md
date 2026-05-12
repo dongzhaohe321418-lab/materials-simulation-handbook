@@ -309,6 +309,141 @@ prototypes, would have had to evaluate millions of DFT calculations
 to find the same hits — if the relevant structures had appeared in
 the prototype library at all, which several of them did not.
 
+### The full validation chain, quantified
+
+The yield numbers above conceal a great deal of structure. Each stage
+of the pipeline has a characteristic rejection rate, and understanding
+where the candidates die clarifies both what the generative model is
+good at and what it is not.
+
+A typical breakdown — averaged across several recent MatterGen-class
+studies (Zeni et al. 2025; Antunes et al. 2024; Merchant et al. 2023
+GNoME) — is approximately:
+
+| Stage | Input | Rejection rate | Survivors | Cumulative survival |
+|---|---|---|---|---|
+| 1. Generate | — | — | $10^5$ | $100\%$ |
+| 2. Chemical sanity | $10^5$ | $\sim 25$% | $7.5 \times 10^4$ | $75\%$ |
+| 3. MLIP relaxation converges | $7.5 \times 10^4$ | $\sim 30$% | $5.3 \times 10^4$ | $53\%$ |
+| 4. MLIP $E_\mathrm{hull} < 50$ meV/atom | $5.3 \times 10^4$ | $\sim 90$% | $5 \times 10^3$ | $5\%$ |
+| 5. DFT relaxation completes | $5 \times 10^3$ | $\sim 5$% | $4.7 \times 10^3$ | $4.7\%$ |
+| 6. DFT $E_\mathrm{hull} < 0$ | $4.7 \times 10^3$ | $\sim 95$% | $250$ | $0.25\%$ |
+| 7. Property target met | $250$ | $\sim 40$% | $150$ | $0.15\%$ |
+| 8. Synthesisability heuristics | $150$ | $\sim 80$% | $30$ | $0.03\%$ |
+| 9. Experimentally attempted | $30$ | $\sim 95$% | $1$–$3$ | $\sim 10^{-5}$ |
+
+The headline conclusion is the one already stated: $\sim 95$–$99$% of
+generated candidates are rejected before any human looks at them.
+This is not a failure mode of the diffusion model; it is its
+*intended* behaviour. A model that generated only on-hull structures
+would be a model that had memorised the training set. A useful
+generative model produces a probability distribution that is *broader*
+than the support of stable structures, and the downstream filtering
+is what extracts the stable subset.
+
+### Where the rejections come from
+
+The two largest filters are stages 4 (MLIP-hull) and 6 (DFT-hull),
+which together remove roughly $99.5$% of candidates. Their failure
+modes are partially independent.
+
+**Stage 4 failures** are dominated by candidates with broadly correct
+composition and topology but the wrong specific arrangement of atoms.
+The MLIP relaxation pulls the structure into a local minimum that
+turns out to be $200$–$500$ meV/atom above hull — a familiar enough
+crystal but not a competitive one. These are the candidates that
+"look right" to a chemist but are thermodynamically dominated by a
+known polymorph at the same composition.
+
+**Stage 6 failures** — candidates that pass MLIP screening but fail
+DFT — split into two sub-classes. About one-third are MLIP errors:
+the foundation MLIP under-predicted the energy and the structure was
+not actually below hull. The remaining two-thirds are competing-phase
+issues: the MLIP-predicted hull, computed using only Materials
+Project compositions, missed a recent addition to the hull or a
+mixed-phase decomposition that the candidate is unstable against.
+
+The implication is that the universal MLIPs of §12.2 and the
+generative models of this section are deeply coupled. Improvements
+in MLIP accuracy translate directly into reduced stage-4 false
+positives and stage-6 surprises. Conversely, the most expensive
+generative-pipeline failures — candidates that passed all
+computational filters but turned out to be wrong in DFT — are
+themselves valuable training data for the next-generation MLIP.
+
+### Common failure modes of generated structures
+
+The failure modes at the sanity-filter stage (step 2) are stereotyped
+enough to be worth cataloguing.
+
+- **Non-physical bond lengths.** The most common failure: two atoms
+  closer together than the sum of their covalent radii minus a
+  tolerance. In MatterGen samples, $\sim 15$% of raw outputs have at
+  least one bond shorter than $0.7$ Å, an obvious diffusion-process
+  artefact when noise at high $t$ collapses two atoms together.
+
+- **Missing atoms.** The categorical diffusion can predict an atom of
+  type "padding" or "no atom" with non-zero probability; when an
+  atom is dropped from the unit cell the resulting structure is no
+  longer charge-balanced and is typically chemically nonsense. The
+  fraction varies with the model and is suppressed by careful
+  classifier-free guidance.
+
+- **Wrong oxidation states.** A common subtle failure: the model
+  generates compositions like NaO$_2$Cl$_3$ that have no
+  charge-balanced oxidation-state assignment for any element. The
+  Materials Project's BVAnalyzer flags these in seconds; many groups
+  filter on this criterion before MLIP relaxation.
+
+- **Implausible coordination geometries.** Octahedral cations placed
+  in tetrahedral environments, or vice versa. These are not
+  necessarily wrong — high-pressure phases routinely break common
+  coordination heuristics — but they are usually a sign that the
+  model has wandered far from its training distribution.
+
+- **Hollow regions.** A unit cell with a large region of empty space
+  that should contain atoms. Diffusion models sometimes fail to
+  populate all required sites, especially at the boundary of the
+  cell. Catching these requires a Voronoi-cell or pore-size analysis.
+
+These failures are surprisingly uniform across the published
+generative-model families. CDVAE, DiffCSP, MatterGen and the
+CIF-language-model variants all produce them, though at different
+rates and with different chemical biases.
+
+### Recent benchmarks: MatterGen 2024 numbers
+
+The Zeni et al. *Nature* (2025) paper on MatterGen reports the
+following on its largest-scale evaluation. For unconditional
+generation, $\sim 78$% of samples pass chemical sanity, $\sim 13$%
+relax to within $50$ meV/atom of the convex hull as estimated by
+MACE-MP-0, and $\sim 3$% are confirmed on-hull by PBE DFT. For
+conditional generation targeting specific space groups, the
+on-hull fraction drops to $\sim 1.5$% but the fraction matching the
+requested space group reaches $\sim 65$%.
+
+In a head-to-head with DiffCSP (Jiao et al. 2023), MatterGen produces
+$1.7\times$ more on-hull structures per generation step but is
+$\sim 2\times$ slower per step, yielding roughly comparable on-hull
+throughput per GPU-hour. The GNoME effort (Merchant et al. 2023),
+using a substitutional rather than generative approach and the
+Materials Project DFT pipeline, screened $\sim 2 \times 10^7$
+candidate compositions to discover $\sim 4 \times 10^5$ on-hull
+structures — a higher absolute yield but at substantially higher
+DFT cost per discovery. The two approaches are complementary: GNoME
+extends the periodic table coverage of known-prototype chemistry;
+MatterGen-class models explore genuinely novel structural motifs at
+lower DFT cost per novel motif.
+
+A 2025 follow-up benchmark by the Microsoft team reported that
+fine-tuning MatterGen with property-conditioned classifier-free
+guidance on $\sim 5 \times 10^4$ DFT-validated samples improved the
+on-hull rate on conditional targets by roughly a factor of two over
+the base model. This suggests that the generative pipeline is
+approaching the regime where the same active-learning ideas of
+Chapter 11 will further reduce the rejection rates — a clear
+near-term research direction.
+
 ## Limitations: what the model does not know
 
 MatterGen and its cousins are powerful but partial tools, and any
@@ -323,7 +458,7 @@ but kinetically inaccessible (high-pressure phases, metastable
 polymorphs with no known low-temperature route, structures requiring
 exotic precursors) appear regularly in the model's output.
 
-**They do not understand chemistry.** The model has learned
+**They do not understand chemistry.** The model has learnt
 correlations, not principles. It will happily generate structures
 with mixed oxidation states that no chemist would propose, or with
 unusual coordination geometries that violate established

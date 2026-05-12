@@ -19,12 +19,12 @@ State and prove Hohenberg–Kohn Theorem I without consulting §5.2. Your proof 
 (c) Add them and derive a contradiction.
 (d) State the conclusion: $v_\mathrm{ext}^{(1)} - v_\mathrm{ext}^{(2)} = \mathrm{const}$.
 
-**Solution.** Suppose $v^{(1)}$ and $v^{(2)}$ differ by more than a constant but produce the same ground-state density $n_0$. Their non-degenerate ground states $|\Psi^{(1)}\rangle, |\Psi^{(2)}\rangle$ are distinct: were they equal, applying $\hat H^{(1)} - \hat H^{(2)} = \hat V^{(1)} - \hat V^{(2)}$ would give $v^{(1)} - v^{(2)} = E^{(1)} - E^{(2)} = \mathrm{const}$, contradicting the hypothesis.
+**Solution.** Suppose $v^{(1)}$ and $v^{(2)}$ differ by more than a constant but produce the same ground-state density $n_0$. Their non-degenerate ground states $|\Psi^{(1)}\rangle, |\Psi^{(2)}\rangle$ are distinct: were they equal, applying $\hat{H}^{(1)} - \hat{H}^{(2)} = \hat V^{(1)} - \hat V^{(2)}$ would give $v^{(1)} - v^{(2)} = E^{(1)} - E^{(2)} = \mathrm{const}$, contradicting the hypothesis.
 
-Use $|\Psi^{(2)}\rangle$ as a trial in $\hat H^{(1)}$: by the variational principle,
+Use $|\Psi^{(2)}\rangle$ as a trial in $\hat{H}^{(1)}$: by the variational principle,
 
 $$
-E^{(1)} < \langle\Psi^{(2)}|\hat H^{(1)}|\Psi^{(2)}\rangle = E^{(2)} + \int n_0(v^{(1)} - v^{(2)})\,\mathrm d\mathbf r.
+E^{(1)} < \langle\Psi^{(2)}|\hat{H}^{(1)}|\Psi^{(2)}\rangle = E^{(2)} + \int n_0(v^{(1)} - v^{(2)})\,\mathrm d\mathbf r.
 $$
 
 Symmetrically, $E^{(2)} < E^{(1)} + \int n_0(v^{(2)} - v^{(1)})\,\mathrm d\mathbf r$. Adding gives $E^{(1)} + E^{(2)} < E^{(1)} + E^{(2)}$ — contradiction. Hence $v^{(1)} - v^{(2)} = \mathrm{const}$. $\blacksquare$

@@ -89,8 +89,8 @@ using the standard sine-sine integral. This is the orthogonality theorem of §4.
 We now solve exactly the same problem numerically, with the explicit aim that the method should generalise to any 1D potential $V(x)$. The strategy is:
 
 1. Replace the continuous coordinate $x \in [0, L]$ by a discrete grid of $N$ points.
-2. Replace the second-derivative operator by a finite-difference approximation, turning $\hat H$ into a finite-size matrix.
-3. Diagonalise the matrix to obtain approximate eigenvalues and eigenvectors of $\hat H$.
+2. Replace the second-derivative operator by a finite-difference approximation, turning $\hat{H}$ into a finite-size matrix.
+3. Diagonalise the matrix to obtain approximate eigenvalues and eigenvectors of $\hat{H}$.
 
 **The grid.** Place $N$ equally spaced points $x_1, x_2, \ldots, x_N$ inside the box, with spacing $h = L/(N+1)$ and positions $x_i = i\, h$ for $i = 1, \ldots, N$. The endpoints $x_0 = 0$ and $x_{N+1} = L$ are *not* part of the grid; the boundary conditions $\psi(0) = \psi(L) = 0$ are imposed by simply not including those points.
 
@@ -107,13 +107,13 @@ This is the **central second-difference** formula. On the grid, with $\psi_i \eq
 
 $$\psi''(x_i) \approx \frac{\psi_{i+1} - 2\psi_i + \psi_{i-1}}{h^2}.$$
 
-**The Hamiltonian matrix.** Inside the box $V = 0$, so $\hat H = -\frac{\hbar^2}{2m}\partial_x^2$, and the discrete Hamiltonian is the $N\times N$ matrix
+**The Hamiltonian matrix.** Inside the box $V = 0$, so $\hat{H} = -\frac{\hbar^2}{2m}\partial_x^2$, and the discrete Hamiltonian is the $N\times N$ matrix
 
 $$H_{ij} = -\frac{\hbar^2}{2m h^2}\, \begin{cases} -2, & i = j,\\ 1, & |i - j| = 1,\\ 0, & \text{otherwise.}\end{cases} \tag{4.3.11}$$
 
 In matrix form,
 
-$$\hat H = \frac{\hbar^2}{2m h^2}\, \begin{pmatrix} 2 & -1 & & & \\ -1 & 2 & -1 & & \\ & -1 & 2 & -1 & \\ & & \ddots & \ddots & \ddots \\ & & & -1 & 2\end{pmatrix}. \tag{4.3.12}$$
+$$\hat{H} = \frac{\hbar^2}{2m h^2}\, \begin{pmatrix} 2 & -1 & & & \\ -1 & 2 & -1 & & \\ & -1 & 2 & -1 & \\ & & \ddots & \ddots & \ddots \\ & & & -1 & 2\end{pmatrix}. \tag{4.3.12}$$
 
 This is a real symmetric tridiagonal matrix. Real symmetric matrices have real eigenvalues and orthogonal eigenvectors — the discrete analogue of our continuum theorem in §4.2.5–6. (The continuum operator is Hermitian; its finite-difference approximation is *symmetric*, which is the real version of the same condition.)
 
