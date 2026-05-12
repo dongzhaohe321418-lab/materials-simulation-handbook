@@ -131,9 +131,9 @@ The electronic specific heat is *linear* in $T$, with a coefficient $\gamma := (
 
 The free electron prediction for $\gamma$ in copper, using $g(\varepsilon_F) = 3n/(2\varepsilon_F)$ from (3b.4.11):
 
-$$\gamma_\text{free} = \frac{\pi^2}{3}\cdot \frac{3n}{2\varepsilon_F}\cdot k_B^2 = \frac{\pi^2 n k_B^2}{2\varepsilon_F} \approx 5.0\times 10^{-5}\text{ J K}^{-2}\text{ mol}^{-1}. \tag{3b.4.24}$$
+$$\gamma_\text{free} = \frac{\pi^2}{3}\cdot \frac{3n}{2\varepsilon_F}\cdot k_B^2 = \frac{\pi^2 n k_B^2}{2\varepsilon_F} \approx 5.0\times 10^{-4}\text{ J K}^{-2}\text{ mol}^{-1}. \tag{3b.4.24}$$
 
-The measured value is $7.0\times 10^{-5}$. The ratio 1.4 is the *effective mass enhancement* — band structure and electron–phonon coupling combine to make the real Cu electrons slightly heavier than free electrons.
+(Per-volume this is $\approx 71$ J K$^{-2}$ m$^{-3}$; multiplication by Cu's molar volume $V_m \approx 7.09\times 10^{-6}$ m$^3$/mol gives the per-mole figure.) The measured value is $7.0\times 10^{-4}$ J K$^{-2}$ mol$^{-1}$. The ratio 1.4 is the *effective mass enhancement* — band structure and electron–phonon coupling combine to make the real Cu electrons slightly heavier than free electrons.
 
 ## 3b.4.8 Python: $g(\varepsilon)$, $\varepsilon_F$ for copper
 

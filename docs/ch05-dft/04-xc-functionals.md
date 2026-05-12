@@ -81,7 +81,7 @@ The corresponding potential is $v_x^\mathrm{LDA}(\mathbf r) = -(3/\pi)^{1/3}n(\m
 
 **Weaknesses.**
 
-- *Overbinding*: LDA systematically overestimates binding energies, often by tens of per cent. The H$_2$ binding energy is 4.91 eV experimentally; LDA gives 4.79 eV with a too-short bond, then is unreliable for everything bigger.
+- *Overbinding*: LDA systematically overestimates binding energies, often by tens of per cent. The H$_2$ binding energy is 4.75 eV experimentally; LDA gives roughly 4.9 eV with a too-short bond, and the error grows for larger molecules.
 - *Lattice constants*: LDA gives lattice constants about 1–3% *too small* (the famous "LDA overbinding").
 - *Band gaps*: LDA underestimates band gaps by 30–100%. (This has two distinct causes — the derivative discontinuity and self-interaction — both discussed in §5.6.)
 - *Strongly correlated electrons*: LDA misses Mott insulating gaps entirely; predicts FeO, CoO, and many other transition metal oxides to be metals when they are antiferromagnetic insulators.

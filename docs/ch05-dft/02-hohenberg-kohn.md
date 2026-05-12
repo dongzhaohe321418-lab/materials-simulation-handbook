@@ -7,7 +7,7 @@ In 1964, Pierre Hohenberg and Walter Kohn published a short paper titled "Inhomo
 Throughout this section, fix the number of electrons $N$ and consider the Hamiltonian
 
 $$
-\hat H = \hat T + \hat V_{ee} + \hat V_\mathrm{ext},
+\hat{H} = \hat T + \hat V_{ee} + \hat V_\mathrm{ext},
 \tag{5.10}
 $$
 
@@ -31,7 +31,7 @@ normalised so that $\int n_0\,\mathrm d\mathbf r = N$.
 We will use the variational principle for the ground-state energy: for any normalised trial state $|\Psi\rangle$,
 
 $$
-\langle\Psi|\hat H|\Psi\rangle \;\geq\; E_0,
+\langle\Psi|\hat{H}|\Psi\rangle \;\geq\; E_0,
 \tag{5.12}
 $$
 
@@ -48,33 +48,33 @@ In other words: the ground-state density determines the external potential **uni
 Suppose, for the sake of contradiction, that two external potentials $v^{(1)}$ and $v^{(2)}$ differ by more than a constant — $v^{(1)} - v^{(2)} \neq \mathrm{const}$ — yet produce the same ground-state density $n_0$. Let the corresponding Hamiltonians, ground states, and ground-state energies be
 
 $$
-\hat H^{(1)} = \hat T + \hat V_{ee} + \hat V^{(1)},
+\hat{H}^{(1)} = \hat T + \hat V_{ee} + \hat V^{(1)},
 \qquad |\Psi^{(1)}\rangle,\;\;E^{(1)},
 $$
 $$
-\hat H^{(2)} = \hat T + \hat V_{ee} + \hat V^{(2)},
+\hat{H}^{(2)} = \hat T + \hat V_{ee} + \hat V^{(2)},
 \qquad |\Psi^{(2)}\rangle,\;\;E^{(2)}.
 $$
 
 The two Hamiltonians differ only in their one-body external potential. Their ground states are different — they are eigenstates of different operators — but by assumption they yield the same density.
 
-**Step 1.** Use $|\Psi^{(2)}\rangle$ as a trial state for $\hat H^{(1)}$. By the variational principle (5.12),
+**Step 1.** Use $|\Psi^{(2)}\rangle$ as a trial state for $\hat{H}^{(1)}$. By the variational principle (5.12),
 
 $$
-\langle\Psi^{(2)}|\hat H^{(1)}|\Psi^{(2)}\rangle > E^{(1)},
+\langle\Psi^{(2)}|\hat{H}^{(1)}|\Psi^{(2)}\rangle > E^{(1)},
 $$
 
-with strict inequality because $|\Psi^{(2)}\rangle \neq |\Psi^{(1)}\rangle$ — they are non-degenerate ground states of different Hamiltonians, so they cannot be the same wavefunction (if they were, applying $\hat H^{(1)}-\hat H^{(2)} = \hat V^{(1)} - \hat V^{(2)}$ would give $(E^{(1)}-E^{(2)})|\Psi^{(2)}\rangle = (\hat V^{(1)}-\hat V^{(2)})|\Psi^{(2)}\rangle$, so $v^{(1)}-v^{(2)}$ would equal the constant $E^{(1)}-E^{(2)}$, contradicting our hypothesis).
+with strict inequality because $|\Psi^{(2)}\rangle \neq |\Psi^{(1)}\rangle$ — they are non-degenerate ground states of different Hamiltonians, so they cannot be the same wavefunction (if they were, applying $\hat{H}^{(1)}-\hat{H}^{(2)} = \hat V^{(1)} - \hat V^{(2)}$ would give $(E^{(1)}-E^{(2)})|\Psi^{(2)}\rangle = (\hat V^{(1)}-\hat V^{(2)})|\Psi^{(2)}\rangle$, so $v^{(1)}-v^{(2)}$ would equal the constant $E^{(1)}-E^{(2)}$, contradicting our hypothesis).
 
 Now write
 
 $$
-\langle\Psi^{(2)}|\hat H^{(1)}|\Psi^{(2)}\rangle
-= \langle\Psi^{(2)}|\hat H^{(2)}|\Psi^{(2)}\rangle
+\langle\Psi^{(2)}|\hat{H}^{(1)}|\Psi^{(2)}\rangle
+= \langle\Psi^{(2)}|\hat{H}^{(2)}|\Psi^{(2)}\rangle
 + \langle\Psi^{(2)}|\hat V^{(1)} - \hat V^{(2)}|\Psi^{(2)}\rangle.
 $$
 
-The first term is $E^{(2)}$ since $|\Psi^{(2)}\rangle$ is the ground state of $\hat H^{(2)}$. The second is the expectation of a one-body operator, which depends only on the density of $|\Psi^{(2)}\rangle$, which is $n_0$ by assumption:
+The first term is $E^{(2)}$ since $|\Psi^{(2)}\rangle$ is the ground state of $\hat{H}^{(2)}$. The second is the expectation of a one-body operator, which depends only on the density of $|\Psi^{(2)}\rangle$, which is $n_0$ by assumption:
 
 $$
 \langle\Psi^{(2)}|\hat V^{(1)} - \hat V^{(2)}|\Psi^{(2)}\rangle
@@ -88,7 +88,7 @@ E^{(2)} + \int n_0\big[v^{(1)} - v^{(2)}\big]\,\mathrm d\mathbf r \;>\; E^{(1)}.
 \tag{5.13}
 $$
 
-**Step 2.** By exactly the symmetric argument, using $|\Psi^{(1)}\rangle$ as a trial state for $\hat H^{(2)}$,
+**Step 2.** By exactly the symmetric argument, using $|\Psi^{(1)}\rangle$ as a trial state for $\hat{H}^{(2)}$,
 
 $$
 E^{(1)} + \int n_0\big[v^{(2)} - v^{(1)}\big]\,\mathrm d\mathbf r \;>\; E^{(2)}.
@@ -125,7 +125,7 @@ The first map is "up to a constant in $v$ and a phase in $|\Psi\rangle$": adding
 
 ### Consequence: every observable is a functional of $n_0$
 
-Since $n_0$ determines $v_\mathrm{ext}$, hence $\hat H$, hence $|\Psi_0\rangle$, every ground-state expectation value is a functional of $n_0$. In particular the kinetic energy $T[n_0] = \langle\Psi_0[n_0]|\hat T|\Psi_0[n_0]\rangle$ and the electron–electron energy $V_{ee}[n_0] = \langle\Psi_0[n_0]|\hat V_{ee}|\Psi_0[n_0]\rangle$ are *exact* density functionals. They are universal — defined by the operators $\hat T$ and $\hat V_{ee}$, which do not depend on the system — but they are also unknown: the existence of $\Psi_0[n]$ does not give us a way to compute it.
+Since $n_0$ determines $v_\mathrm{ext}$, hence $\hat{H}$, hence $|\Psi_0\rangle$, every ground-state expectation value is a functional of $n_0$. In particular the kinetic energy $T[n_0] = \langle\Psi_0[n_0]|\hat T|\Psi_0[n_0]\rangle$ and the electron–electron energy $V_{ee}[n_0] = \langle\Psi_0[n_0]|\hat V_{ee}|\Psi_0[n_0]\rangle$ are *exact* density functionals. They are universal — defined by the operators $\hat T$ and $\hat V_{ee}$, which do not depend on the system — but they are also unknown: the existence of $\Psi_0[n]$ does not give us a way to compute it.
 
 ## 5.2.3 Theorem II: the variational principle for the density
 
@@ -151,7 +151,7 @@ The functional $E_{v_\mathrm{ext}}[n]$ is minimised by the true ground-state den
 HK's original proof restricted attention to densities that arise as ground-state densities of *some* external potential — so-called **$v$-representable** densities. For such a density $n$ there exists a unique $v$ (by HK I) and hence a unique $|\Psi[n]\rangle$ and a unique value $F[n] = \langle\Psi[n]|\hat T + \hat V_{ee}|\Psi[n]\rangle$. The variational principle on wavefunctions then gives, for the system with potential $v_\mathrm{ext}$,
 
 $$
-\langle\Psi[n]|\hat H|\Psi[n]\rangle = F[n] + \int v_\mathrm{ext} n\,\mathrm d\mathbf r \;\geq\; E_0,
+\langle\Psi[n]|\hat{H}|\Psi[n]\rangle = F[n] + \int v_\mathrm{ext} n\,\mathrm d\mathbf r \;\geq\; E_0,
 $$
 
 with equality only when $|\Psi[n]\rangle = |\Psi_0\rangle$, i.e., when $n = n_0$.
@@ -186,10 +186,10 @@ $$
 Compute the full energy expectation value of $\Psi_n$ in the system of interest:
 
 $$
-\langle\Psi_n|\hat H|\Psi_n\rangle = \langle\Psi_n|\hat T + \hat V_{ee}|\Psi_n\rangle + \langle\Psi_n|\hat V_\mathrm{ext}|\Psi_n\rangle = F_L[n] + \int v_\mathrm{ext} n\,\mathrm d\mathbf r.
+\langle\Psi_n|\hat{H}|\Psi_n\rangle = \langle\Psi_n|\hat T + \hat V_{ee}|\Psi_n\rangle + \langle\Psi_n|\hat V_\mathrm{ext}|\Psi_n\rangle = F_L[n] + \int v_\mathrm{ext} n\,\mathrm d\mathbf r.
 $$
 
-By the variational principle on wavefunctions, $\langle\Psi_n|\hat H|\Psi_n\rangle \geq E_0$. Therefore
+By the variational principle on wavefunctions, $\langle\Psi_n|\hat{H}|\Psi_n\rangle \geq E_0$. Therefore
 
 $$
 F_L[n] + \int v_\mathrm{ext} n\,\mathrm d\mathbf r \;\geq\; E_0. \tag{5.18}
@@ -231,7 +231,7 @@ $$
 a non-local, non-trivial functional. We saw in §5.1 that even the leading-order local approximation $T_\mathrm{TF} \propto \int n^{5/3}$, while qualitatively reasonable, is too poor to bind a molecule. The electron–electron functional
 
 $$
-V_{ee}[n] = \min_{\Psi\to n}\langle\Psi|\hat V_{ee}|\Psi\rangle - T[n]\cdot 0
+V_{ee}[n] = \langle\Psi[n]|\hat V_{ee}|\Psi[n]\rangle
 $$
 
 contains the classical Hartree piece (5.7) plus an **exchange–correlation** piece encoding the antisymmetry of $\Psi$ and the correlation hole around each electron. We cannot write either of these in closed form.
