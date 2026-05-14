@@ -1,5 +1,6 @@
 # 6.2 Your first Quantum ESPRESSO calculation
 
+<figure markdown>
 ```mermaid
 flowchart LR
     A["<b>Input file</b><br/>silicon.scf.in<br/>(geometry, pseudos,<br/>k-points, E_cut)"]
@@ -11,7 +12,8 @@ flowchart LR
     P --> B
     B --> C --> D
 ```
-*The standard Quantum ESPRESSO workflow: input + pseudopotentials feed `pw.x`, which writes both a human-readable log and a binary save directory for downstream analysis.*
+<figcaption>The standard Quantum ESPRESSO workflow, left to right: an input file specifying geometry, pseudopotentials, k-points and energy cutoff, together with the pseudopotential UPF files, feeds the plane-wave SCF solver <code>pw.x</code>, which writes both a human-readable output log and a binary save directory; these output files are then read for analysis of energies, forces and charge density.</figcaption>
+</figure>
 
 !!! tip "Mental model — every DFT calculation is the same five steps"
     Before any code, build the picture: a DFT calculation always consists of (1) define the cell (geometry + species), (2) point at pseudopotential files, (3) set numerical knobs (cutoff, k-grid, mixer, convergence threshold), (4) run an SCF loop until self-consistent, (5) read off energies, forces, stresses. Quantum ESPRESSO's input file maps almost one-to-one onto these steps: `&SYSTEM` is geometry+basis, `ATOMIC_SPECIES` is pseudopotential paths, `&ELECTRONS` is the SCF knobs, `K_POINTS` is the integration mesh. Once you can read these four blocks in order, you can read any QE input file ever written.
@@ -119,7 +121,7 @@ Before we look at the skeleton below, here is what every variable that follows a
 - `nat`: number of atoms in the simulation cell.
 - `ntyp`: number of distinct chemical species. Each gets one line in `ATOMIC_SPECIES`.
 - `ecutwfc`: wavefunction plane-wave cutoff, in Ry. Set from pseudopotential recommendation.
-- `ecutrho`: density plane-wave cutoff, in Ry. For NC: $4\times$`ecutwfc`. For USPP/PAW: $8$-$12\times$`ecutwfc`; always set explicitly.
+- `ecutrho`: density plane-wave cutoff, in Ry. For NC: $4\times$`ecutwfc`. For USPP/PAW: $8$-$12\times$`ecutwfc`; always set explicitly. (The norm-conserving vs ultrasoft vs PAW distinction this rule depends on is treated in detail in §6.1.6 of [§6.1](01-pseudo-basis.md); for now, take the value your pseudopotential library recommends.)
 - `occupations`: `'fixed'` for insulators (integer occupations), `'smearing'` for metals, `'tetrahedra'` for nscf DOS post-processing only.
 - `smearing`: which smearing function (`'fd'`, `'gauss'`, `'mp'`, `'mv'`). MV is the production default.
 - `degauss`: smearing width in Ry. 0.01-0.02 for typical metals; 0 for `'fixed'`.

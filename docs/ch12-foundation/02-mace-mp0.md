@@ -1,5 +1,6 @@
 # 12.2 MACE-MP-0 and the Universal MLIP Zoo
 
+<figure markdown>
 ```mermaid
 flowchart TD
     Q{"Do you have<br/>training data<br/>for your system?"}
@@ -8,7 +9,8 @@ flowchart TD
     Q -->|"thousands of DFT<br/>points; need bespoke<br/>accuracy"| T["<b>Full fine-tune</b><br/>retrain all weights<br/>with strong regularisation"]
     Q -->|"a system completely<br/>outside training<br/>distribution"| S["<b>Train from scratch</b><br/>(Chapter 9 recipes)"]
 ```
-*Decision flow for using a foundation MLIP such as MACE-MP-0. The right answer depends on how much labelled data you have and how far your chemistry sits from the training set.*
+<figcaption>Decision flow for using a foundation MLIP such as MACE-MP-0, branching on how much labelled training data you have: no data points to zero-shot use of the model as-is; a few hundred DFT points of uncommon chemistry points to few-shot fine-tuning of the last layers; thousands of points needing bespoke accuracy points to a full fine-tune of all weights with strong regularisation; and a system completely outside the training distribution points to training from scratch with the Chapter 9 recipes.</figcaption>
+</figure>
 
 The cleanest concrete realisation of the foundation-model paradigm in
 materials science, as of 2026, is the family of universal machine-
@@ -41,11 +43,24 @@ contributions. Forces are obtained, as usual, by differentiation:
 $$
 \mathbf{F}_i = -\frac{\partial E}{\partial \mathbf{r}_i}.
 $$
-What is different from the Chapter 9 setting is *scale*. The training
-ran for roughly two weeks on $32$ A100 GPUs. The result is a single
-checkpoint that, with no further training, will integrate Newton's
-equations of motion for almost any inorganic compound you care to
-construct.
+What is different from the Chapter 9 setting is *scale*. According to
+Batatia et al. (arXiv:2401.00096), the models were trained for $200$
+epochs on $40$–$80$ NVIDIA A100 GPUs spread across $10$–$20$ nodes,
+and training the `medium` model — the one used for the bulk of the
+published benchmarks — cost approximately $2{,}600$ GPU-hours. The
+result is a single checkpoint that, with no further training, will
+integrate Newton's equations of motion for almost any inorganic
+compound you care to construct.
+
+!!! note "On quoted compute budgets"
+    Earlier drafts of this chapter quoted a much larger figure
+    ("two weeks on $32$ A100s", i.e. of order $10^4$ GPU-hours). That
+    number was not supported by the paper. The figure above —
+    $\sim 2{,}600$ GPU-hours for the `medium` model — is the one
+    stated in the methods section of Batatia et al. The lesson
+    generalises: compute budgets quoted second-hand drift upward, and
+    a specific GPU-count-times-duration claim should always be traced
+    back to the primary source before it is repeated.
 
 ### The training data, briefly
 
@@ -84,6 +99,15 @@ not embarrass itself on most inorganic chemistry. It will be beaten
 by a specialist on any specialist's home turf. The interesting
 question is *how much it costs* to bring it to specialist accuracy on
 a new system, and we will answer that empirically below.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is MACE-MP-0 trained on, and what does it mean to call it a "competent generalist"?
+    2. What does *zero-shot* use of a foundation MLIP mean, and what level of accuracy should you expect from it on common inorganic chemistry?
+    3. Why will a bespoke specialist potential typically beat MACE-MP-0 on its own system, and what is the practical question this raises?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Hands-on: zero-shot MD on an oxide
 

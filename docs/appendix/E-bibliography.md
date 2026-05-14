@@ -100,6 +100,18 @@ Review* **46**, 618–622 (1934).
 
 ## Chapter 5 — Density functional theory
 
+**Levy 1979** — Levy, M. "Universal variational functionals of
+electron densities, first-order density matrices, and natural
+spin-orbitals and solution of the v-representability problem."
+*Proceedings of the National Academy of Sciences of the United
+States of America* **76**, 6062–6065 (1979).
+[The constrained-search formulation of density functional theory.]
+
+**Lieb 1983** — Lieb, E. H. "Density functionals for Coulomb
+systems." *International Journal of Quantum Chemistry* **24**,
+243–277 (1983).
+[The rigorous mathematical foundation of the constrained search.]
+
 **Perdew–Burke–Ernzerhof 1996 (PBE)** — Perdew, J. P.; Burke, K.;
 Ernzerhof, M. "Generalized gradient approximation made simple."
 *Physical Review Letters* **77**, 3865–3868 (1996).
@@ -183,6 +195,11 @@ Physics* **81**, 511–519 (1984).
 phase-space distributions." *Physical Review A* **31**, 1695–1697
 (1985).
 
+**Bussi–Donadio–Parrinello 2007 (CSVR)** — Bussi, G.; Donadio, D.;
+Parrinello, M. "Canonical sampling through velocity rescaling."
+*Journal of Chemical Physics* **126**, 014101 (2007).
+[The stochastic velocity-rescaling (CSVR) thermostat.]
+
 **Parrinello–Rahman 1981** — Parrinello, M.; Rahman, A. "Polymorphic
 transitions in single crystals: A new molecular dynamics method."
 *Journal of Applied Physics* **52**, 7182–7190 (1981).
@@ -257,6 +274,18 @@ passing neural networks for fast and accurate force fields."
 **Drautz 2019 (ACE)** — Drautz, R. "Atomic cluster expansion for
 accurate and transferable interatomic potentials." *Physical Review
 B* **99**, 014104 (2019).
+
+**Pozdnyakov 2020** — Pozdnyakov, S. N.; Willatt, M. J.; Bartók,
+A. P.; Ortner, C.; Csányi, G.; Ceriotti, M. "Incompleteness of
+atomic structure representations." *Physical Review Letters*
+**125**, 166001 (2020).
+[Counterexamples showing that two- and three-body descriptors do
+not uniquely determine an atomic environment.]
+
+**Geiger–Smidt 2022 (e3nn)** — Geiger, M.; Smidt, T. "e3nn:
+Euclidean neural networks." *arXiv:2207.09453* (2022).
+[The reference library for E(3)-equivariant neural networks;
+underlies NequIP and MACE.]
 
 **Behler 2021 (review)** — Behler, J. "Four generations of high-
 dimensional neural network potentials." *Chemical Reviews* **121**,
@@ -359,6 +388,11 @@ Information Processing Systems (NeurIPS)*, 2023.
 Grau-Crespo, R. "Crystal structure generation with autoregressive
 large language modeling." *Nature Communications* **15**, 10570
 (2024).
+
+**Merchant 2023 (GNoME)** — Merchant, A.; Batzner, S.; Schoenholz,
+S. S.; Aykol, M.; Cheon, G.; Cubuk, E. D. "Scaling deep learning
+for materials discovery." *Nature* **624**, 80–85 (2023).
+[The GNoME large-scale discovery effort.]
 
 **Szymanski 2023 (A-Lab)** — Szymanski, N. J. et al. "An autonomous
 laboratory for the accelerated synthesis of novel materials."

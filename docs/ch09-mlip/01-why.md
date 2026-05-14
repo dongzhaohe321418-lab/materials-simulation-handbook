@@ -314,6 +314,7 @@ is an engineering decision shaped by accuracy needs, system size,
 trajectory length, and the chemical novelty of the configurations to
 be visited. The decision tree below makes the trade-offs explicit.
 
+<figure markdown>
 ```mermaid
 flowchart TD
     Q1{Do I need DFT-level<br/>accuracy?}
@@ -338,6 +339,8 @@ flowchart TD
     Q4 -->|"Yes, ~10^3 configs<br/>or budget for them"| MLIP
     Q4 -->|"No data, no budget"| FOUND
 ```
+<figcaption>Decision tree for choosing a force model. If DFT-level accuracy is not needed, the tree checks whether existing force fields cover the chemistry — pointing to a classical force field for non-reactive systems or a reactive force field for bond breaking — and otherwise to bespoke MLIP training or a foundation model. If DFT-level accuracy is needed, the tree branches on system size: small short-trajectory systems run DFT-MD directly, while larger or longer simulations point to training a bespoke MLIP if training data or budget exists, or using a foundation model out of the box if not.</figcaption>
+</figure>
 
 A few practical refinements that the tree elides:
 

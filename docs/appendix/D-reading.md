@@ -110,6 +110,15 @@ pages, free online, and the best short introduction to the conceptual
 content of DFT we know. A surprising number of senior researchers
 have learnt the essentials from this article.
 
+**Levy, "Universal variational functionals of electron densities..."
+(*PNAS*, 1979), and Lieb, "Density functionals for Coulomb systems"
+(*International Journal of Quantum Chemistry*, 1983).** Advanced. The
+two papers that put the Hohenberg–Kohn theorems on a firm footing
+through the constrained-search formulation. Levy gives the physical
+construction; Lieb supplies the rigorous mathematical analysis. Read
+them together once the reader wants to understand *why* the universal
+functional is well defined, not merely that it exists.
+
 ---
 
 ## D.4 Molecular dynamics and statistical mechanics
@@ -210,6 +219,13 @@ chemistry" (*arXiv:2401.00096*, 2024).** The MACE-MP-0 paper.
 **Zeni et al., "MatterGen: a generative model for inorganic
 materials design" (*Nature*, 2025).** The MatterGen paper.
 
+**Merchant et al., "Scaling deep learning for materials discovery"
+(*Nature*, 2023).** The GNoME paper. A demonstration that graph
+networks trained at scale, coupled to active learning and
+high-throughput DFT, can expand the set of known stable inorganic
+crystals by an order of magnitude. Worth reading both for the method
+and for the lively debate it provoked about what "discovery" means.
+
 ---
 
 ## D.6 Foundational data and infrastructure
@@ -230,6 +246,13 @@ ecosystem. The online documentation is the right entry point.
 Python framework for atomistic calculations and for integrating
 different electronic-structure codes. The standard glue between
 DFT codes and MLIPs.
+
+**e3nn (e3nn.org; Geiger and Smidt, *arXiv:2207.09453*, 2022).** The
+reference library for E(3)-equivariant neural networks, and the
+foundation on which NequIP and MACE are built. The documentation and
+accompanying paper are the right entry point for any reader who wants
+to understand how equivariant tensor operations are implemented in
+practice rather than only in the abstract.
 
 ---
 

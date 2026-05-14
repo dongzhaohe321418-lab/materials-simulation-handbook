@@ -766,3 +766,442 @@ The exercises that close this chapter walk you through deriving the
 core ideas yourself, from the analytical force expression of a BPNN
 to a from-scratch SOAP invariance proof, ending with a tiny MACE
 training run on a fifty-configuration toy dataset.
+
+## 9.6.11 How MLIPs fail — a candid catalogue
+
+Chapter 5 devoted a long section (§5.6) to the failure modes of DFT:
+the self-interaction error, the band-gap problem, the poor
+description of dispersion and of strong correlation. That honesty is
+not optional — a method whose limitations are not catalogued cannot
+be used responsibly. An MLIP is a second layer of approximation
+stacked on top of DFT, and it has its own catalogue of failures,
+distinct from the electronic-structure errors it inherits. This
+section is the MLIP counterpart of §5.6. It is deliberately as
+unsparing.
+
+The unifying theme is stated once and then specialised: **an MLIP is
+an interpolator**. It reproduces, smoothly, the chemistry contained
+in its training set. Everything below is a consequence of asking an
+interpolator to do something else — to extrapolate, to constrain a
+region no data touched, to represent a physics its functional form
+cannot express, or to be trusted on the basis of a metric that does
+not measure what we care about.
+
+### 9.6.11.1 Extrapolation failure and out-of-distribution collapse
+
+The sharpest failure is also the simplest to state. A trained MLIP
+has seen bond lengths, coordination numbers, and angular environments
+within some region $\mathcal{D}$ of configuration space. Inside
+$\mathcal{D}$, and in a thin smooth collar around it, predictions are
+reliable. Outside, the model is evaluating a high-dimensional
+polynomial-like function in a region where nothing constrained its
+coefficients. The output is not "uncertain" in any flagged sense — it
+is a confident, specific, and wrong number.
+
+!!! warning "Extrapolation is silent"
+    A classical force field that you push outside its parameterised
+    regime usually fails *loudly*: a harmonic bond stretched past its
+    inflection point produces a monotonically rising force, an
+    obviously unphysical hard wall. An MLIP fails *quietly*. The
+    learned function continues smoothly past the edge of the training
+    data and returns a plausible-looking energy and force. There is
+    no exception, no warning, no `NaN` — just a number that happens
+    to be wrong. This is the single most dangerous property of MLIPs
+    and the reason uncertainty quantification (§9.6.11.8) is not a
+    luxury.
+
+The concrete failure signatures, in rough order of how they appear
+during a production run:
+
+- **Forces blow up.** A configuration drifts to a bond length the
+  model never saw — say a transient O–H compression to $0.7\,\text{\AA}$
+  during a hot collision, when training only ever sampled
+  $0.9$–$1.1\,\text{\AA}$. The model's force at $0.7\,\text{\AA}$ is
+  an extrapolation of whatever curvature it learned near
+  $0.9\,\text{\AA}$; there is no reason for it to be the steep
+  Pauli-repulsion wall physics demands. It can be too soft, or even
+  *attractive*.
+- **MD explodes.** Once one force is wrong by an order of magnitude,
+  the integrator takes a catastrophic step, which produces an even
+  more out-of-distribution configuration, whose force is even more
+  wrong. The trajectory diverges within a handful of steps. The
+  classic console symptom is a temperature that reads $10^4$–$10^6\,\mathrm{K}$
+  and a structure in which atoms are scattered across the periodic
+  cell.
+- **Energy non-conservation.** A subtler precursor: before the
+  outright explosion, an NVE trajectory that should conserve total
+  energy to $< 1\,\mathrm{meV/atom/ps}$ instead shows a steady drift,
+  or sudden steps, as the trajectory repeatedly grazes the edge of
+  $\mathcal{D}$. An energy-drift plot is the cheapest early-warning
+  instrument you have.
+
+A worked example fixes the scale. Take the revPBE0+D3 water potential
+of §9.6, trained exclusively on $300\,\mathrm{K}$ liquid
+configurations. Its test-set force MAE is $25\,\mathrm{meV}/\text{\AA}$
+— excellent. Now run it at $1500\,\mathrm{K}$. The mean kinetic
+energy per degree of freedom rises by a factor of five; bonds sample
+compressions and extensions far outside the $300\,\mathrm{K}$
+thermal envelope; O–O contacts occur at distances the training set
+never contained. Typical outcome: the trajectory is visibly unstable
+within $5$–$20\,\mathrm{ps}$, with energy drift one to two orders of
+magnitude above the $300\,\mathrm{K}$ value, *despite the test-set
+MAE being unchanged* — because the test set is also drawn from
+$300\,\mathrm{K}$. The model did not get worse; it was always an
+interpolator, and you left the interpolation region.
+
+### 9.6.11.2 Holes in the potential energy surface
+
+Extrapolation failure concerns regions *adjacent* to the training
+data. A second, more insidious failure concerns regions *enclosed*
+by it but never directly sampled: the **holes** in the learned PES.
+
+A neural-network potential is a flexible function fitted to reproduce
+energies at a finite set of points. Between those points it
+interpolates, and the interpolation is constrained only where data
+constrains it. Consider two atoms. Training data contains them at
+equilibrium separation ($\sim 1.0\,\text{\AA}$ for a bond,
+$\sim 3\,\text{\AA}$ for a non-bonded contact) and at moderate
+displacements either side. It very rarely contains them at, say,
+$0.3\,\text{\AA}$ — DFT configurations are drawn from physically
+reasonable structures, and no equilibrium or near-equilibrium
+snapshot has two nuclei almost on top of each other.
+
+The true PES rises *steeply* as $r \to 0$: nuclear–nuclear Coulomb
+repulsion alone diverges as $Z_i Z_j / r$. But the MLIP has no data
+there. Nothing in the loss function penalises the model for
+predicting a *low* energy at $r = 0.3\,\text{\AA}$. With realistic
+probability it does exactly that — it invents an unphysical
+low-energy basin, a "hole", where physics demands a wall.
+
+!!! warning "Why a fresh MLIP often 'melts' instantly"
+    Start an MD run from a perfectly reasonable crystal structure
+    with a freshly trained MLIP that has a PES hole at short range.
+    Thermal fluctuations will, within picoseconds, push some pair of
+    atoms close enough to feel the downhill gradient *into* the hole.
+    Once an atom starts falling into an artificial energy well it
+    accelerates, drags neighbours with it, and the structure
+    collapses — atoms pile onto each other, the cell "melts" or
+    implodes, and the energy plummets to a nonsensical value. The
+    tell-tale is that the final energy is *lower* than the starting
+    crystal, which is thermodynamically impossible for a real
+    potential at that density. The model has not melted the crystal;
+    it has fallen into a hole it invented.
+
+The standard mitigations:
+
+- **A repulsive prior.** Add an analytical pair repulsion — a
+  Ziegler–Biersack–Littmark (ZBL) screened-Coulomb term is the usual
+  choice — that the network *corrects* rather than replaces. The ZBL
+  term guarantees the correct $r \to 0$ divergence regardless of what
+  the network does. `mace-torch` supports this via a `pair_repulsion`
+  option, and for any potential that will see high temperatures or
+  collisions it should be considered mandatory.
+- **Adversarial / short-range training data.** Deliberately include
+  compressed configurations — dimer scans down to small $r$, randomly
+  rattled structures — so the loss function *does* see the wall and
+  the model is constrained to reproduce it.
+- **Active learning** (§9.6.7) catches holes the moment a trajectory
+  finds one, provided the ensemble disagreement is monitored
+  *during* the run rather than after it.
+
+### 9.6.11.3 Smoothness versus reactivity
+
+Most MLIPs — MACE, NequIP, GAP, Behler–Parrinello — assume the PES is
+a *smooth* function of atomic positions. The architecture is built
+from smooth radial bases, smooth cutoff functions, and smooth tensor
+products; the energy is differentiable everywhere by construction
+(which is what makes autograd forces possible at all). For the
+overwhelming majority of condensed-matter physics — vibrations,
+diffusion, elastic response, phase stability — smoothness is exactly
+right.
+
+Chemistry that involves **bond breaking and forming**, or **charge
+transfer between atoms**, is harder. The difficulty is partly
+representational and partly about data. Representationally, a
+bond-breaking event is a place where the electronic ground state can
+change character abruptly — a singlet–triplet crossing, a sudden
+relocalisation of charge — and the corresponding feature in the PES
+is sharp, sometimes with a near-cusp. A smooth interpolator can
+approximate a sharp feature only by spending a great deal of model
+capacity and a great deal of training data densely sampling the
+transition region. About data: reactive configurations are
+transition states and high-energy intermediates, exactly the
+configurations a relaxation-based or equilibrium-MD dataset contains
+least of.
+
+The contrast with **ReaxFF** is instructive. ReaxFF was designed,
+from the functional form up, around reactivity: it carries explicit
+*bond-order* variables that respond continuously to the local
+environment, so a bond can smoothly cease to be a bond. It builds in
+charge equilibration so that charge can flow as bonds rearrange. The
+price, as §9.1.2 discussed, is brittleness — a ReaxFF parameter set
+is trustworthy only in the narrow chemical neighbourhood it was
+fitted for. The trade-off is real and worth stating plainly: a
+generic smooth MLIP is *accurate and transferable for non-reactive
+chemistry and silent about reactivity*; ReaxFF is *built for
+reactivity but fragile across chemistries*. An MLIP can be trained to
+describe a *specific* reaction well, but it must be given dense
+training data along the reaction coordinate to do so, and even then
+its smoothness prior fights any genuine cusp. Treat any reaction
+barrier from a stock MLIP — and especially from a zero-shot
+foundation model — as a lower bound of uncertain quality until it has
+been validated against DFT or refined with reaction-path training
+data.
+
+### 9.6.11.4 Long-range interactions missed by cutoff models
+
+The locality ansatz $U = \sum_i E_i$ with each $E_i$ depending only
+on neighbours within $r_\mathrm{c} \approx 5\,\text{\AA}$ is the
+foundation of MLIP efficiency — it is what makes the cost linear in
+system size. It is also, for an important class of systems, simply
+wrong.
+
+Two interactions have tails that no reasonable cutoff captures.
+Electrostatics between partial charges decays as $1/r$; dispersion
+(van der Waals) decays as $1/r^6$. Neither has a length beyond which
+it is negligible. For a covalent or metallic solid this rarely
+matters — the local bonding dominates and the tails are screened —
+but for ionic crystals, polar materials, molecular crystals, and
+systems in external fields, the truncated tail carries real energy
+and real forces.
+
+The canonical worked failure is **LO–TO splitting** in a polar
+crystal: the longitudinal and transverse optical phonon branches,
+degenerate at the zone centre in a non-polar analogue, are split by
+the macroscopic electric field of a long-wavelength longitudinal
+phonon. That field is a genuinely non-local object, built from atomic
+contributions at arbitrarily large separation. A cutoff-based MLIP
+has no representation of it, and a finite-difference phonon
+calculation with such a model returns the LO and TO branches
+*degenerate* — a qualitative error that propagates into every
+infrared and Raman intensity computed from those phonons.
+
+This failure mode is the entry point to a substantial research
+frontier — fourth-generation charge-equilibration potentials, the
+LODE descriptor, range-separated and latent-Ewald MACE variants — and
+it is treated in full in **Chapter 12, §12.4** ("Long-range
+electrostatics in depth"), including a worked BaTiO$_3$ example where
+the cutoff model fails qualitatively and the long-range variant
+succeeds. For the purposes of this chapter the practical rule is
+narrow and firm: if your system is ionic, polar, layered, or sitting
+in an applied field, a stock short-cutoff MLIP is *unvalidated* for
+any electrostatics-sensitive observable, and you must either add an
+explicit long-range term or restrict your conclusions to quantities
+the local model can legitimately reach.
+
+### 9.6.11.5 Force noise and phonon softening
+
+The validation table of §9.6.5 reported a force MAE of
+$25\,\mathrm{meV}/\text{\AA}$ and called it competitive. It is. But a
+non-zero force error is not merely a number on a parity plot — it is
+*noise added to every gradient the integrator ever sees*, and the
+integration is not innocent of how that noise propagates.
+
+Consider phonons. The phonon spectrum is obtained from the second
+derivatives of the energy — the dynamical matrix — evaluated near a
+minimum. Small, *systematic* errors in the force field translate
+directly into errors in the curvature of the PES at equilibrium, and
+hence into errors in the phonon frequencies. The characteristic
+symptom is **phonon softening**: modes come out at frequencies lower
+than DFT, and in the worst case a mode that should have a small
+positive frequency comes out with an **imaginary frequency** — the
+model predicts that a mechanically stable crystal is unstable.
+
+A back-of-the-envelope estimate of the sensitivity. A phonon
+frequency scales as $\omega \sim \sqrt{k/m}$, where $k$ is an
+effective force constant — a curvature of the PES. If the force
+errors near equilibrium have a systematic component
+$\delta F$ over a displacement scale $\delta r$, the implied
+curvature error is $\delta k \sim \delta F / \delta r$. For a soft
+mode whose true force constant $k$ is itself small, the *relative*
+error $\delta k / k$ can be of order unity even when the *absolute*
+force error is the modest $25\,\mathrm{meV}/\text{\AA}$ that looked
+so reassuring on the parity plot — and $\omega^2 \propto k$ can then
+go negative. Soft modes, precisely the ones that matter for
+ferroelectric and structural phase transitions, are the most
+fragile.
+
+!!! warning "Imaginary modes in a stable phase are an unambiguous failure"
+    If a phonon calculation on a structure you know to be
+    mechanically stable returns imaginary frequencies, the potential
+    is wrong — full stop. It is not a subtle inaccuracy to be noted
+    and worked around; the model has the curvature of the energy
+    surface qualitatively wrong at equilibrium. The remedy is more
+    training data on near-equilibrium, slightly-displaced
+    configurations (so the loss directly constrains the curvature),
+    a higher `max_ell` if angular resolution is the bottleneck, and
+    in stubborn cases a Hessian-matching or curvature-weighted term
+    added to the loss. Never publish a phonon spectrum from an MLIP
+    without this check; it is item seven on the §9.6.9 deployment
+    checklist for exactly this reason.
+
+The general lesson: a force MAE is an *average over the test
+distribution*. It says nothing about whether the residual error is
+random (which integrates to a tolerable diffusion-like drift) or
+systematic and concentrated near equilibrium (which corrupts every
+derived second-order property). Two potentials with identical force
+MAE can have entirely different phonon spectra.
+
+### 9.6.11.6 Transferability across composition
+
+It is tempting to assume that a potential fitted to one stoichiometry
+will be "roughly right" at a nearby one — that an MLIP trained on
+Li$_2$S knows enough about Li and S to handle Li$_3$S or
+Li$_2$S$_2$. It does not, and the assumption is dangerous because the
+failure is once again silent.
+
+The reason is structural. The atomic energy $E_i$ that an MLIP learns
+is not the energy of an isolated atom plus small corrections; it is
+an effective quantity that absorbs the *average chemical environment*
+of that species *in the training set*. Change the stoichiometry and
+you change the coordination numbers, the charge states, the typical
+bond lengths, the second-neighbour shells — the whole environment
+distribution that $E_i$ silently averaged over. The model is now
+being asked, once again, to extrapolate.
+
+A concrete illustration. Suppose a potential is trained on
+stoichiometric, defect-free MgO. Every Mg in the training set sits in
+a six-coordinate octahedral oxygen cage; every O likewise. Now ask
+the potential about an oxygen vacancy. The Mg atoms neighbouring the
+vacancy are suddenly five-coordinate, with an environment — and a
+true local energy — that *appeared nowhere in training*. The model
+will return a number, smoothly extrapolated, and the vacancy
+formation energy it implies can easily be wrong by several tenths of
+an eV. The same logic applies to surfaces (under-coordinated atoms),
+interfaces (mixed environments), grain boundaries, and any
+off-stoichiometry phase.
+
+!!! note "Why this step?"
+    This is the composition-space face of the same single fact —
+    *an MLIP is an interpolator* — that §9.6.11.1 stated in
+    configuration space. Extrapolation in temperature, extrapolation
+    to short bond lengths, extrapolation to a new coordination number,
+    extrapolation to a new stoichiometry: these are not four separate
+    weaknesses but one weakness viewed along four axes. The
+    engineering response is always the same — characterise the
+    training distribution honestly, and either restrict the
+    application to it or grow it (by hand or by active learning) to
+    cover where you actually intend to go.
+
+The practical rule: a potential is validated for the *compositions
+and defect states* in its training set, not merely for the
+*elements*. If you need Li$_2$S and Li$_3$S, the training set must
+contain both, or you must run active learning across the composition
+range.
+
+### 9.6.11.7 The validation gap — low test MAE does not imply stable MD
+
+This is the most important single sentence in the section, so it gets
+its own subsection: **a low test-set MAE does not guarantee a stable,
+physically correct molecular-dynamics trajectory.** The two are
+measuring different things, and the literature is full of potentials
+that excel at the first and fail at the second.
+
+The standard counterexample makes the mechanism clear. Consider two
+potentials, A and B, for the same system, with *identical* test-set
+force MAE of $30\,\mathrm{meV}/\text{\AA}$.
+
+- Potential A's residual error is **random**: zero-mean,
+  uncorrelated between configurations, with no structure. Integrated
+  over an MD trajectory, this behaves like a weak stochastic force —
+  it adds a small effective diffusion, mildly perturbs dynamical
+  properties, but the trajectory stays on the right manifold and
+  conserves energy to within a tolerable drift.
+- Potential B's residual error is the *same size on average* but
+  **structured**: it is small in the densely sampled equilibrium
+  region and grows systematically in a thinly sampled corner of
+  configuration space — say, the slightly-expanded-volume
+  configurations that thermal fluctuations visit a few per cent of
+  the time. The *average* MAE is dragged down by the well-sampled
+  bulk. But every time the trajectory visits the thin corner, it
+  feels a consistent, systematic, wrong force. Those errors do not
+  average out; they accumulate. The energy drifts, and given long
+  enough the trajectory walks off into a region where the error is
+  larger still — the §9.6.11.1 collapse, reached slowly.
+
+Potential B has a beautiful parity plot and is unfit for production.
+The test MAE could not distinguish it from A because the test set,
+drawn from the same distribution as the training set, *under-samples
+the exact corner that breaks the dynamics* — the same sampling bias,
+in the metric, that caused the problem in the model.
+
+The resolution is the multi-test validation suite of §9.6.5, and it
+is worth restating *why* each test is there: parity plots check the
+average; **NVE energy-drift** checks for the structured, accumulating
+error that parity plots miss; **long MD at $1.5\times$ the target
+temperature** deliberately pushes into the thin corners; **RDF and
+phonon checks** verify that derived structural and second-order
+properties — not just pointwise forces — come out right. A potential
+that passes only the parity plot has passed only the test that cannot
+see its most likely failure mode.
+
+### 9.6.11.8 Detection and mitigation
+
+The catalogue above is not a counsel of despair. Every failure mode
+listed has a detection strategy and a mitigation, and a disciplined
+workflow makes MLIPs entirely usable. The toolkit, assembled in one
+place:
+
+**Ensemble disagreement / committee uncertainty.** Train $K$
+potentials (typically $K = 3$–$5$) on the same data with different
+random seeds — different weight initialisations and, optionally,
+different data-shuffling. On any configuration, the *spread* of their
+predictions is a cheap, well-calibrated proxy for epistemic
+uncertainty. Inside the training distribution the members agree
+closely (they all interpolate the same data); outside it they
+diverge, because there is nothing pinning them to a common answer.
+The committee force standard deviation,
+
+$$
+\sigma_F(\text{config}) = \sqrt{\frac{1}{K}\sum_{k=1}^{K}
+\big\| \mathbf{F}^{(k)} - \bar{\mathbf{F}} \big\|^2 } ,
+$$
+
+is the workhorse signal. A GAP, being a Gaussian process, supplies
+the same information natively through its posterior variance.
+
+**Uncertainty monitoring *during* MD.** The committee spread is only
+useful if it is checked while the trajectory runs, not after it has
+already exploded. Evaluate $\sigma_F$ every few hundred steps; if it
+crosses a threshold — typically $3$–$5\sigma$ above the training-set
+average — halt the trajectory, flag the configuration, and either
+stop or trigger an active-learning labelling step. This single
+practice catches PES holes (§9.6.11.2), extrapolation (§9.6.11.1),
+and composition drift (§9.6.11.6) the moment they bite.
+
+**Active learning.** Detection feeds naturally into the loop of
+§9.6.7: the flagged high-uncertainty configurations are exactly the
+ones to label with DFT and add to the training set. Active learning
+is the systematic answer to "the training distribution does not cover
+where I need to go" — it grows $\mathcal{D}$ toward the production
+trajectory rather than guessing it in advance.
+
+**Energy-conservation checks.** Run a fraction of every production
+campaign in the NVE ensemble and plot the total energy. A drift above
+$\sim 1\,\mathrm{meV/atom/ps}$, or any sudden step, is a direct
+symptom of force-field pathology — `float32` rounding, an
+insufficiently smooth cutoff, or a trajectory grazing the edge of
+$\mathcal{D}$. It is the cheapest diagnostic in the toolbox and
+should run unconditionally.
+
+**Physically-motivated priors.** A ZBL pair repulsion (§9.6.11.2)
+eliminates short-range holes by construction. An explicit Ewald or D3
+term (§9.6.11.4) eliminates the long-range blind spot. Where a known
+physical constraint can be *built in* rather than *learned*, building
+it in removes an entire failure mode rather than merely detecting it.
+
+**The full validation suite.** Finally, the §9.6.5 four-test suite
+and the §9.6.9 deployment checklist exist precisely to close the
+validation gap of §9.6.11.7. They are not bureaucracy; each item
+catches a failure mode the others miss.
+
+!!! tip "The honest posture"
+    The right mental model is not "my MLIP is accurate" but "my MLIP
+    is accurate *within a characterised region*, I have instruments
+    that tell me when a trajectory leaves that region, and I have a
+    procedure for extending the region when it does." Stated that
+    way, the failure modes of this section are not embarrassments to
+    be hidden but the specification of a workflow. A practitioner who
+    can recite this catalogue and name the detection strategy for
+    each entry is using MLIPs responsibly; one who quotes a test-set
+    MAE and nothing else is not.

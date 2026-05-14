@@ -1,5 +1,7 @@
 # Chapter 12 — Foundation Models for Materials
 
+[Open in Colab](https://colab.research.google.com/github/dongzhaohe321418-lab/materials-simulation-handbook/blob/main/notebooks/ch12-foundation-colab.ipynb){ .md-button .md-button--primary }
+
 Chapter 11 closed with a workflow that, by 2024 standards, was already
 the state of the art: a Bayesian-optimisation loop driving a sequence of
 DFT calculations, guided by a graph neural network trained on a few

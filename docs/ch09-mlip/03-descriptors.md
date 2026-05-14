@@ -47,6 +47,15 @@ GAP achieves the data-efficiency frontier it does.
 The slogan: **a bad descriptor cannot be saved by a large network;
 a good descriptor lets a small network suffice.**
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is a descriptor, and what two competing requirements must a good one balance?
+    2. Why can a large neural network trained on raw Cartesian coordinates not be relied upon to learn the rotational symmetry exactly?
+    3. What does it mean for a descriptor to be *injective*, and why does a non-injective descriptor place a hard ceiling on accuracy that no regressor can overcome?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ### Radial symmetry functions
 
 The radial function $G^2$ is a Gaussian centred at distance $r_s$:

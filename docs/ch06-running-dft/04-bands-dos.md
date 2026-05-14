@@ -1,5 +1,6 @@
 # 6.4 Band structures and density of states
 
+<figure markdown>
 ```mermaid
 flowchart LR
     SCF["<b>scf</b> (pw.x)<br/>self-consistent density"]
@@ -13,10 +14,11 @@ flowchart LR
     BANDS -->|"bands.gnu"| PLOT
     DOS -->|"*.dos / *.pdos"| PLOT
 ```
-*The bands-and-DOS pipeline in Quantum ESPRESSO. Each arrow carries a concrete file artifact; `scf` converges the density, `nscf` evaluates eigenvalues on the desired grid/path, then `bands.x` or `dos.x` post-process for plotting.*
+<figcaption>The bands-and-DOS pipeline in Quantum ESPRESSO, flowing left to right: a self-consistent <code>scf</code> run converges the density, which is passed as the saved charge density and potential to a non-self-consistent <code>nscf</code> run that evaluates eigenvalues on a dense grid or band path; the eigenvalues then feed <code>bands.x</code>, which reorders bands along the k-path, and <code>dos.x</code> or <code>projwfc.x</code>, which build the total and projected density of states, with both branches ending in a plotting step. Each arrow carries a concrete file artifact.</figcaption>
+</figure>
 
 <figure markdown>
-![Silicon band structure from sp3d5s* tight binding](../assets/figures/ch06/fig_si_bands_real.png){ width="700" }
+![Band structure of silicon along the FCC high-symmetry k-path, showing the valence-band maximum at Gamma and the conduction-band minimum about 85 percent of the way from Gamma to X, giving an indirect fundamental gap of roughly 1.17 eV](../assets/figures/ch06/fig_si_bands_real.png){ width="700" }
 <figcaption>Figure 6.4.1. Band structure of silicon. The valence-band maximum sits at \(\Gamma\) while the conduction-band minimum lies about 85% of the way along \(\Gamma\to X\), giving an indirect fundamental gap (\(\approx 1.17\) eV) — silicon's defining electronic feature. The smallest direct transition at \(\Gamma\) is much larger (\(\approx 3.4\) eV). Computed from a real sp\(^3\)d\(^5\)s\(^*\) tight-binding calculation with the Slater-Koster parameters of Jancu, Scholz, Beltram and Bassani, <em>PRB</em> 57, 6493 (1998), diagonalising the 20×20 Bloch Hamiltonian along the canonical FCC k-path — see <code>scripts/figures/fig_si_bands_real.py</code>.</figcaption>
 </figure>
 
@@ -48,6 +50,15 @@ The reason for the nscf step is purely computational: we want $\epsilon_{n\mathb
     - **nscf**: dense grid or path, *fixed* $V_\mathrm{KS}$ from SCF, one diagonalisation per k-point.
     
     The nscf step is variationally consistent: the eigenvalues it produces are those of the fully converged ground state Hamiltonian, sampled at new k-points. There is no extra error from skipping self-consistency — only the small error from the fact that for $\mathbf{k}$ not on the SCF grid, the density was never explicitly summed at this $\mathbf{k}$. For insulators with smooth bands, this introduces nothing.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why is the band structure computed in a separate `nscf` step rather than during the SCF loop itself?
+    2. Why does the `nscf` step use a different k-point set from the `scf` step — what is each grid chosen to do?
+    3. Why is it legitimate to fix the density from the SCF run and not update it during the `nscf` diagonalisation?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 6.4.2 High-symmetry paths for FCC silicon
 

@@ -1,5 +1,6 @@
 # 9.5 Equivariant networks — NequIP and MACE
 
+<figure markdown>
 ```mermaid
 flowchart LR
     A["Atomic numbers Zᵢ<br/>positions rᵢ"]
@@ -15,7 +16,8 @@ flowchart LR
     Y --> TP
     TP --> M --> RO --> E
 ```
-*MACE architecture sketch. Radial and spherical features feed equivariant tensor-product layers that grow body-order with each iteration. An invariant readout yields per-atom energies; forces come from autograd.*
+<figcaption>Sketch of the MACE architecture. Atomic numbers and positions are encoded along two paths: a radial embedding on a Bessel basis and spherical harmonics of the bond directions. Both feed equivariant tensor-product message-passing layers, which build up many-body features of increasing correlation order with each iteration; an invariant readout then maps these to per-atom energies that sum to the total, with forces obtained by automatic differentiation.</figcaption>
+</figure>
 
 The Behler–Parrinello and GAP architectures of §9.4 reduce the local
 environment of an atom to a *scalar* descriptor and then regress on
@@ -242,6 +244,15 @@ differ — NequIP couples node features with edge spherical harmonics,
 MACE adds symmetric tensor products to raise body order — but the
 underlying operation is always the Clebsch–Gordan-contracted tensor
 product.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is a *representation* of a group, and what is the defining property a representation map $\rho$ must satisfy?
+    2. What is the tensor product of two irreducible representations used for in an equivariant network, and what role do the Clebsch–Gordan coefficients play?
+    3. Why does propagating tensor (equivariant) features through the network make a potential more data-efficient than propagating only scalars?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 9.5.1 Why equivariance helps
 

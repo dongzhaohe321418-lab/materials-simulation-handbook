@@ -255,6 +255,262 @@ Cheng-group Cartesian-ACE long-range work (npj Computational
 Materials, 2024) shows promising results on simple ionic solids but
 has not yet been scaled to a universal model.
 
+#### Long-range electrostatics in depth — the dominant 2024–2026 frontier
+
+The paragraphs above sketch the problem; it deserves a fuller
+treatment, because for ionic and polar materials it is not one open
+problem among several but *the* open problem. A universal MLIP that
+got long-range electrostatics right would immediately unlock
+ferroelectrics, fast-ion conductors, dielectric screening, charged
+defects, and a large fraction of battery and electrochemistry
+modelling. The remainder of this subsection lays out why short
+cutoffs fail, the three main architectural responses, and a worked
+example where the distinction is unmistakable.
+
+**Why short cutoffs fail — the physics.** A standard message-passing
+MLIP truncates interactions at a cutoff $r_\mathrm{c}$, typically
+$5$–$6\,\text{\AA}$. For the chemistry that sets covalent and
+metallic cohesion this is not an approximation worth worrying about:
+the exchange–correlation hole, the kinetic-energy contributions, and
+the bond-order physics all decay *exponentially* with distance, so
+the truncation error is of order $e^{-r_\mathrm{c}/\xi}$ with a
+correlation length $\xi$ of order an angstrom. Doubling the cutoff
+buys nothing measurable.
+
+Electrostatics and dispersion are qualitatively different. The
+Coulomb interaction between two partial charges goes as $1/r$; the
+leading dispersion (van der Waals) term goes as $1/r^6$. Neither has
+a length scale beyond which it is negligible — they have *tails*. The
+energy contribution from the shell of material between $r_\mathrm{c}$
+and infinity is
+
+$$
+\Delta E_\mathrm{Coul} \;\sim\; \int_{r_\mathrm{c}}^{\infty}
+\frac{1}{r}\, \rho(r)\, 4\pi r^2 \, \mathrm{d}r,
+$$
+
+which, for a non-zero mean charge density $\rho$, does not converge
+at all without the careful cancellation that an Ewald sum arranges.
+Truncating it is not a small error; it is the omission of a
+conditionally convergent series. Even when the system is locally
+neutral, the *dipole* and *quadrupole* fields of distant regions
+($1/r^3$, $1/r^4$) reach into the central cell and a $6\,\text{\AA}$
+model simply cannot see them.
+
+!!! warning "The LO–TO splitting is the canonical local-model failure"
+    In a polar crystal — any crystal with more than one atom per cell
+    and a non-zero Born effective charge — the longitudinal-optical
+    (LO) and transverse-optical (TO) phonon branches are *split* at
+    the zone centre, $\mathbf{q} \to 0$, even though they are
+    degenerate by symmetry in a hypothetical non-polar analogue. The
+    splitting arises from the macroscopic electric field that a
+    long-wavelength longitudinal phonon sets up: a genuinely
+    non-local effect, encoded in the non-analytic term of the
+    dynamical matrix,
+
+    $$
+    D^\mathrm{NA}_{\kappa\alpha,\kappa'\beta}(\mathbf{q}\to 0)
+    \;\propto\;
+    \frac{(\mathbf{q}\cdot \mathbf{Z}^*_\kappa)_\alpha\,
+          (\mathbf{q}\cdot \mathbf{Z}^*_{\kappa'})_\beta}
+         {\mathbf{q}\cdot \boldsymbol{\varepsilon}_\infty \cdot \mathbf{q}},
+    $$
+
+    built from the Born effective-charge tensors $\mathbf{Z}^*$ and
+    the electronic dielectric tensor $\boldsymbol{\varepsilon}_\infty$.
+    A purely local MLIP has *no representation of this term*: the
+    contribution comes from atom pairs separated by arbitrarily large
+    distances, all of which lie outside the receptive field. Run a
+    finite-difference phonon calculation with a short-cutoff
+    foundation MLIP on GaN, ZnO, MgO or BaTiO$_3$ and the LO and TO
+    branches will come out degenerate at $\Gamma$ — a qualitative,
+    not quantitative, failure. The infrared and Raman spectra built
+    on those phonons are then wrong in a way no amount of training
+    data at fixed cutoff can fix.
+
+**The dispersion tail is the same disease, milder.** Electrostatics
+is the dramatic case, but the $1/r^6$ dispersion interaction has the
+same structural problem: it is a tail, not a screened local quantity.
+A $6\,\text{\AA}$ cutoff captures most of the pair dispersion energy
+between two atoms but not the slowly converging sum over all distant
+pairs, which matters for layered materials (graphite interlayer
+binding, transition-metal dichalcogenides), molecular crystals, and
+physisorption. The usual fix is pragmatic and predates MLIPs
+entirely: bolt on a Grimme D3 or many-body-dispersion (MBD)
+correction, summed to convergence outside the cutoff. This works
+because dispersion, unlike charge transfer, is *additive and
+environment-mild* enough that a semi-empirical pairwise (or MBD)
+term is a good model. It is worth noting the asymmetry: the
+community treats the dispersion tail as solved-enough by D3/MBD, but
+treats the Coulomb tail as an open research problem — because
+Coulomb couples to charge, charge responds non-locally to the
+environment, and there is no equally cheap, equally reliable
+bolt-on.
+
+**Response 1 — 4G-HDNNP: let charge flow non-locally.** The
+fourth-generation high-dimensional neural network potential of Ko,
+Finkler, Goedecker and Behler (Nature Communications, 2021) is the
+cleanest architectural answer. The idea is to insert a *global*
+charge-equilibration step between the descriptor and the energy. A
+local network first predicts an *electronegativity* $\chi_i$ for each
+atom from its local environment. A charge-equilibration (QEq) layer
+then solves, for the whole system at once, the linear problem of
+distributing the total charge so as to minimise an electrostatic
+energy functional
+
+$$
+E_\mathrm{elec}(\{q_i\}) = \sum_i \left( \chi_i q_i +
+\tfrac{1}{2} J_i q_i^2 \right) + \tfrac{1}{2}
+\sum_{i \neq j} \frac{q_i q_j}{r_{ij}}
+\quad\text{subject to}\quad \sum_i q_i = Q_\mathrm{tot},
+$$
+
+with $J_i$ a hardness parameter. Because the constraint and the
+$1/r_{ij}$ kernel couple every atom to every other, charge can flow
+from one end of the cell to the other in response to a local
+perturbation — exactly the non-locality a cutoff model lacks. The
+equilibrated charges then feed an explicit Ewald-summed Coulomb
+energy, and a second short-range network adds everything else. The
+4G-HDNNP correctly describes textbook cases that defeat third-
+generation potentials: a charged metal-oxide cluster whose excess
+electron localises on the far side, or a system where the charge
+state depends on a defect several nanometres away. The cost is a
+linear solve per evaluation (or a few iterations of a conjugate-
+gradient solver), which is cheap relative to the network itself but
+does introduce a global communication step that complicates
+parallelisation.
+
+**Response 2 — LODE: a descriptor that carries the long-range field.**
+Grisafi and Ceriotti (J. Chem. Phys., 2019) take a representational
+rather than an architectural route. Their Long-Distance Equivariant
+(LODE) descriptor is built by treating each atom as the source of a
+*potential field* — a $1/r$ (or, more generally, $1/r^p$) field — and
+then expanding the total field at each atom on a local basis of
+spherical harmonics and radial functions, exactly as SOAP expands the
+local density. The key difference from SOAP is the kernel inside the
+expansion: SOAP convolves a *Gaussian* density, which is short-
+ranged; LODE convolves a *Coulomb-like* density, whose $1/r$ tail
+means the resulting features at atom $i$ carry information about
+atoms arbitrarily far away. In practice LODE is used as a
+*complementary* feature set: a short-range SOAP/ACE/MACE descriptor
+captures the local chemistry, and the LODE channels are concatenated
+to inject the long-range electrostatic context. The combination has
+been shown to recover the correct $1/r$ scaling of dimer binding
+curves for ionic pairs and to improve the description of molecular
+crystals where electrostatics dominates the lattice energy. The
+limitation is that LODE, in its standard form, assumes a fixed
+multipolar character for the long-range source and is less natural
+for genuine charge transfer.
+
+**Response 3 — latent Ewald and range-separated MACE.** The most
+recent line of work bolts a long-range term directly onto an existing
+short-range foundation architecture. The general pattern is
+*range separation*: write the total energy as
+
+$$
+E = E_\mathrm{SR}^\mathrm{MLIP}(r < r_\mathrm{c})
+  + E_\mathrm{LR}^\mathrm{Ewald},
+$$
+
+where $E_\mathrm{SR}$ is an ordinary MACE (or NequIP) restricted to
+the cutoff, and $E_\mathrm{LR}$ is an Ewald sum over charges (or,
+more generally, multipoles) that the network *also* predicts as an
+extra equivariant readout head. "Latent Ewald" variants make the
+long-range charges latent variables rather than physical Mulliken-
+or Hirshfeld-style charges: they are whatever values make the Ewald
+term best reproduce the DFT energies and forces, with no requirement
+that they match any particular population-analysis scheme. This is
+pragmatic — the network is free to use the long-range channel as a
+correction term — but it sacrifices interpretability, and there is an
+identifiability question (many charge assignments give similar
+long-range energies). Loche et al. (2024) report a range-separated
+MACE that reproduces the dielectric response of BaTiO$_3$ to within
+roughly $15\%$; this is real progress but still short of the
+DFT-accuracy bar set for short-range properties.
+
+**Charge transfer and electrochemistry — the hardest corner.** The
+three responses above all assume the *total* charge of the cell is
+fixed and the question is only how to distribute and propagate it.
+Genuine electrochemistry breaks that assumption. An electrode at a
+controlled potential exchanges electrons with its surroundings; the
+cell carries a net charge that is itself a dependent variable, set by
+the applied potential rather than by the composition. No public
+universal MLIP supports this today: the architectures have input
+channels for position and species but none for total charge or
+electrochemical potential, and the training data (DFT at charge
+neutrality, almost without exception) never exercises the degree of
+freedom. The current research directions are two. **CENT**
+(charge-equilibration via neural-network technique, Ghasemi et al.
+2015 and successors) makes the *electronegativities* the learned
+quantity and then equilibrates charge globally — the same QEq
+machinery as 4G-HDNNP, but framed so that a non-zero total charge or
+an imposed chemical potential is a natural boundary condition rather
+than an afterthought. **Constant-potential MD** (the Bonnet–Otani–
+Sugino scheme and its descendants) is the explicit-DFT reference: the
+electrode is held at a fixed Fermi level and electrons are allowed to
+flow in and out grand-canonically. A learned surrogate for
+constant-potential MD — an MLIP that takes the electrochemical
+potential as an input and returns forces consistent with the
+self-consistently determined cell charge — is an obvious and
+much-wanted target, and is treated further in the "Charged systems
+and electrochemistry" subsection below. The short version: charge
+transfer is long-range electrostatics plus a moving total-charge
+constraint, and it is correspondingly harder.
+
+**A worked example — BaTiO$_3$, where the cutoff model fails and the
+long-range model succeeds.** Barium titanate is the textbook
+ferroelectric. Above $\sim 400\,\mathrm{K}$ it is cubic perovskite
+and paraelectric; cooling through the Curie point it distorts to a
+tetragonal phase in which the Ti ion sits off-centre in its oxygen
+octahedron, producing a spontaneous polarisation of order
+$0.26\,\mathrm{C\,m^{-2}}$. The energetics of that distortion are a
+delicate balance: a short-range double-well in the Ti displacement,
+*stabilised* against the short-range restoring force by the
+long-range dipole–dipole coupling between unit cells. Remove the
+long-range term and the balance tips.
+
+Concretely, take a $5\times5\times5$ supercell ($625$ atoms) and
+ask three questions of (a) a stock short-cutoff foundation MLIP and
+(b) a range-separated long-range variant:
+
+| Quantity | Short-cutoff MLIP | Long-range variant | DFT / experiment |
+|---|---|---|---|
+| Cubic $\to$ tetragonal double-well depth | washed out, near-flat | $\sim 15$–$25\,\mathrm{meV}$ per f.u. | $\sim 20\,\mathrm{meV}$ per f.u. |
+| $\Gamma$-point LO–TO splitting | $\approx 0$ (degenerate) | finite, within $\sim 15\%$ | several hundred $\mathrm{cm}^{-1}$ |
+| Curie temperature from MD | absent or grossly wrong | qualitatively correct trend | $\sim 400\,\mathrm{K}$ |
+
+The short-cutoff model fails *qualitatively* on all three. It cannot
+see the inter-cell dipole coupling that the soft-mode condensation
+depends on, so the double well is flattened and the ferroelectric
+instability either disappears or appears at the wrong temperature.
+The LO–TO splitting is identically zero for the structural reason
+given in the warning above. The long-range variant, by carrying an
+explicit Ewald term over predicted charges, restores the inter-cell
+coupling and gets the physics qualitatively — and increasingly
+quantitatively — right. BaTiO$_3$ is therefore the standard stress
+test in this literature: if a proposed long-range MLIP cannot
+reproduce its double well and its LO–TO splitting, it has not solved
+the problem.
+
+!!! note "Forward and backward references"
+    Chapter 9, §9.6.11 (the MLIP failure-modes section) treats the
+    *short-range* consequences of this same locality assumption —
+    why a cutoff model can pass every neutral-system validation test
+    and still be unfit for an ionic conductor. The two discussions
+    are two views of one limitation: §9.6.11 is the practitioner's
+    checklist, this subsection is the research frontier that aims to
+    remove the limitation altogether.
+
+The honest summary: as of mid-2026 long-range electrostatics is the
+single most active architectural frontier for foundation MLIPs, no
+public universal model has cleared the BaTiO$_3$ bar, and the
+practical advice for anyone simulating an ionic or polar material
+with a stock foundation MLIP is to treat every electrostatics-
+sensitive observable — dielectric constants, ferroelectric
+transitions, charged-defect energetics, infrared intensities — as
+unvalidated until checked against DFT or against one of the
+long-range variants above.
+
 ### Charged systems and electrochemistry
 
 **The problem.** Every universal MLIP discussed here treats the

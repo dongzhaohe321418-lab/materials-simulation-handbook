@@ -1,5 +1,7 @@
 # Chapter 9 — Machine Learning Interatomic Potentials
 
+[Open in Colab](https://colab.research.google.com/github/dongzhaohe321418-lab/materials-simulation-handbook/blob/main/notebooks/ch09-mlip-colab.ipynb){ .md-button .md-button--primary }
+
 For seventy years the practitioner of atomistic simulation has faced an
 uncomfortable choice. Quantum-mechanical methods such as density functional
 theory (Chapter 5) deliver chemically accurate energies and forces, but the

@@ -122,6 +122,15 @@ configurations and the model size is in the millions of parameters.
 The training cost runs to weeks of multi-GPU compute. The output is a
 single set of weights that anyone can download and run.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What does "foundation model" mean, and which features of the paradigm carry over from language models to interatomic potentials?
+    2. What distinguishes a *universal* MLIP from the task-specific MLIPs of Chapter 9?
+    3. Why is the in-distribution versus out-of-distribution distinction the central diagnostic for whether a foundation MLIP can be trusted on a new system?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Three regimes of use
 
 Once a universal model is in hand, three usage regimes are worth
@@ -321,6 +330,7 @@ approach.
 
 A pragmatic protocol, condensing the considerations above:
 
+<figure markdown>
 ```mermaid
 flowchart TD
     Start{"Run zero-shot MD<br/>on representative<br/>configuration"}
@@ -336,6 +346,8 @@ flowchart TD
     Q3 -->|"yes"| Use
     Q3 -->|"no"| Full["Full fine-tune<br/>or train from scratch<br/>(Chapter 9)"]
 ```
+<figcaption>A pragmatic protocol for deciding whether to use a foundation MLIP zero-shot or to fine-tune it. Run zero-shot MD, compute MLIP-versus-DFT parity on about 20 snapshots, and check the force error: if it is acceptable and energies lie on the convex hull, use the model zero-shot for production; otherwise few-shot fine-tune on 100 to 500 DFT configurations, re-evaluate on a held-out test set, and if the energy and force errors are now within threshold use the model, falling back to a full fine-tune or training from scratch if not.</figcaption>
+</figure>
 
 The two thresholds — $100$ meV/Å on forces, $20$ meV/atom on energy
 post-tuning — are empirical and somewhat field-dependent. For

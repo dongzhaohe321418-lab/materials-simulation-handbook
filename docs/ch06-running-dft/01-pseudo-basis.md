@@ -25,70 +25,9 @@ Outside $r_c$ the pseudo-wavefunction equals the all-electron wavefunction; insi
 !!! note "Semi-core states"
     For some elements the boundary between "core" and "valence" is fuzzy. Transition metals such as Ti or Zn often need their $3s$ and $3p$ "semi-core" electrons treated as valence, because they overlap with neighbours and respond to chemistry. Pseudopotential libraries provide multiple variants; reading the metadata is not optional.
 
-## 6.1.2 Three flavours of pseudopotential
+That is the whole idea: freeze the core, smooth the valence, and hand the valence electrons an effective pseudo-atom. In practice three families of pseudopotential — norm-conserving, ultrasoft, and PAW — implement this idea with different trade-offs between smoothness and bookkeeping. You do *not* need those distinctions to run your first calculation: a curated library (§6.1.5) picks a good pseudopotential and its cutoffs for you. The detailed NC/USPP/PAW comparison is therefore deferred to the end of this section (§6.1.6); on a first pass you may skip ahead to [§6.2](02-first-qe.md) and come back to it once you have a running calculation to anchor the theory.
 
-Three families dominate modern DFT codes. They differ in how aggressively they smooth the pseudo-wavefunction, and therefore in what cutoff energy you need.
-
-### Norm-conserving (NC)
-
-Introduced by Hamann, Schlüter and Chiang in 1979. The pseudo-wavefunction $\tilde\psi_{n\ell}$ is required to have the same norm inside $r_c$ as the all-electron wavefunction $\psi_{n\ell}^\mathrm{AE}$:
-
-$$ \int_0^{r_c} |\tilde\psi_{n\ell}(r)|^2 r^2\, dr = \int_0^{r_c} |\psi_{n\ell}^\mathrm{AE}(r)|^2 r^2\, dr. $$
-
-This norm condition guarantees correct scattering at the reference energy and, crucially, correct *energy derivative* of the scattering — the pseudopotential is transferable across chemical environments. Modern "ONCV" (optimised norm-conserving Vanderbilt) pseudopotentials are tight, accurate, and the gold standard for high-precision work. They require cutoffs of 50-100 Ry for typical elements.
-
-### Ultrasoft (USPP)
-
-Vanderbilt (1990) relaxed the norm condition. The pseudo-wavefunction can be much smoother — *ultrasoft* — at the price that the orthonormality condition changes from $\langle \tilde\psi_i | \tilde\psi_j \rangle = \delta_{ij}$ to a generalised form $\langle \tilde\psi_i | S | \tilde\psi_j \rangle = \delta_{ij}$ with an overlap operator $S$ that depends on augmentation charges localised near each atom. The eigenvalue problem becomes generalised. USPP cutoffs are typically 25-40 Ry — a factor of 2-4 cheaper than NC.
-
-### Projector augmented wave (PAW)
-
-Blöchl (1994). A linear transformation $|\psi\rangle = |\tilde\psi\rangle + \sum_i (|\phi_i\rangle - |\tilde\phi_i\rangle)\langle \tilde p_i | \tilde\psi\rangle$ takes a smooth pseudo-wavefunction $|\tilde\psi\rangle$ to the true all-electron wavefunction $|\psi\rangle$ by adding back, atom by atom, the difference between all-electron partial waves $\phi_i$ and pseudo partial waves $\tilde\phi_i$. PAW reproduces all-electron results to within a few meV/atom for most properties, is as cheap as USPP, and gives you access to the true wavefunction near the nucleus (useful for hyperfine fields, NMR, EFGs). It is the default in VASP and GPAW, and widely available in QE.
-
-#### Valence wavefunction reconstruction in one picture
-
-A schematic comparison helps. Inside the core radius $r_c$, the all-electron valence orbital $\psi^\mathrm{AE}_{n\ell}(r)$ oscillates rapidly because it must remain orthogonal to the (likewise rapidly oscillating) core orbitals; outside, $\psi^\mathrm{AE}$ is smooth. Norm-conserving, ultrasoft, and PAW pseudopotentials all introduce a smooth pseudo-orbital $\tilde\psi_{n\ell}$ that *equals* $\psi^\mathrm{AE}$ for $r>r_c$ and *replaces* the oscillations inside. The flavours differ in **what they keep track of**:
-
-- **NC**: only $\tilde\psi$ is stored; the all-electron $\psi^\mathrm{AE}$ is forgotten, but the norm condition guarantees correct scattering. Orthonormality $\langle\tilde\psi_i|\tilde\psi_j\rangle=\delta_{ij}$ is preserved.
-- **USPP**: $\tilde\psi$ is *more* aggressively smoothed (no norm conservation); a localised augmentation charge $Q_{ij}(\mathbf{r})$ is added to the density to restore the correct total charge.
-- **PAW**: $\tilde\psi$ is stored *and* the transformation back to $\psi^\mathrm{AE}$ is stored. PAW thus retains, formally, all the information of an all-electron calculation; properties involving the wavefunction near the nucleus (NMR shielding, hyperfine fields, EFGs) are accessible.
-
-#### The augmentation operator $\hat{S}$
-
-For USPP and PAW the orthogonality of the all-electron orbitals translates into a *generalised* orthonormality for the pseudo-orbitals:
-$$\langle\tilde\psi_i|\hat{S}|\tilde\psi_j\rangle = \delta_{ij}, \qquad \hat{S} = \mathbb{1} + \sum_{a,ij} q^{(a)}_{ij}\,|\tilde{p}^{(a)}_i\rangle\langle\tilde{p}^{(a)}_j|.$$
-Here the sum is over atoms $a$ and projector indices $i,j$, and $q^{(a)}_{ij} = \int_{r<r_c}[\phi^{(a)}_i(\mathbf{r})\phi^{(a)}_j(\mathbf{r}) - \tilde\phi^{(a)}_i(\mathbf{r})\tilde\phi^{(a)}_j(\mathbf{r})]\,d^3r$ are augmentation integrals. The Kohn-Sham equation becomes a generalised eigenvalue problem
-$$\hat{H}|\tilde\psi_n\rangle = \epsilon_n\,\hat{S}|\tilde\psi_n\rangle,$$
-which costs roughly the same as the standard problem to solve. Forces inherit a Pulay-like correction from the implicit $\mathbf{r}$-dependence of $\hat{S}$ through the projectors, which production codes handle automatically; you just have to know it is there when you read the QE output and see a term called "augmentation".
-
-#### Pseudopotential construction recipe
-
-The half-page algorithm used in every modern NC/PAW generator (Hamann, Vanderbilt, Blöchl) is:
-
-1. **All-electron atomic reference.** Solve the radial Kohn-Sham equation for the isolated atom; obtain $\psi^\mathrm{AE}_{n\ell}(r)$ and eigenvalues $\epsilon^\mathrm{AE}_{n\ell}$ for each valence channel.
-2. **Choose a core radius $r_c^{(\ell)}$.** Typically $r_c \approx 1.0$-$2.0\,a_0$, large enough that $\tilde\psi$ can be smooth but small enough that valence chemistry happens entirely outside.
-3. **Construct a smooth $\tilde\psi$.** For $r > r_c$, set $\tilde\psi = \psi^\mathrm{AE}$. For $r < r_c$, replace by a polynomial (or spherical Bessel sum, or whatever the scheme prefers) that is nodeless and matches $\psi^\mathrm{AE}$ in value and derivative at $r_c$.
-4. **Invert the radial Schrödinger equation.** Given $\tilde\psi$ and the reference energy $\epsilon^\mathrm{AE}_{n\ell}$, the radial Schrödinger equation
-   $$\left[-\tfrac{1}{2r^2}\partial_r(r^2\partial_r) + \tfrac{\ell(\ell+1)}{2r^2} + V^{(\ell)}_\mathrm{ps}(r)\right]\tilde\psi(r) = \epsilon^\mathrm{AE}_{n\ell}\,\tilde\psi(r)$$
-   is solved for the *channel-dependent* potential $V^{(\ell)}_\mathrm{ps}(r)$. Different $\ell$'s see different pseudopotentials: the pseudopotential is **non-local**.
-5. **Log-derivative test.** The accuracy of a pseudopotential is the agreement between $\psi^\mathrm{AE}$ and $\tilde\psi$ scattering log-derivatives,
-   $$L^{(\ell)}(\epsilon, r_c) \equiv \frac{r\,\partial_r \psi(r,\epsilon)}{\psi(r,\epsilon)}\bigg|_{r=r_c},$$
-   over a range of energies $\epsilon$. The norm condition (Hamann-Schlüter-Chiang) guarantees that the first energy derivative $\partial_\epsilon L^{(\ell)}$ agrees at the reference energy; ONCV-style optimisation also matches higher derivatives.
-6. **Unscreen.** Subtract the Hartree and XC contributions from the *atomic* valence density to leave a pure ionic pseudopotential, transferable to any chemical environment.
-
-This recipe is implemented in `ld1.x` (QE), `oncvpsp` (Hamann's code, the engine behind PseudoDojo), and `atompaw`. Modern users download finished UPF/PSP8 files; understanding the recipe explains why the "PBE pseudopotential" is not unique and why curated libraries matter.
-
-### Which to use
-
-For a starter calculation: **PAW or efficient USPP via SSSP-PBE-efficiency** (see below). Cutoffs around 40-50 Ry, runs in seconds for small cells. For high-precision properties (especially absolute energies and pressures), prefer **norm-conserving** (PseudoDojo) with cutoffs around 80 Ry. For NMR shielding tensors, hyperfine, or anything that probes the wavefunction near the nucleus, use **PAW**.
-
-!!! warning "Mix-and-match pseudopotentials at your peril"
-    A pseudopotential is generated together with a particular exchange-correlation functional. A PBE pseudopotential is not interchangeable with an LDA one, and even between PBE pseudopotentials from different libraries the all-electron reference may differ in subtle ways (relativistic treatment, frozen-core boundary, choice of valence configuration). Within one calculation, use pseudopotentials from a *single, consistent set*. Mixing SSSP for one element and PseudoDojo for another is a common bug.
-
-!!! tip "Why pseudopotentials exist — the historical moment"
-    Before the 1970s, all-electron DFT of solids was the only option, and it was painfully expensive: a $1s$ orbital of Si oscillates at the Bohr-radius scale ($\sim 0.05$ Å) while bonding happens at the bond-length scale ($\sim 2.4$ Å). Resolving both requires a basis 50× finer than needed for chemistry. The pseudopotential idea — already implicit in the orthogonalised-plane-wave method of Herring (1940) and the empirical pseudopotential method of Phillips and Kleinman (1959) — is to *replace* the core's oscillation by a smooth function whose scattering of valence electrons is unchanged. Hamann, Schlüter, and Chiang's 1979 paper on *ab initio* norm-conserving pseudopotentials was the breakthrough: a recipe for constructing the smooth replacement directly from atomic DFT, with provable accuracy. Modern PAW and ONCV are descendants. The "aha" is that *chemistry only sees the valence shell*; the core is geometrically inert. Once you accept that, the smooth replacement is the obvious move.
-
-## 6.1.3 Choosing a basis: plane waves vs everything else
+## 6.1.2 Choosing a basis: plane waves vs everything else
 
 The Kohn-Sham orbital must be expanded in some basis $\{\chi_\alpha(\mathbf{r})\}$:
 
@@ -182,7 +121,7 @@ Tabulated radial functions $R_{n\ell}(r)$ times spherical harmonics $Y_{\ell m}$
 
 For periodic, dense solids, plane waves give you variational convergence, no Pulay forces, and trivial parallelisation over $\mathbf{G}$-vectors. Almost every major solid-state code (QE, VASP, ABINIT, Castep) is plane-wave based. For surfaces with thick vacuum, large unit cells, or large systems, NAO-based codes such as FHI-aims become competitive or superior, but plane waves remain the default for first calculations and for any cross-code comparison.
 
-## 6.1.4 The cutoff energy
+## 6.1.3 The cutoff energy
 
 The condition
 
@@ -201,7 +140,7 @@ The right cutoff is whatever your pseudopotential needs. SSSP-PBE-efficiency lis
 
 For our silicon example using SSSP-PBE-efficiency, the recommended values are `ecutwfc = 30` Ry and `ecutrho = 240` Ry. We will use 40 Ry / 320 Ry to be a little conservative, and verify convergence in [§6.3](03-convergence.md).
 
-## 6.1.5 k-point sampling
+## 6.1.4 k-point sampling
 
 !!! tip "Why k-points exist — the picture"
     A crystal extends to infinity. The Schrödinger equation in such a system has uncountably many solutions, indexed by a continuous label $\mathbf{k}$ in the Brillouin zone. To compute *anything* — the total energy, the density, a force — you must integrate over $\mathbf{k}$. The integral is infinite-dimensional in principle (one Hamiltonian per $\mathbf{k}$) but only $\sim$ tens of "characteristic" $\mathbf{k}$-values actually matter, because the Bloch eigenvalues $\epsilon_{n\mathbf{k}}$ vary smoothly with $\mathbf{k}$ (gradient ≈ group velocity). The job of "k-point sampling" is to pick a finite set of $\mathbf{k}$ that integrates this smooth function accurately.
@@ -258,7 +197,7 @@ Rule of thumb: $N_i \cdot |\mathbf{a}_i| \gtrsim 30$ Å is a reasonable starting
 !!! warning "k-grids and supercells"
     When you make a $2\times2\times2$ supercell of a primitive cell, the BZ shrinks by 8 in volume. A k-grid that was $8\times8\times8$ for the primitive cell becomes $4\times4\times4$ for the supercell — the *density* of k-points in absolute reciprocal-space units is preserved, not the *number*. Forgetting this rule is the most common bug in supercell calculations.
 
-## 6.1.5b Smearing functions for metals — derivations
+## 6.1.4b Smearing functions for metals — derivations
 
 For metals the integrand in the BZ sum has a step at the Fermi level $\mu$ and the integral converges as $1/N_k$ — almost useless. The cure is to replace the sharp Heaviside occupation $\theta(\mu-\epsilon)$ by a smooth function $f((\epsilon-\mu)/\sigma)$ of width $\sigma$. Three choices dominate; each is best understood as a derivation from a different approximation strategy.
 
@@ -293,7 +232,7 @@ based on a *non-symmetric* combination that remains in $[0,1]$ and still produce
 
 For everything in this book that involves a metal, we use MV with $\sigma = 0.01$-$0.02$ Ry; the reasoning follows the convergence study of [§6.3](03-convergence.md).
 
-## 6.1.6 Pseudopotential libraries
+## 6.1.5 Pseudopotential libraries
 
 Three curated libraries are the practical choices for plane-wave DFT.
 
@@ -343,6 +282,69 @@ A solid-state DFT calculation needs three numerical ingredients:
 3. **A Monkhorst-Pack k-grid** $N_1\times N_2\times N_3$ — the discrete sampling of the BZ integral. Density chosen for the BZ-integration tolerance you need; metals need denser grids than insulators because of Fermi-surface steps, which require smearing functions (MV cold smearing is the production default).
 
 The combination $(E_\mathrm{cut}, N_k, \sigma)$ is what you converge in §6.3.
+
+## 6.1.6 Three flavours of pseudopotential — the detailed comparison
+
+With a calculation now running, we can return to the question deferred from §6.1.1: *which* pseudopotential, and why. A curated library has already made a sound choice for you, but understanding the trade-offs is what lets you read pseudopotential metadata, diagnose convergence trouble, and pick the right family for properties beyond total energy. Three families dominate modern DFT codes. They differ in how aggressively they smooth the pseudo-wavefunction, and therefore in what cutoff energy you need.
+
+### Norm-conserving (NC)
+
+Introduced by Hamann, Schlüter and Chiang in 1979. The pseudo-wavefunction $\tilde\psi_{n\ell}$ is required to have the same norm inside $r_c$ as the all-electron wavefunction $\psi_{n\ell}^\mathrm{AE}$:
+
+$$ \int_0^{r_c} |\tilde\psi_{n\ell}(r)|^2 r^2\, dr = \int_0^{r_c} |\psi_{n\ell}^\mathrm{AE}(r)|^2 r^2\, dr. $$
+
+This norm condition guarantees correct scattering at the reference energy and, crucially, correct *energy derivative* of the scattering — the pseudopotential is transferable across chemical environments. Modern "ONCV" (optimised norm-conserving Vanderbilt) pseudopotentials are tight, accurate, and the gold standard for high-precision work. They require cutoffs of 50-100 Ry for typical elements.
+
+### Ultrasoft (USPP)
+
+Vanderbilt (1990) relaxed the norm condition. The pseudo-wavefunction can be much smoother — *ultrasoft* — at the price that the orthonormality condition changes from $\langle \tilde\psi_i | \tilde\psi_j \rangle = \delta_{ij}$ to a generalised form $\langle \tilde\psi_i | S | \tilde\psi_j \rangle = \delta_{ij}$ with an overlap operator $S$ that depends on augmentation charges localised near each atom. The eigenvalue problem becomes generalised. USPP cutoffs are typically 25-40 Ry — a factor of 2-4 cheaper than NC.
+
+### Projector augmented wave (PAW)
+
+Blöchl (1994). A linear transformation $|\psi\rangle = |\tilde\psi\rangle + \sum_i (|\phi_i\rangle - |\tilde\phi_i\rangle)\langle \tilde p_i | \tilde\psi\rangle$ takes a smooth pseudo-wavefunction $|\tilde\psi\rangle$ to the true all-electron wavefunction $|\psi\rangle$ by adding back, atom by atom, the difference between all-electron partial waves $\phi_i$ and pseudo partial waves $\tilde\phi_i$. PAW reproduces all-electron results to within a few meV/atom for most properties, is as cheap as USPP, and gives you access to the true wavefunction near the nucleus (useful for hyperfine fields, NMR, EFGs). It is the default in VASP and GPAW, and widely available in QE.
+
+#### Valence wavefunction reconstruction in one picture
+
+A schematic comparison helps. Inside the core radius $r_c$, the all-electron valence orbital $\psi^\mathrm{AE}_{n\ell}(r)$ oscillates rapidly because it must remain orthogonal to the (likewise rapidly oscillating) core orbitals; outside, $\psi^\mathrm{AE}$ is smooth. Norm-conserving, ultrasoft, and PAW pseudopotentials all introduce a smooth pseudo-orbital $\tilde\psi_{n\ell}$ that *equals* $\psi^\mathrm{AE}$ for $r>r_c$ and *replaces* the oscillations inside. The flavours differ in **what they keep track of**:
+
+- **NC**: only $\tilde\psi$ is stored; the all-electron $\psi^\mathrm{AE}$ is forgotten, but the norm condition guarantees correct scattering. Orthonormality $\langle\tilde\psi_i|\tilde\psi_j\rangle=\delta_{ij}$ is preserved.
+- **USPP**: $\tilde\psi$ is *more* aggressively smoothed (no norm conservation); a localised augmentation charge $Q_{ij}(\mathbf{r})$ is added to the density to restore the correct total charge.
+- **PAW**: $\tilde\psi$ is stored *and* the transformation back to $\psi^\mathrm{AE}$ is stored. PAW thus retains, formally, all the information of an all-electron calculation; properties involving the wavefunction near the nucleus (NMR shielding, hyperfine fields, EFGs) are accessible.
+
+#### The augmentation operator $\hat{S}$
+
+For USPP and PAW the orthogonality of the all-electron orbitals translates into a *generalised* orthonormality for the pseudo-orbitals:
+$$\langle\tilde\psi_i|\hat{S}|\tilde\psi_j\rangle = \delta_{ij}, \qquad \hat{S} = \mathbb{1} + \sum_{a,ij} q^{(a)}_{ij}\,|\tilde{p}^{(a)}_i\rangle\langle\tilde{p}^{(a)}_j|.$$
+Here the sum is over atoms $a$ and projector indices $i,j$, and $q^{(a)}_{ij} = \int_{r<r_c}[\phi^{(a)}_i(\mathbf{r})\phi^{(a)}_j(\mathbf{r}) - \tilde\phi^{(a)}_i(\mathbf{r})\tilde\phi^{(a)}_j(\mathbf{r})]\,d^3r$ are augmentation integrals. The Kohn-Sham equation becomes a generalised eigenvalue problem
+$$\hat{H}|\tilde\psi_n\rangle = \epsilon_n\,\hat{S}|\tilde\psi_n\rangle,$$
+which costs roughly the same as the standard problem to solve. Forces inherit a Pulay-like correction from the implicit $\mathbf{r}$-dependence of $\hat{S}$ through the projectors, which production codes handle automatically; you just have to know it is there when you read the QE output and see a term called "augmentation".
+
+#### Pseudopotential construction recipe
+
+The half-page algorithm used in every modern NC/PAW generator (Hamann, Vanderbilt, Blöchl) is:
+
+1. **All-electron atomic reference.** Solve the radial Kohn-Sham equation for the isolated atom; obtain $\psi^\mathrm{AE}_{n\ell}(r)$ and eigenvalues $\epsilon^\mathrm{AE}_{n\ell}$ for each valence channel.
+2. **Choose a core radius $r_c^{(\ell)}$.** Typically $r_c \approx 1.0$-$2.0\,a_0$, large enough that $\tilde\psi$ can be smooth but small enough that valence chemistry happens entirely outside.
+3. **Construct a smooth $\tilde\psi$.** For $r > r_c$, set $\tilde\psi = \psi^\mathrm{AE}$. For $r < r_c$, replace by a polynomial (or spherical Bessel sum, or whatever the scheme prefers) that is nodeless and matches $\psi^\mathrm{AE}$ in value and derivative at $r_c$.
+4. **Invert the radial Schrödinger equation.** Given $\tilde\psi$ and the reference energy $\epsilon^\mathrm{AE}_{n\ell}$, the radial Schrödinger equation
+   $$\left[-\tfrac{1}{2r^2}\partial_r(r^2\partial_r) + \tfrac{\ell(\ell+1)}{2r^2} + V^{(\ell)}_\mathrm{ps}(r)\right]\tilde\psi(r) = \epsilon^\mathrm{AE}_{n\ell}\,\tilde\psi(r)$$
+   is solved for the *channel-dependent* potential $V^{(\ell)}_\mathrm{ps}(r)$. Different $\ell$'s see different pseudopotentials: the pseudopotential is **non-local**.
+5. **Log-derivative test.** The accuracy of a pseudopotential is the agreement between $\psi^\mathrm{AE}$ and $\tilde\psi$ scattering log-derivatives,
+   $$L^{(\ell)}(\epsilon, r_c) \equiv \frac{r\,\partial_r \psi(r,\epsilon)}{\psi(r,\epsilon)}\bigg|_{r=r_c},$$
+   over a range of energies $\epsilon$. The norm condition (Hamann-Schlüter-Chiang) guarantees that the first energy derivative $\partial_\epsilon L^{(\ell)}$ agrees at the reference energy; ONCV-style optimisation also matches higher derivatives.
+6. **Unscreen.** Subtract the Hartree and XC contributions from the *atomic* valence density to leave a pure ionic pseudopotential, transferable to any chemical environment.
+
+This recipe is implemented in `ld1.x` (QE), `oncvpsp` (Hamann's code, the engine behind PseudoDojo), and `atompaw`. Modern users download finished UPF/PSP8 files; understanding the recipe explains why the "PBE pseudopotential" is not unique and why curated libraries matter.
+
+### Which to use
+
+For a starter calculation: **PAW or efficient USPP via SSSP-PBE-efficiency** (see §6.1.5). Cutoffs around 40-50 Ry, runs in seconds for small cells. For high-precision properties (especially absolute energies and pressures), prefer **norm-conserving** (PseudoDojo) with cutoffs around 80 Ry. For NMR shielding tensors, hyperfine, or anything that probes the wavefunction near the nucleus, use **PAW**.
+
+!!! warning "Mix-and-match pseudopotentials at your peril"
+    A pseudopotential is generated together with a particular exchange-correlation functional. A PBE pseudopotential is not interchangeable with an LDA one, and even between PBE pseudopotentials from different libraries the all-electron reference may differ in subtle ways (relativistic treatment, frozen-core boundary, choice of valence configuration). Within one calculation, use pseudopotentials from a *single, consistent set*. Mixing SSSP for one element and PseudoDojo for another is a common bug.
+
+!!! tip "Why pseudopotentials exist — the historical moment"
+    Before the 1970s, all-electron DFT of solids was the only option, and it was painfully expensive: a $1s$ orbital of Si oscillates at the Bohr-radius scale ($\sim 0.05$ Å) while bonding happens at the bond-length scale ($\sim 2.4$ Å). Resolving both requires a basis 50× finer than needed for chemistry. The pseudopotential idea — already implicit in the orthogonalised-plane-wave method of Herring (1940) and the empirical pseudopotential method of Phillips and Kleinman (1959) — is to *replace* the core's oscillation by a smooth function whose scattering of valence electrons is unchanged. Hamann, Schlüter, and Chiang's 1979 paper on *ab initio* norm-conserving pseudopotentials was the breakthrough: a recipe for constructing the smooth replacement directly from atomic DFT, with provable accuracy. Modern PAW and ONCV are descendants. The "aha" is that *chemistry only sees the valence shell*; the core is geometrically inert. Once you accept that, the smooth replacement is the obvious move.
 
 ## 6.1.7 Summary
 

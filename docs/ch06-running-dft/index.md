@@ -1,5 +1,7 @@
 # Chapter 6 — Running DFT in Practice
 
+[Open in Colab](https://colab.research.google.com/github/dongzhaohe321418-lab/materials-simulation-handbook/blob/main/notebooks/ch06-running-dft-colab.ipynb){ .md-button .md-button--primary }
+
 In [Chapter 5](../ch05-dft/index.md) we set up the machinery of Kohn-Sham density functional theory: the energy functional, the self-consistency loop, the exchange-correlation approximations. We treated the calculation abstractly — give it a set of atomic positions, get back an energy.
 
 That abstraction breaks the moment you sit at a terminal. A real DFT calculation requires you to decide on a pseudopotential, a basis set, a plane-wave cutoff, a k-point mesh, a smearing scheme, a starting magnetisation, an SCF convergence threshold, and a dozen other knobs whose default values are wrong about half the time. None of these are theory. All of them affect the answer.

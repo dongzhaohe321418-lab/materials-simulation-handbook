@@ -1,5 +1,6 @@
 # 9.4 Behler–Parrinello neural networks and Gaussian Approximation Potentials
 
+<figure markdown>
 ```mermaid
 flowchart LR
     A["Atom i<br/>(position rᵢ,<br/>neighbours)"]
@@ -11,7 +12,8 @@ flowchart LR
     A --> G --> NN --> EI --> ETOT
     ETOT --> F
 ```
-*Behler–Parrinello architecture. Each atom is encoded by hand-crafted symmetry functions, passed through an element-specific neural network to give an atomic energy, then summed. Forces fall out of autograd on the total energy.*
+<figcaption>The Behler–Parrinello architecture, flowing left to right: each atom and its neighbours are encoded by a set of hand-crafted radial and angular symmetry functions; these are passed through an element-specific neural network that outputs the atomic energy; the atomic energies are summed to the total energy; and the forces on every atom are obtained by automatic differentiation of that total energy.</figcaption>
+</figure>
 
 With a descriptor in hand we need a regression model to map the
 descriptor of each atom to its energetic contribution $E_i$. Two

@@ -1,12 +1,12 @@
 # 6.3 Convergence testing
 
 <figure markdown>
-![Plane-wave cutoff convergence](../assets/figures/ch06/fig_ecut_convergence.png){ width="650" }
+![Plane-wave cutoff convergence: the energy difference from the converged value plotted on a log scale against the plane-wave cutoff, falling roughly exponentially and crossing the 1 meV per atom tolerance line near 60 Rydberg](../assets/figures/ch06/fig_ecut_convergence.png){ width="650" }
 <figcaption>Figure 6.3.1. Plane-wave cutoff convergence (synthetic example). The energy difference from the converged value falls roughly exponentially with \(E_{\rm cut}\); for this system, \(E_{\rm cut} \approx 60\) Ry is sufficient to reach the conventional 1 meV/atom tolerance.</figcaption>
 </figure>
 
 <figure markdown>
-![k-point convergence](../assets/figures/ch06/fig_kpoint_convergence.png){ width="650" }
+![k-point convergence: the energy error on a log scale against the linear size N of an N-by-N-by-N Monkhorst-Pack grid, oscillating as the mesh resolves more Brillouin-zone features and dropping below the 1 meV per atom tolerance around N equals 10](../assets/figures/ch06/fig_kpoint_convergence.png){ width="650" }
 <figcaption>Figure 6.3.2. \(k\)-point convergence on an \(N \times N \times N\) Monkhorst–Pack grid (synthetic example). The error oscillates as the mesh resolves more Brillouin-zone features; the 1 meV/atom tolerance is reached around \(N=10\). Metals typically need denser grids than insulators.</figcaption>
 </figure>
 
@@ -113,6 +113,15 @@ For free-electron-like metals (Al, Na) a $12\times12\times12$ grid with $\sigma 
 
 !!! warning "Do not turn on smearing for an insulator with `degauss > 0.005`"
     If you smear an insulator with $\sigma$ larger than the gap divided by ~5, you start partially populating the conduction band. The total energy becomes meaningless and forces become wrong. Either set `occupations = 'fixed'` (the right choice for true insulators) or use very small `degauss`.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why is a DFT total energy meaningless without quoting the plane-wave cutoff and k-point density it was computed at?
+    2. How does the convergence behaviour of the total energy with respect to plane-wave cutoff differ qualitatively from its convergence with respect to k-point grid density?
+    3. Why do metals need smearing while insulators do not, and what goes wrong if you apply a large smearing width to a true insulator?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 6.3.4 A complete convergence script
 

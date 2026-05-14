@@ -79,6 +79,15 @@ data-efficient potentials — the empirical lesson of §9.5.
 The slogan to memorise: **invariance throws away information,
 equivariance keeps it.** Both are correct; one is wasteful.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. State the definitions of *invariance* and *equivariance*, and explain why invariance is a special case of equivariance.
+    2. Which physical quantities of an atomic system are invariant under rotation, and which are equivariant — give an example of each.
+    3. Why is the slogan "invariance throws away information, equivariance keeps it" correct, even though both yield invariant energies?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## 9.2.0a Why differentiability matters
 
 The forces that drive molecular dynamics are not measured; they are
