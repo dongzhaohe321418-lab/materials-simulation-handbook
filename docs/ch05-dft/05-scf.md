@@ -7,6 +7,7 @@
     
     This section is half theory, half pseudocode. By the end, you should be able to write your own SCF loop from scratch — and we include a complete 150-line Python implementation that does exactly that for a 1D hydrogen chain.
 
+<figure markdown>
 ```mermaid
 stateDiagram-v2
     [*] --> Guess : initial guess n⁰(r)
@@ -18,10 +19,11 @@ stateDiagram-v2
     Check --> Veff : no — iterate
     Check --> [*] : yes — output E, forces, ρ
 ```
-*State diagram of the Kohn–Sham SCF loop: guess the density, build the effective potential, solve the one-electron equations, mix, repeat until self-consistent.*
+<figcaption>State diagram of the Kohn–Sham self-consistent field loop: starting from an initial density guess, the effective Kohn–Sham potential is built, the one-electron equations are diagonalised for new orbitals, a new density is formed from the occupied orbitals and mixed with the input, and convergence is checked — if not converged the loop returns to rebuild the potential, and if converged it outputs the energy, forces, and density.</figcaption>
+</figure>
 
 <figure markdown>
-![SCF total energy convergence](../assets/figures/ch05/fig_scf_convergence.png){ width="750" }
+![Two-panel plot of SCF convergence: the total energy approaching its converged value roughly exponentially over iterations on the left, and the energy change per step on a log scale dropping below the convergence threshold after a few tens of iterations on the right](../assets/figures/ch05/fig_scf_convergence.png){ width="750" }
 <figcaption>Figure 5.5.1. Typical SCF convergence behaviour (synthetic example). The total energy approaches the converged value approximately exponentially (left), and the energy change per step \(|\Delta E|\) drops below the user-specified threshold (here \(10^{-6}\) Ry) after a few tens of iterations (right). Real calculations may oscillate before locking in, especially for metals and magnetic systems.</figcaption>
 </figure>
 
@@ -96,6 +98,15 @@ Small $\alpha$ (e.g., $\alpha = 0.1$) almost always converges but does so slowly
     For a small silicon cluster (insulator, gap $\sim 1\;\text{eV}$), linear mixing with $\alpha=0.3$ converges in $\sim 15$–$20$ iterations to $|\Delta n|_\infty < 10^{-6}$. For bcc iron (ferromagnetic metal), the same $\alpha=0.3$ either diverges or oscillates; $\alpha=0.05$ converges in $\sim 80$–$120$ iterations. With Pulay mixing of history length 8 and Kerker preconditioning, the iron calculation converges in $\sim 25$ iterations. The factor of $\sim 5$ speed-up is typical and the reason every production code uses an acceleration scheme.
 
 Linear mixing is robust but slow. Modern codes use **acceleration schemes** based on the history of recent densities.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why are the Kohn–Sham equations nonlinear, and what is the chicken-and-egg dependence that forces an iterative solution?
+    2. What is "charge sloshing", and what does it imply about the eigenvalues of the SCF Jacobian for a metal?
+    3. How does linear mixing $n^{(k+1)} = (1-\alpha)n^{(k)} + \alpha\,n_\mathrm{out}^{(k)}$ stabilise the iteration, and what is the trade-off in choosing $\alpha$?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 5.5.3 Pulay / DIIS mixing
 

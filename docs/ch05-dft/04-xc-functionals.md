@@ -44,6 +44,15 @@ The first three rungs are purely *semi-local* — the value of $\epsilon_{xc}$ a
     
     The cost increase with rung is dominated by the cost of evaluating exact exchange (non-local, scales as $\mathcal O(N_\mathrm{occ}^{2})$ rather than $\mathcal O(N)$). Modern range-separation tricks reduce the prefactor but not the scaling.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What single quantity stands between Kohn–Sham DFT and exact results, and why is it only ever known approximately?
+    2. Name the five rungs of Jacob's ladder in order, and state the new ingredient each one adds.
+    3. Why is climbing the ladder not guaranteed to improve accuracy, and why are the first three rungs much cheaper than the fourth?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## 5.4.2 LDA: the local density approximation
 
 The simplest approximation: pretend that, locally, the electron gas is uniform. Define an exchange–correlation energy density per particle, $\epsilon_{xc}^\mathrm{unif}(n)$, for a uniform electron gas of density $n$. Then
@@ -367,6 +376,7 @@ For LDA/GGA, $E(N)$ is smooth (no jump), so $\Delta_{xc}=0$. Restoring piecewise
 
 ## 5.4.7a Decision flowchart for choosing a functional
 
+<figure markdown>
 ```mermaid
 flowchart TD
     A[Start: what system?] --> B{Periodic solid?}
@@ -384,7 +394,8 @@ flowchart TD
     P -- Yes --> Q[Range-separated: CAM-B3LYP, ωB97X]
     P -- No --> R[B3LYP + D3]
 ```
-*A practical decision tree for functional choice. Always include a dispersion correction (D3, D4, or vdW-DF) when non-bonded fragments are present.*
+<figcaption>A practical decision tree for choosing an exchange–correlation functional. The first branch asks whether the system is a periodic solid or a molecule; periodic solids then branch on strong correlation (pointing to DFT+U, HSE06 or DMFT), on whether a band gap is needed (HSE06 plus dispersion), and on whether lattice constants are critical (PBEsol or SCAN, otherwise PBE+D3); molecules branch on reaction barriers and thermochemistry (B3LYP-D3, ωB97X-D or M06-2X) and on charge-transfer or Rydberg character (range-separated functionals, otherwise B3LYP+D3). Always include a dispersion correction such as D3, D4 or vdW-DF when non-bonded fragments are present.</figcaption>
+</figure>
 
 ## 5.4.7b Benchmarks: a tour across the ladder
 

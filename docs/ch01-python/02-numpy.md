@@ -207,6 +207,15 @@ grid = x[:, None] * y[None, :]         # shape (5, 3)
 
 When broadcasting confuses you, `print(a.shape, b.shape)` solves 90% of the problem.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. State the broadcasting rule: starting from which end are shapes aligned, and when are two dimensions compatible?
+    2. Why does subtracting a shape-`(3,)` reference position from a shape-`(N, 3)` array of atoms produce the correct per-atom displacements without any explicit loop?
+    3. Given two arrays of shapes `(8, 1, 3)` and `(1, 8, 3)`, what is the shape of their difference, and why is this the natural way to build a pairwise distance matrix?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Elementwise versus matrix operations
 
 NumPy operators are **elementwise by default**. Matrix multiplication uses `@`.

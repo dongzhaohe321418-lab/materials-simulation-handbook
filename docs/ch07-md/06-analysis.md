@@ -8,12 +8,12 @@
 **Definition 7.6.1 (Trajectory).** A *trajectory* is a sequence $\{(\mathbf{r}^n_i,\mathbf{v}^n_i)\}_{n=0}^{N_t-1}$ for $i=1,\ldots,N$ atoms, sampled at times $t_n = n\Delta t_\mathrm{save}$ with frame interval $\Delta t_\mathrm{save}$ a multiple of the MD timestep.
 
 <figure markdown>
-![g(r) for crystal, liquid, gas](../assets/figures/ch07/fig_rdf_real.png){ width="700" }
+![Radial distribution function g of r for three phases: the crystal shows sharp persistent peaks at well-defined neighbour shells, the liquid shows one or two broad peaks decaying to one, and the gas is nearly featureless and approaches one immediately](../assets/figures/ch07/fig_rdf_real.png){ width="700" }
 <figcaption>Figure 7.6.1. Radial distribution function \(g(r)\) for the three phases. Sharp, persistent peaks at well-defined neighbour shells signal a crystal; one or two broad peaks decaying to \(g(r) \to 1\) signal a liquid; a near-featureless approach to 1 signals a gas. Computed from a real LJ-MD simulation of 500 argon atoms (\(\sigma = 3.405\) Å, \(\varepsilon/k_B = 119.8\) K) via velocity-Verlet integration with Berendsen-style equilibration. Each phase is run at <em>both</em> its characteristic temperature and its characteristic density — reduced density \(\rho^* = \rho\sigma^3 \approx 1.0\) at 50 K (solid), \(0.84\) at 150 K (triple-point liquid), and \(0.05\) at 600 K (dilute gas); running all three at one density would merely give the same fluid at three temperatures. The liquid first peak here sits at \(r/\sigma \approx 1.06\) with \(g_\text{max} \approx 2.6\), in line with the textbook triple-point Lennard-Jones value. See <code>scripts/figures/fig_rdf_real.py</code>; a simpler analytic-curve illustration is in <code>scripts/figures/fig_rdf_phases.py</code>.</figcaption>
 </figure>
 
 <figure markdown>
-![MSD vs time per phase](../assets/figures/ch07/fig_msd_diffusion.png){ width="700" }
+![Mean-squared displacement versus time for three phases: the solid plateaus at a bounded value, the liquid grows asymptotically linearly with a slope of six times the diffusion constant, and the gas grows linearly with a much steeper slope](../assets/figures/ch07/fig_msd_diffusion.png){ width="700" }
 <figcaption>Figure 7.6.2. Mean-squared displacement \(\langle r^2(t) \rangle\) versus time. A solid plateaus (bounded vibrations), a liquid is asymptotically linear with slope \(6D\) where \(D\) is the diffusion constant, and a gas has the same form but with a much larger \(D\). (Synthetic curves for illustration.)</figcaption>
 </figure>
 
@@ -55,6 +55,15 @@ This is the **Einstein relation**.
     Comparing to $\mathrm{MSD}(t) = 2dD t$ gives $D = k_BT/(m\gamma)$, the **Stokes-Einstein form**. In an MD simulation without an explicit friction, $D$ is determined by the *effective* friction from interatomic collisions; the relation $\mathrm{MSD} = 2dD t$ still holds in the long-time limit, and $D$ is what you extract from the slope.
     
     The factor $d$ (dimensionality) is important: a Cartesian-x-only MSD grows as $2Dt$, a 3D MSD as $6Dt$, a 2D-slab MSD as $4Dt$. Be careful which one your analysis function returns. It is the standard way to extract $D$ from an MD trajectory.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. State the Einstein relation and explain how the diffusion coefficient $D$ is extracted from the slope of the mean-squared displacement.
+    2. Why does the dimensionality factor $d$ matter — what slope would you expect for a 3D MSD versus a Cartesian-x-only MSD?
+    3. Why must you use unwrapped coordinates for the MSD, and what does the MSD of a *solid* look like versus that of a liquid?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 Two practical considerations:
 

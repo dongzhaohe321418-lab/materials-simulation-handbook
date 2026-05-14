@@ -1,5 +1,6 @@
 # Convergence and Validation
 
+<figure markdown>
 ```mermaid
 flowchart TD
     START["Pick observable O<br/>and target tolerance ε"]
@@ -16,7 +17,8 @@ flowchart TD
     OK --> P
     P -.->|"all done"| DONE
 ```
-*Convergence study decision tree. Each numerical parameter is varied independently until the observable of interest changes by less than the tolerance you set up-front.*
+<figcaption>Convergence study decision tree. Start by picking the observable of interest and a target tolerance up front. Then, for each numerical knob — plane-wave cutoff, k-grid, supercell size, timestep, neighbour cutoff and so on — sweep that knob while holding the others fixed, plot the deviation of the observable from its finest-grid value, and check whether it is below tolerance: if so, lock in the parameter and move to the next knob; if not, increase the parameter or change method and sweep again. Once every knob is locked, proceed to the production run.</figcaption>
+</figure>
 
 There is exactly one inviolable rule of computational materials science:
 *every result must be converged with respect to every parameter that
@@ -145,6 +147,15 @@ Same as above, except:
 - **Statistical convergence**: standard error of the mean of your
   observables, with proper accounting for autocorrelation between MC
   steps.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What does it mean for a calculation to be "converged" with respect to a numerical parameter?
+    2. Why must you converge the *observable you report* rather than just the total energy?
+    3. Why is each numerical knob swept independently while the others are held fixed?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## How to actually run a convergence study
 

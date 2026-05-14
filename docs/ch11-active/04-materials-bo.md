@@ -1,7 +1,7 @@
 # 11.4 BO for Materials Discovery
 
 <figure markdown>
-![BO vs random search regret](../assets/figures/ch11/fig_bo_convergence.png){ width="650" }
+![Simple-regret curves versus number of evaluations comparing Bayesian optimisation with Expected Improvement against random search, averaged over 30 seeds, with the BO curve dropping roughly an order of magnitude faster](../assets/figures/ch11/fig_bo_convergence.png){ width="650" }
 <figcaption>Figure 11.4.1. Simple-regret curves for Bayesian optimisation (EI) versus random search on a synthetic benchmark, averaged over 30 random seeds. BO converges roughly an order of magnitude faster on this problem — the same advantage typically seen on real materials-discovery tasks where each evaluation is expensive.</figcaption>
 </figure>
 
@@ -80,6 +80,15 @@ For one-off campaigns with small candidate sets ($\lesssim 10^3$),
 Magpie features and an RBF-kernel GP work well. For larger campaigns
 or for problems where structure-property relationships dominate, GNN
 embeddings are worth the upfront training cost.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why does a material need to be *featurised* before Bayesian optimisation can be applied to it?
+    2. Name the three dominant featurisation approaches, and state one situation where each is the natural choice.
+    3. Beyond the abstract GP-plus-acquisition machinery, what are the three concrete choices that turn BO into a working materials campaign?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 11.4.2 Case study 1: perovskite band-gap optimisation
 

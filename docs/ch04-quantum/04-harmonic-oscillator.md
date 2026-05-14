@@ -1,12 +1,12 @@
 # 4.4 The harmonic oscillator
 
 <figure markdown>
-![Quantum harmonic oscillator eigenstates](../assets/figures/ch04/fig_harmonic_oscillator.png){ width="600" }
+![The first four eigenstates of the 1D quantum harmonic oscillator drawn on the parabolic potential well, with energy levels equally spaced by h-bar omega and the ground state sitting at the zero-point energy one half h-bar omega above the potential minimum](../assets/figures/ch04/fig_harmonic_oscillator.png){ width="600" }
 <figcaption>Figure 4.4.1. The first four eigenstates of the 1D quantum harmonic oscillator. Energy levels are equally spaced by \(\hbar\omega\); the ground state sits at the zero-point energy \(\tfrac{1}{2}\hbar\omega\) above the classical minimum.</figcaption>
 </figure>
 
 <figure markdown>
-![Morse vs harmonic potential](../assets/figures/ch04/fig_morse_potential.png){ width="600" }
+![A comparison of the Morse potential and its harmonic approximation: the two curves share the same curvature at the minimum, but the Morse potential is asymmetric and flattens to a dissociation limit at large bond length while the harmonic parabola rises without bound](../assets/figures/ch04/fig_morse_potential.png){ width="600" }
 <figcaption>Figure 4.4.2. The Morse potential and its harmonic approximation. Both share the same curvature at the minimum, but the Morse potential dissociates at large \(r\) and is asymmetric — physically more realistic for molecular bonds. The harmonic approximation is excellent for small displacements only.</figcaption>
 </figure>
 
@@ -154,6 +154,15 @@ The zero-point energy has real physical consequences.
     The H$_2$ molecule has a vibrational wavenumber $\tilde\nu \approx 4400$ cm$^{-1}$. Convert to angular frequency: $\omega = 2\pi c \tilde\nu = 2\pi(3\times 10^{10}\,\text{cm/s})(4400\,\text{cm}^{-1}) \approx 8.3\times 10^{14}$ s$^{-1}$. Then
     $$E_0 = \tfrac12 \hbar\omega = \tfrac12 (1.055\times 10^{-34})(8.3\times 10^{14}) \approx 4.4\times 10^{-20}\ \mathrm{J} \approx 0.273\ \mathrm{eV}.$$
     Equivalently $E_0 \approx 6.3$ kcal/mol — about 1.5% of the H–H bond energy (104 kcal/mol). At $T = 0$ a hydrogen molecule still vibrates with this energy. Replace one proton by deuterium and the reduced mass roughly doubles, so $\omega \propto 1/\sqrt\mu$ drops by $\sqrt 2$ and the ZPE drops to $\sim 0.19$ eV. This 0.08 eV gap is responsible for measurable kinetic-isotope effects in hydrogen-transfer reactions.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why is the harmonic oscillator the "universal" model — what does Taylor-expanding any smooth potential about a minimum give you?
+    2. In the ladder-operator method, what is the commutator $[\hat a, \hat a^\dagger]$, and how does the positivity of $\hat N = \hat a^\dagger \hat a$ force the spectrum to be $\hbar\omega(n + \tfrac12)$?
+    3. Why does the quantum oscillator have a non-zero ground-state energy, and name one physical consequence of this zero-point motion.
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 4.4.4 Numerical solution
 

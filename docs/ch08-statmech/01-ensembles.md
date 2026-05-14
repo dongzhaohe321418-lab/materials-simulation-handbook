@@ -61,6 +61,15 @@ $$
 
 Connection: grand potential $\Phi = -k_B T \ln \Xi = -PV$.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. For each of the four standard ensembles, name which macroscopic variables are held fixed and which thermodynamic potential it connects to.
+    2. In the canonical ensemble, why does the partition function $Z$ carry the factor $1/(N!\,h^{3N})$ — what does each piece account for?
+    3. Why does the choice of ensemble (NVE vs NVT vs NPT) not matter for averages in the thermodynamic limit, but can matter for fluctuations and for small systems?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Free energies and what to compute them with
 
 Every ensemble has a natural thermodynamic potential. From any free energy, derivatives recover the conjugate variables:

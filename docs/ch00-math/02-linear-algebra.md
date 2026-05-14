@@ -452,6 +452,15 @@ $$
 
 The orthogonality of eigenvectors belonging to distinct eigenvalues follows by an analogous calculation: take the inner product of $H\boldsymbol{\psi}_i = \lambda_i \boldsymbol{\psi}_i$ with $\boldsymbol{\psi}_j$ and of $H\boldsymbol{\psi}_j = \lambda_j \boldsymbol{\psi}_j$ with $\boldsymbol{\psi}_i$, subtract, and observe that Hermiticity forces $(\lambda_i - \lambda_j) \boldsymbol{\psi}_j^\dagger \boldsymbol{\psi}_i = 0$. For distinct eigenvalues, the inner product must vanish. This is the spectral theorem at work.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Write down the characteristic equation $\det(A - \lambda I) = 0$ and explain why a non-zero eigenvector can only exist when $A - \lambda I$ is singular.
+    2. In the proof that Hermitian matrices have real eigenvalues, which single property of $H$ was used to turn $\boldsymbol{\psi}^\dagger H^\dagger \boldsymbol{\psi}$ back into $\boldsymbol{\psi}^\dagger H \boldsymbol{\psi}$?
+    3. Why does it matter physically that the eigenvalues of a Hamiltonian matrix are guaranteed to be real, and what would it mean if they were not?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ### Why this matters in physics
 
 Quantum mechanics is, at the level of computation, the eigenvalue problem

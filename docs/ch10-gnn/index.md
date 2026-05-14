@@ -1,5 +1,7 @@
 # Chapter 10 — Graph Neural Networks for Materials
 
+[Open in Colab](https://colab.research.google.com/github/dongzhaohe321418-lab/materials-simulation-handbook/blob/main/notebooks/ch10-gnn-colab.ipynb){ .md-button .md-button--primary }
+
 Chapter 9 closed with a quiet observation. A machine-learning interatomic
 potential, stripped of its symmetry plumbing, is a regression model that
 takes a local atomic neighbourhood and returns a scalar — the atomic

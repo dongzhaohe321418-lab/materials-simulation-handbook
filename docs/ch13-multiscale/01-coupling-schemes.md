@@ -1,5 +1,6 @@
 # Coupling Schemes
 
+<figure markdown>
 ```mermaid
 flowchart TB
     subgraph SEQ["Sequential (parameter-passing)"]
@@ -13,7 +14,8 @@ flowchart TB
         C1 <-->|"forces, coordinates<br/>every MD step"| C2
     end
 ```
-*Two flavours of multiscale coupling. Sequential schemes pass outputs from one method to the next once; concurrent schemes embed two methods in the same running simulation and exchange information every step.*
+<figcaption>The two flavours of multiscale coupling. In the sequential or parameter-passing scheme (top), a DFT calculation supplies energies, forces and elastic constants to fit a potential, which drives a large-scale MD simulation, whose effective properties in turn feed a continuum finite-element model — each handoff happens once. In the concurrent or live-coupling scheme (bottom), a quantum-mechanical region and a classical molecular-mechanics region are embedded in the same running simulation and exchange forces and coordinates at every MD step.</figcaption>
+</figure>
 
 There are two fundamentally different ways to make two simulation methods work
 together. We will call them *sequential* and *concurrent*. Almost every named
@@ -96,6 +98,15 @@ of a thermoelectric, say SnSe.
 
 At no point does the BTE solver send information back to the DFT. The interface
 is a `FORCE_CONSTANTS` text file, plus a few `POSCAR`s.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is the defining difference between sequential (parameter-passing) and concurrent (live) coupling?
+    2. In a sequential workflow, what kind of artefact is passed between methods, and how often?
+    3. Why is sequential coupling simpler to implement but potentially fragile when the large-scale simulation explores states the small-scale calculation never sampled?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Concurrent coupling
 

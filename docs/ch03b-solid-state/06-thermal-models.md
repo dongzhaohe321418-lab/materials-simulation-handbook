@@ -1,7 +1,7 @@
 # 3b.6 — Specific Heat: Einstein and Debye
 
 <figure markdown>
-![Dulong-Petit vs Einstein vs Debye heat capacity](../assets/figures/ch03b/fig_debye_einstein_cv.png){ width="700" }
+![Lattice heat capacity versus temperature for three models, all converging to the Dulong-Petit limit of 3 N k-B at high temperature but differing at low temperature, where the Einstein model decays exponentially and the Debye model follows the correct T-cubed scaling](../assets/figures/ch03b/fig_debye_einstein_cv.png){ width="700" }
 <figcaption>Figure 3b.6.1. Lattice heat capacity in three classic models. All converge to the Dulong–Petit classical limit \(3 N k_B\) at high temperature, but the Einstein model decays exponentially at low \(T\) (wrong) while the Debye model gives the correct \(T^3\) scaling.</figcaption>
 </figure>
 

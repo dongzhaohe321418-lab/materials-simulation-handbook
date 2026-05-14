@@ -1,7 +1,7 @@
 # 4.3 Solving it numerically — particle in a box
 
 <figure markdown>
-![Particle in a box eigenstates](../assets/figures/ch04/fig_particle_in_box.png){ width="700" }
+![The first four eigenstates of the 1D infinite square well: a level diagram on the left showing energies that grow as n squared, and the corresponding sinusoidal wavefunctions on the right, each vanishing at the walls and gaining one extra node per level](../assets/figures/ch04/fig_particle_in_box.png){ width="700" }
 <figcaption>Figure 4.3.1. The first four eigenstates of the 1D infinite square well. Energies scale as \(n^2\) (left panel); wavefunctions are sinusoids that vanish at the walls (right panel). The number of nodes increases by one with each level.</figcaption>
 </figure>
 
@@ -168,6 +168,15 @@ For $n = 1$: $(\Delta x)(\Delta p) \approx 0.568\,\hbar > \hbar/2$. The bound is
 
 !!! tip "The lower bound is *not* saturated"
     Heisenberg's inequality is saturated only by Gaussian wavepackets, which the box eigenstates are not. The particle-in-a-box ground state is a half-sine, which has a steeper position cut-off than a Gaussian and therefore a slightly larger $\Delta p$ for the same $\Delta x$. Saturation will appear naturally in the harmonic oscillator ground state of §4.4 — a Gaussian.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Which boundary condition forces the wavefunction to be a pure sine, and which one then quantises the allowed wavenumbers $k_n$?
+    2. Why is the ground-state energy $E_1$ strictly positive, and how does this zero-point energy follow from the uncertainty principle?
+    3. The energies scale as $n^2/L^2$ — what does the $1/L^2$ dependence imply for the optical properties of a quantum dot as it is made smaller?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 4.3.3 Discretising the Hamiltonian
 

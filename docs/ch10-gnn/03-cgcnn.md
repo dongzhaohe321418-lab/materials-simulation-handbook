@@ -1,5 +1,6 @@
 # 10.3 CGCNN from Scratch
 
+<figure markdown>
 ```mermaid
 flowchart LR
     S["Crystal<br/>structure<br/>(atoms + bonds)"]
@@ -11,7 +12,8 @@ flowchart LR
     Y["Property prediction<br/>(E_f, band gap, …)"]
     S --> G --> EMB --> CONV --> POOL --> MLP --> Y
 ```
-*CGCNN block diagram. The crystal becomes a graph; atom embeddings and learned edge features feed several convolutional layers; pooling and an MLP produce a single material-level property.*
+<figcaption>The CGCNN block diagram, flowing left to right: a crystal structure is converted to a multigraph whose nodes are atoms and edges are neighbour bonds; atoms are mapped to learned embedding vectors and edges to a distance basis; these pass through N crystal-graph convolution layers of message, aggregate and update; a global mean pooling over atoms collapses the graph to a single vector; and an MLP head produces a material-level property prediction such as formation energy or band gap.</figcaption>
+</figure>
 
 The Crystal Graph Convolutional Neural Network — CGCNN — was published by
 Tian Xie and Jeffrey Grossman in *Physical Review Letters* in 2018. It is
@@ -140,6 +142,15 @@ $$
     the message contributes meaningfully to the update. With six
     neighbours per atom and three layers, after training the embeddings
     span a richly populated subspace of $\mathbb{R}^{64}$.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. How is a periodic crystal turned into a graph for CGCNN — what are the nodes, and why is it a *multigraph*?
+    2. What does the global pooling step do, and why is it needed to predict a single material-level property?
+    3. In the CGConv update, why is the message gated by a sigmoid before being added back to the node state?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 10.3.2 Hyperparameters from the paper
 

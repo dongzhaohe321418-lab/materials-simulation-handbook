@@ -180,6 +180,15 @@ vasprun.xml
 
 Adjust to taste. Anything that takes seconds to regenerate from code should not be in git; anything that takes a week of compute should be archived elsewhere (a Zenodo deposit, an institutional store), with the *recipe* committed to git.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Name the four pillars of reproducibility and give one concrete failure mode for each when it is missing.
+    2. What is the difference between a loose pin (`numpy>=1.26,<2.0`) and an exact pin (`numpy==1.26.4`), and when should each be used?
+    3. Why is setting every random seed still not enough to guarantee bitwise-identical results across different GPUs or driver versions?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Structuring a scientific repository
 
 A layout that scales from one student to a small group:

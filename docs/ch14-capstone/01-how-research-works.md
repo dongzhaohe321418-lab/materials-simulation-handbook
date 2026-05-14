@@ -1,5 +1,6 @@
 # How Research Works
 
+<figure markdown>
 ```mermaid
 flowchart LR
     Q["<b>Question</b><br/>identify a gap<br/>or claim"]
@@ -13,7 +14,8 @@ flowchart LR
     A -.->|"refine"| M
     A -.->|"new question"| Q
 ```
-*The idealised research loop, with the unglamorous but vital back-arrows: analysis usually sends you back to refine the method or even to reframe the question.*
+<figcaption>The idealised research loop, flowing left to right: a question identifies a gap or claim, a literature survey establishes what is known and open, a method is chosen and justified, the setup fixes convergence and baselines, simulations or experiments are run, results are analysed with statistics and sanity checks, and the work is written up. The two dashed back-arrows are the unglamorous but vital part: analysis usually sends you back to refine the method, or even back to reframe the question.</figcaption>
+</figure>
 
 A computational materials thesis, in idealised cartoon form, looks like
 this. You walk in on Day 1, your supervisor hands you a question. You
@@ -91,6 +93,15 @@ incorporating feedback. Allow more time than you think.
 **Revision.** After your supervisor reads draft 1, you will rewrite. You
 will rewrite several times. The first draft is for you to find out what you
 think. The last draft is for the examiner.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. List the stages of the research loop in order, from question to write-up.
+    2. What do the dashed back-arrows in the research loop represent, and why are they described as "vital"?
+    3. Why is the first draft of a thesis or paper said to be "for you" while the last draft is "for the examiner"?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## A time budget for a six-month thesis
 

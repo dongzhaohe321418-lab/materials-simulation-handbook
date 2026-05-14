@@ -1,5 +1,6 @@
 # 2.1 The Scale Ladder
 
+<figure markdown>
 ```mermaid
 flowchart LR
     A["<b>Electronic</b><br/>10⁻¹¹–10⁻⁹ m<br/>10⁻¹⁶–10⁻¹³ s<br/><i>DFT, QMC, GW</i>"]
@@ -15,7 +16,8 @@ flowchart LR
     classDef c fill:#f0d8ec,stroke:#cc78bc,color:#000
     class A e; class B a; class C m; class D c
 ```
-*The four rungs of the materials-simulation ladder, with characteristic length, time, and dominant methods.*
+<figcaption>The four rungs of the materials-simulation ladder, ordered left to right from shortest to longest scale: the electronic rung (sub-ångström, sub-picosecond, DFT and QMC) passes forces and energies up to the atomistic rung (nanometre, nanosecond, MD and MLIPs), which passes transport and defect information up to the mesoscale (micrometre, second, phase-field and KMC), which in turn passes effective constitutive laws up to the continuum rung (metre, scale, FEM and CFD).</figcaption>
+</figure>
 
 A material is a hierarchy. An aluminium beam holding up a bridge is, at the bottom of the stack, a sea of $10^{29}$ or so electrons moving in the potential of $10^{29}$ ion cores. Just above that is a regular arrangement of those ions into an FCC lattice with the occasional vacancy or dislocation. Higher still, those defects form patterns — grain boundaries, precipitates, voids — that organise themselves on the micrometre scale. Finally, on the metre scale, the beam bends. Different physics dominates at each level, and no single simulation method can span them all. The art of computational materials science is in knowing which rung to stand on.
 
@@ -108,6 +110,15 @@ At the top of the ladder, atoms disappear entirely. A material becomes a field �
 
 !!! note "The scale–accuracy trade-off"
     The fundamental constraint of the field is that the methods at the bottom of the ladder are the most physically transparent and accurate, but the most expensive per atom. Each step up gains roughly two to three orders of magnitude in accessible system size but discards information about the level below. There is no free lunch: you can have first-principles accuracy on 100 atoms or empirical accuracy on $10^9$, but not first-principles accuracy on $10^9$.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Name the four rungs of the scale ladder in order, and give the characteristic length and time scale of each.
+    2. State the scale–accuracy trade-off in one sentence: what do you gain and what do you lose with each step up the ladder?
+    3. Why can a mesoscale simulation "produce plausible nonsense" even when it runs without crashing?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Multiscale coupling
 

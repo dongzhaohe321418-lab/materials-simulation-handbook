@@ -220,6 +220,15 @@ The Hessian encodes local curvature. A point $\mathbf{x}^\star$ with $\nabla f(\
 
 In a chemistry context, equilibrium geometries are local minima of the potential energy surface; transition states are saddle points with exactly one negative Hessian eigenvalue, whose corresponding eigenvector is the **reaction coordinate**. Chapter 7 §5 discusses transition-state theory in earnest; the Hessian is its central object.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. State the two interpretations of the gradient $\nabla f$ — what direction does it point, and what linear approximation does it provide?
+    2. Given a stationary point where $\nabla f = \mathbf{0}$, how do the signs of the Hessian eigenvalues distinguish a minimum, a maximum, and a saddle point?
+    3. Why is the force on an atom equal to $-\nabla_{\mathbf{r}_i} U$ rather than $+\nabla_{\mathbf{r}_i} U$, and why must $U$ be at least once-differentiable for molecular dynamics to be well-posed?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ### Directional derivative
 
 The **directional derivative** of $f$ at $\mathbf{x}$ along a unit vector $\hat{\mathbf{u}}$ is

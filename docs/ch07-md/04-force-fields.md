@@ -1,7 +1,7 @@
 # 7.4 Force Fields
 
 <figure markdown>
-![Lennard-Jones potential](../assets/figures/ch07/fig_lj_potential.png){ width="600" }
+![The Lennard-Jones 12-6 pair potential plotted against interatomic separation, showing a steep repulsive wall at short range, a single attractive minimum at r equals 2 to the one-sixth times sigma, and a smooth attractive tail decaying to zero at large separation](../assets/figures/ch07/fig_lj_potential.png){ width="600" }
 <figcaption>Figure 7.4.1. The Lennard-Jones 12-6 potential: the canonical pair potential, with a steep repulsive wall, a single minimum at \(r_{\min} = 2^{1/6}\sigma\), and a smooth attractive tail. (Synthetic curve in reduced units.)</figcaption>
 </figure>
 

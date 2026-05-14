@@ -166,6 +166,15 @@ where the last equality follows by inspecting the HF equation $\hat F \chi_i = \
 
 Koopmans' theorem gives HF a direct interpretation in photoelectron spectroscopy: peaks in the UPS/XPS spectrum correspond to $-\varepsilon_i$ values, suitably labelled by the orbital character. It is one of the cleanest links between calculation and experiment in the entire theory.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why does the Hartree product wavefunction violate the Pauli principle, and how does a Slater determinant fix this?
+    2. What is the physical difference between the Coulomb integral $J_{ij}$ and the exchange integral $K_{ij}$, and why does $J_{ii} - K_{ii} = 0$ matter?
+    3. The Hartree–Fock equations look like single-particle Schrödinger equations but must be solved iteratively — why, and what is this iteration called?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## 4.7.5 What HF means and where it fails
 
 Hartree–Fock has a clear physical interpretation:

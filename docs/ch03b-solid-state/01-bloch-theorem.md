@@ -152,6 +152,15 @@ $$\psi(\mathbf r) = e^{i\mathbf k \cdot \mathbf r}\, u(\mathbf r), \tag{3b.1.19}
 
 which is Bloch's theorem in the form (3b.1.15). The discrete index $n$ arises because, *within* a fixed $\mathbf k$ sector, the Schrödinger equation reduces to a problem on a single unit cell (see below), and that problem has infinitely many discrete eigenvalues. $\blacksquare$
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Which two properties of the Hamiltonian were used to show $[\hat H, \hat T_\mathbf{R}] = 0$, and why does that commutation matter?
+    2. Why must the eigenvalue $c(\mathbf{R})$ of the translation operator have the form $e^{i\mathbf{k}\cdot\mathbf{R}}$ with $\mathbf{k}$ real — what role do the composition rule and unitarity each play?
+    3. Bloch's theorem writes $\psi_{n\mathbf{k}} = e^{i\mathbf{k}\cdot\mathbf{r}}\,u_{n\mathbf{k}}(\mathbf{r})$ — which factor is lattice-periodic, and why does this not mean the wavefunction itself is periodic?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## 3b.1.6 The Bloch equation on the unit cell
 
 Bloch's theorem reduces the problem to: find $u_{n\mathbf k}(\mathbf r)$ that is periodic on the unit cell. Plug (3b.1.15) into the Schrödinger equation $\hat{H} \psi = E \psi$:

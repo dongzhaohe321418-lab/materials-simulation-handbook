@@ -1,7 +1,7 @@
 # 3b.5 — Phonons
 
 <figure markdown>
-![1D monatomic and diatomic chain phonon dispersions](../assets/figures/ch03b/fig_1d_chain_phonons.png){ width="700" }
+![Two phonon dispersion plots: the monatomic chain on the left shows a single acoustic branch rising sinusoidally from zero at the zone centre, and the diatomic chain on the right shows that branch split into a lower acoustic branch and an upper optical branch separated by a frequency gap at the zone boundary](../assets/figures/ch03b/fig_1d_chain_phonons.png){ width="700" }
 <figcaption>Figure 3b.5.1. Phonon dispersions of the simplest 1D models. The monatomic chain (left) has a single acoustic branch with a linear (sound-like) regime near \(k=0\). The diatomic chain (right) splits this into an acoustic branch and an optical branch separated by a band gap that opens at the zone boundary when the two masses differ.</figcaption>
 </figure>
 
@@ -162,6 +162,15 @@ If $m_1 = m_2$ the gap closes and the two branches join — the diatomic chain *
     Sound velocity:
     $$c_s = a\sqrt{K/[2(m_1+m_2)]} = 2.82\times 10^{-10}\cdot\sqrt{30/(2\cdot 9.71\times 10^{-26})} \approx 3500\text{ m/s},$$
     close to the experimental longitudinal sound velocity in NaCl (~4500 m/s; the factor of ~1.3 discrepancy is again from neglecting longer-range elastic terms).
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. For the 1D diatomic chain, what physically distinguishes the acoustic branch from the optical branch in terms of how the two atoms in a cell move?
+    2. Why does the optical branch have a finite frequency at $k = 0$ while the acoustic branch goes to zero there?
+    3. What happens to the zone-boundary gap between the two branches when the two masses become equal, and why?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 3b.5.3 3D phonons: the dynamical matrix
 

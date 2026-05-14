@@ -1,5 +1,6 @@
 # QM/MM Methods
 
+<figure markdown>
 ```mermaid
 flowchart LR
     subgraph WHOLE["Total system"]
@@ -12,7 +13,8 @@ flowchart LR
     QM -.->|"electrostatic embedding"| MM
     MM -.->|"point charges / polarisation"| QM
 ```
-*Region diagram of a QM/MM partition. A small chemically active region is treated quantum-mechanically; the bulk environment is treated with a classical force field; a buffer zone with link atoms or capping schemes glues them together.*
+<figcaption>Region diagram of a QM/MM partition of a total system. A small chemically active reactive centre is treated quantum-mechanically; the surrounding bulk environment is treated with a classical force field; and a buffer zone of link or capping atoms glues the two together across bonds that cross the boundary. The two regions communicate through electrostatic embedding, with the MM point charges polarising the QM region and the QM region in turn felt by the MM environment.</figcaption>
+</figure>
 
 QM/MM is the prototypical concurrent multiscale method. A small region of
 chemical interest is treated with quantum mechanics, usually DFT; everything
@@ -120,6 +122,15 @@ Use subtractive (ONIOM) when:
 Most calculations of binding energies of ligands to enzyme active sites, or
 of small molecules adsorbed on a defective surface in a non-polar matrix, are
 done with ONIOM-style subtractive schemes.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. In a QM/MM partition, what determines which atoms go in the QM region versus the MM region?
+    2. How does the subtractive (ONIOM) scheme combine the high-level and low-level calculations to get the total energy?
+    3. Why are link atoms or capping atoms needed at the QM/MM boundary, and what problem do they solve?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Additive scheme
 

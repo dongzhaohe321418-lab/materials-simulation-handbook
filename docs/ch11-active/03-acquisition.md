@@ -1,7 +1,7 @@
 # 11.3 Acquisition Functions
 
 <figure markdown>
-![Expected Improvement acquisition](../assets/figures/ch11/fig_ei_acquisition.png){ width="650" }
+![Two stacked panels: the top shows a Gaussian-process posterior fitted to four observations, the bottom shows the Expected Improvement acquisition function, which peaks where the posterior mean is favourable or the uncertainty is large, marking where the next query is placed](../assets/figures/ch11/fig_ei_acquisition.png){ width="650" }
 <figcaption>Figure 11.3.1. The Expected Improvement (EI) acquisition function in 1D. The top panel shows a GP posterior over four observations; the bottom panel shows EI, which is large where the posterior mean is below \(f_{\text{best}}\) <em>or</em> the uncertainty is large. The next query is placed at the EI maximum.</figcaption>
 </figure>
 
@@ -207,6 +207,15 @@ standard in production BO codes.
     $(\mu - f^+) \cdot \mathbb{1}[\mu > f^+]$ in the limit, which agrees.
     Production code adds a small epsilon to $\sigma$ before computing
     $z$ to avoid division by zero.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is the role of an acquisition function in Bayesian optimisation — how does it turn the GP posterior into a decision?
+    2. Define the improvement $I(\mathbf{x})$ and explain why Expected Improvement is its expectation under the GP posterior.
+    3. In the closed form $\mathrm{EI} = (\mu - f^+)\Phi(z) + \sigma\phi(z)$, which term rewards exploitation and which rewards exploration?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 11.3.2 Upper Confidence Bound
 

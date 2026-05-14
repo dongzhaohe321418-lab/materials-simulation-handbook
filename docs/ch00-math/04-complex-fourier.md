@@ -294,6 +294,15 @@ The single most useful sentence in this section is:
 
 A sharp Gaussian peak in $x$-space has a broad Gaussian profile in $k$-space, and vice versa. A perfectly periodic function in $x$ (period $L$) has a Fourier transform supported only on the discrete set $k = 2\pi n / L$. A delta-function in $x$ has a flat, uniform Fourier transform; a flat function in $x$ has a delta-function transform. The two pictures are mathematically equivalent and physically complementary.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. State Euler's formula and sketch one of the two derivations given (Taylor series or the defining ODE).
+    2. The Fourier transform of a Gaussian of real-space width $\sigma_x$ is another Gaussian — what is its width, and what fixed product do the two widths satisfy?
+    3. Why is this Gaussian width relation the mathematical content of the Heisenberg uncertainty principle, and what does it imply about localising a wavepacket in both position and momentum?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 This duality is **everywhere** in solid-state physics. Three illustrations:
 
 - **Real space ↔ reciprocal space.** A crystal lattice $\{ \mathbf{R} \}$ has a dual reciprocal lattice $\{ \mathbf{G} \}$ with $e^{i \mathbf{G} \cdot \mathbf{R}} = 1$ for all lattice translations. Functions that are periodic in real space have Fourier components only at reciprocal-lattice vectors. The Brillouin zone, band structure, X-ray diffraction patterns, and plane-wave DFT bases all live in reciprocal space.

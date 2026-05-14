@@ -1,12 +1,12 @@
 # 3b.3 — The Tight-Binding Model
 
 <figure markdown>
-![1D tight-binding band](../assets/figures/ch03b/fig_1d_tb_bands.png){ width="600" }
+![The single-band 1D tight-binding dispersion E of k equals minus 2t cosine of ka, a cosine curve of total bandwidth 4t, parabolic near its minimum at the zone centre](../assets/figures/ch03b/fig_1d_tb_bands.png){ width="600" }
 <figcaption>Figure 3b.3.1. The single-band 1D tight-binding dispersion \(E(k) = -2t\cos(ka)\). The bandwidth is \(W = 4t\). Near the band minimum the curvature defines an effective mass, giving the parabolic approximation \(E \approx -2t + \hbar^2 k^2 / 2 m^*\).</figcaption>
 </figure>
 
 <figure markdown>
-![Graphene tight-binding bands](../assets/figures/ch03b/fig_graphene_bands.png){ width="650" }
+![Tight-binding pi bands of graphene along the K-Gamma-M-K path, showing the bonding and anti-bonding bands touching at a single point at K, the Dirac point, where the dispersion becomes linear](../assets/figures/ch03b/fig_graphene_bands.png){ width="650" }
 <figcaption>Figure 3b.3.2. Tight-binding bands of graphene along the K–\(\Gamma\)–M–K path. The bonding and anti-bonding \(\pi\) bands touch exactly at the K point — the Dirac point — where the dispersion is linear and the effective mass vanishes.</figcaption>
 </figure>
 

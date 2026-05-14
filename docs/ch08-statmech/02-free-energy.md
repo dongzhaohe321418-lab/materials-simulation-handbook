@@ -1,5 +1,6 @@
 # 8.2 Free Energy Methods
 
+<figure markdown>
 ```mermaid
 flowchart TD
     Q{"What kind of<br/>free-energy<br/>difference?"}
@@ -8,7 +9,8 @@ flowchart TD
     Q -->|"free energy along<br/>a known reaction<br/>coordinate (rare event)"| US["<b>Umbrella Sampling</b><br/>biased windows +<br/>WHAM"]
     Q -->|"high-dim or<br/>unknown CV /<br/>need on-the-fly bias"| MD["<b>Metadynamics</b><br/>history-dependent<br/>Gaussian bias"]
 ```
-*Decision tree for choosing a free-energy method. Endpoint states, path smoothness, and dimensionality of the collective variable drive the choice between FEP, TI, umbrella sampling, and metadynamics.*
+<figcaption>Decision tree for choosing a free-energy method. The root question asks what kind of free-energy difference is needed: between two well-defined states close in phase space points to free-energy perturbation; a smooth path between two states points to thermodynamic integration; a free energy along a known reaction coordinate for a rare event points to umbrella sampling with WHAM; and a high-dimensional or unknown collective variable needing an on-the-fly bias points to metadynamics.</figcaption>
+</figure>
 
 ## Why free energies are hard
 
@@ -31,6 +33,15 @@ $$
 To compute $A$ directly we would need to know the integrand's value across all of phase space, including regions that MD never visits because $e^{-\beta U}$ is exponentially small there. This is hopeless — but the **difference** $A_2 - A_1$ between two systems is tractable, because it depends on the **ratio** $Z_2/Z_1$, which we can sample.
 
 This section presents four classical recipes for computing free energy differences from MD: thermodynamic integration (TI), free energy perturbation (FEP), umbrella sampling with WHAM, and metadynamics. Each is the right tool somewhere.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why can an MD simulation estimate an ordinary ensemble average $\langle A \rangle$ well, but not the absolute free energy $A = -k_B T \ln Z$ directly?
+    2. What makes a *difference* of free energies $A_2 - A_1$ tractable when the absolute values are not?
+    3. Why does the zero-temperature energy difference alone give the wrong answer for phase stability?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Why free energies matter
 

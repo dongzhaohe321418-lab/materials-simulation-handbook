@@ -1,7 +1,7 @@
 # 3b.4 — The Free Electron Gas and the Sommerfeld Expansion
 
 <figure markdown>
-![Free-electron density of states](../assets/figures/ch03b/fig_free_electron_dos.png){ width="600" }
+![The free-electron density of states rising as the square root of energy, with all states below the Fermi energy shaded to indicate they are filled at zero temperature](../assets/figures/ch03b/fig_free_electron_dos.png){ width="600" }
 <figcaption>Figure 3b.4.1. The free-electron density of states is \(g(\varepsilon) \propto \sqrt{\varepsilon}\). At \(T = 0\), all states below the Fermi energy \(\varepsilon_F\) are filled (shaded region); for copper this corresponds to \(\varepsilon_F \approx 7\) eV.</figcaption>
 </figure>
 

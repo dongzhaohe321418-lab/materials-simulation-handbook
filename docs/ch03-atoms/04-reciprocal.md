@@ -1,7 +1,7 @@
 # 3.4 Reciprocal Space Without Tears
 
 <figure markdown>
-![FCC first Brillouin zone](../assets/figures/ch03/fig_brillouin_zone_fcc.png){ width="600" }
+![The first Brillouin zone of the FCC lattice drawn as a truncated octahedron, with high-symmetry points Gamma, X, L, K, U and W labelled and a standard band-structure path traced through them](../assets/figures/ch03/fig_brillouin_zone_fcc.png){ width="600" }
 <figcaption>Figure 3.4.1. The first Brillouin zone of the face-centred-cubic reciprocal lattice — a truncated octahedron — with the conventional high-symmetry points \(\Gamma\), X, L, K, U, W labelled. The orange path \(\Gamma\)–X–W–L–\(\Gamma\)–K is a standard route for plotting band structures.</figcaption>
 </figure>
 
@@ -148,6 +148,15 @@ path = si.cell.bandpath("LGXWKL", npoints=100)
 print(path)            # describes the path
 print(path.kpts[:5])   # first five k-points along the path
 ```
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Write down the defining condition $\mathbf{b}_i \cdot \mathbf{a}_j = 2\pi\,\delta_{ij}$ and explain in words what it guarantees about $e^{i\mathbf{G}\cdot\mathbf{r}}$.
+    2. What is the reciprocal lattice of FCC, and what is the shape of the corresponding first Brillouin zone?
+    3. Why is the first Brillouin zone defined as the Wigner–Seitz cell of the reciprocal lattice rather than any other primitive cell?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Why band-structure paths are one-dimensional
 

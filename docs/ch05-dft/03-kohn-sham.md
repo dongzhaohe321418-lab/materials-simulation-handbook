@@ -113,6 +113,15 @@ This is *exact*: every approximation in DFT now lives in $E_{xc}[n]$ alone. The 
 
 That is the central trick of Kohn–Sham theory.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is the Kohn–Sham postulate — what does the fictitious non-interacting system have in common with the real interacting one?
+    2. The exact energy decomposes as $E = T_s + U_H + E_{xc} + \int v_\mathrm{ext}\,n$. Which of these terms is computed exactly, and which one contains every approximation in DFT?
+    3. Write down the definition of $E_{xc}[n]$ — which two physical contributions does it bundle together, and why is it a relatively small fraction of the total energy?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## 5.3.3 Deriving the Kohn–Sham equations
 
 We now minimise (5.28) over densities subject to the constraint $\int n\,\mathrm d\mathbf r = N$, taking advantage of the parameterisation $n = \sum_i |\phi_i|^{2}$ in terms of orthonormal KS orbitals. We walk through every step of the derivation, since the result is the operational heart of practical DFT.

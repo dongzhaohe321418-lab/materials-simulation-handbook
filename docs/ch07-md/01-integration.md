@@ -1,5 +1,6 @@
 # 7.1 Newton, Verlet, and Time Integration
 
+<figure markdown>
 ```mermaid
 flowchart LR
     P["Positions r(t)<br/>velocities v(t)"]
@@ -10,7 +11,8 @@ flowchart LR
     P --> F --> INT --> T --> P
     T -.->|"every N steps"| OUT
 ```
-*The MD inner loop. Forces are evaluated at the current positions, the integrator advances `(r, v)` by one timestep `Δt`, optional thermostats and barostats rescale or extend the equations, and observables are sampled periodically.*
+<figcaption>The molecular-dynamics inner loop. From the current positions and velocities the forces are evaluated as minus the gradient of the potential; the velocity-Verlet integrator advances positions and velocities by one timestep; an optional thermostat or barostat rescales or extends the equations of motion; and the new state feeds back into the next iteration, with the trajectory, energies, temperature and pressure written out every N steps.</figcaption>
+</figure>
 
 !!! tip "Why this section exists"
     Newton gave us $F = ma$ for one atom. To simulate a material we need to advance $N \sim 10^3$-$10^9$ atoms through time. The naive forward-Euler scheme $\mathbf{r}^{n+1} = \mathbf{r}^n + \Delta t\,\mathbf{v}^n$ *drifts*: energy grows without bound, the simulation explodes within a microsecond of real time. Verlet's 1967 fix — store two consecutive positions and use a second-difference — is short, beautiful, and *time-reversal-symmetric*, like Newton's laws themselves. That symmetry is the deep reason it works: the integrator preserves a *shadow* Hamiltonian close to the true one, so energy *oscillates* instead of drifting. Sixty years on, every production MD code uses Verlet or its equivalents.
@@ -86,6 +88,15 @@ A non-symplectic integrator's per-step error has a generic component that pushes
 A symplectic integrator's per-step error lies *along* the constant-$\tilde H$ surface of a nearby shadow Hamiltonian $\tilde H = H + \Delta t^2 H_2 + \ldots$. The error has no component pushing off $\tilde H$; it stays bounded forever. Over $N$ steps $|H - \tilde H| \lesssim \Delta t^p$, independent of $N$ until exponentially long times where Nekhoroshev-type results kick in.
 
 The difference is structural, not quantitative. Even a 100th-order non-symplectic scheme drifts; a 2nd-order symplectic scheme does not. For long MD this is decisive.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. When forward Euler is applied to a harmonic oscillator, what happens to the eigenvalues of the update matrix, and how does this show up in the total energy?
+    2. Why does a high-order non-symplectic integrator like Runge-Kutta-4 still drift in energy, while a low-order symplectic scheme does not?
+    3. What is the "shadow Hamiltonian", and why does its existence mean the true energy oscillates rather than drifts?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## Verlet integration: derivation
 

@@ -1,7 +1,7 @@
 # 3b.2 — The Nearly Free Electron Model
 
 <figure markdown>
-![Empty lattice vs nearly-free-electron bands](../assets/figures/ch03b/fig_nfe_band_gap.png){ width="700" }
+![Side-by-side band plots: on the left, free-electron parabolas folded into the first Brillouin zone cross at the zone boundary; on the right, a weak periodic potential lifts the degeneracy and opens a gap of width twice the magnitude of the potential Fourier coefficient at k equals plus or minus pi over a](../assets/figures/ch03b/fig_nfe_band_gap.png){ width="700" }
 <figcaption>Figure 3b.2.1. The nearly-free-electron mechanism for band gaps. With no lattice potential (left) the free-electron parabolas, folded into the first Brillouin zone, cross at the zone boundary. Switching on even a small periodic potential (right) lifts the degeneracy, opening a gap of width \(2|V_G|\) at \(k = \pm\pi/a\).</figcaption>
 </figure>
 
@@ -114,6 +114,15 @@ $$\begin{pmatrix} c_0 \\ c_\mathbf G \end{pmatrix}_{\pm} = \frac{1}{\sqrt 2} \be
     $$\psi_+(x) \propto e^{i(G/2)x} + e^{-i(G/2)x} = 2\cos(\pi x/a),$$
     $$\psi_-(x) \propto e^{i(G/2)x} - e^{-i(G/2)x} = 2i\sin(\pi x/a).$$
     The cosine standing wave $\psi_+$ has its probability density peaked at the ion positions ($x=0, a, 2a, \ldots$), the sine standing wave $\psi_-$ has its density peaked between the ions. For an *attractive* lattice potential ($V_G > 0$ in our sign convention), the lower-energy state $E_- = \bar E - V_G$ is the one whose density overlaps the wells — the cosine state. With $a = 4$ Å and $V_G = 0.5$ eV: $\bar E \approx 2.35$ eV, $E_\pm \approx 2.35 \pm 0.5$ eV, gap $\Delta = 1.0$ eV. (Compare to the empty lattice, where the two states were exactly degenerate.)
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Why does non-degenerate perturbation theory fail exactly at a Brillouin-zone boundary, and what replaces it there?
+    2. Diagonalising the $2 \times 2$ secular problem gives a gap of what size, in terms of the Fourier components of the lattice potential?
+    3. Why does an arbitrarily weak periodic potential still open a gap at a Bragg plane, while the *size* of the gap requires a stronger potential?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 3b.2.5 The physical picture: standing waves
 

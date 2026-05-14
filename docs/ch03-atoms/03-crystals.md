@@ -128,6 +128,15 @@ Two interpenetrating FCC lattices, one of cations and one of anions, displaced b
 
 The perovskite structure has been called *the most useful crystal structure ever known*. Distortions from the ideal cubic structure give rise to ferroelectricity (BaTiO$_3$), superconductivity (cuprates, with modified perovskites), high oxygen-ion conductivity (used in solid oxide fuel cells), and a vast array of other functional properties. The flexibility of the structure — A and B can be many different cations, and the oxygen can be replaced by halides for hybrid perovskites — makes it one of the most-studied families in materials science.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is the difference between a lattice, a basis, and a crystal, and why does a primitive cell contain exactly one lattice point?
+    2. How are Miller indices $(hk\ell)$ constructed from a plane's axis intercepts, and what does a zero index signify?
+    3. The diamond, FCC, and rock-salt structures all share the cubic-F Bravais lattice — what distinguishes them, and what is the coordination number of each?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Building crystals in ASE
 
 ASE provides convenient builders for common crystal structures. The single most useful function is `ase.build.bulk`, which returns an `Atoms` object representing a primitive (or optionally conventional) unit cell of a named element in a chosen structure.

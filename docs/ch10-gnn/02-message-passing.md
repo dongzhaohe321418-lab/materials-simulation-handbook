@@ -1,5 +1,6 @@
 # 10.2 Message Passing
 
+<figure markdown>
 ```mermaid
 flowchart LR
     H["Node states<br/>h_v^(t)"]
@@ -11,7 +12,8 @@ flowchart LR
     E --> MSG
     MSG --> AGG --> UPD --> H
 ```
-*One layer of message passing on a graph. Each node sends a message to each neighbour, all incoming messages are aggregated permutation-invariantly, and the node state is updated. Stacking layers grows the receptive field.*
+<figcaption>One layer of message passing on a graph. Current node states and edge features are combined by a message function into a message from each neighbour; all incoming messages at a node are aggregated by a permutation-invariant operation such as sum, mean or max; and an update function combines the aggregated message with the old node state to produce the new node state. Stacking such layers grows the receptive field.</figcaption>
+</figure>
 
 In 2017 Gilmer and co-workers, working on molecular property prediction,
 observed something subtle. The half-dozen graph neural networks then in
@@ -259,6 +261,15 @@ order GNNs and equivariant networks that operate on tuples.
     either. This is why pure topology-only GNNs are limited; in
     crystals, distance- and element-features break this symmetry and
     restore expressivity in practice.
+
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. Name the three steps of one message-passing layer and say what each one does.
+    2. Why must the aggregation step be permutation-invariant, and what would go wrong if it were not?
+    3. How does stacking $L$ message-passing layers relate to the receptive field of a node?
+
+    If any of these is shaky, re-read the preceding section before continuing.
 
 ## 10.2.3a Aggregation as a learnable operator
 

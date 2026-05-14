@@ -155,6 +155,15 @@ The DOS for a one-dimensional band has logarithmic *van Hove singularities* at t
 !!! tip "Reading real band-structure plots"
     When you encounter your first DFT band structure for a real material — silicon, graphene, MoS$_2$, the perovskite of the month — work through the four questions above explicitly. After a dozen materials, the answers will come at a glance. The exercises in this chapter give you a head start.
 
+??? question "Pause and recall"
+    Before reading on, try to answer these from memory:
+
+    1. What is plotted on each axis of a band structure, and how do you tell at a glance whether a material is a metal or a semiconductor?
+    2. What is the difference between a direct and an indirect band gap, and why does silicon's indirect gap make it a poor light emitter?
+    3. How is the effective mass of a charge carrier related to the curvature of a band, and what does a flat band imply about mobility?
+
+    If any of these is shaky, re-read the preceding section before continuing.
+
 ## Diagram three: the radial distribution function
 
 The third pillar is the *radial distribution function* (RDF), also called the *pair correlation function* and denoted $g(r)$. Unlike the previous two diagrams, the RDF is fundamentally a statistical object: it characterises a *snapshot* (or a time-average of snapshots) of atomic positions.
