@@ -44,17 +44,33 @@ class GP:
         self.L: NDArray[np.float64] | None = None
 
     def _prepare_X(self, X: NDArray[np.float64]) -> NDArray[np.float64]:
-        X = np.atleast_2d(X)
-        return X
+        # A 1-D array is interpreted unambiguously as n samples of one
+        # feature each, i.e. a column vector. A 2-D array is taken as
+        # (n_samples, n_features) and used verbatim. We never silently
+        # transpose a 2-D array: an ambiguous shape is a caller bug, and
+        # a silent transpose would hide it.
+        X = np.asarray(X, dtype=np.float64)
+        if X.ndim == 1:
+            return X.reshape(-1, 1)
+        if X.ndim == 2:
+            return X
+        raise ValueError(
+            f"X must be 1-D or 2-D, got {X.ndim}-D array of shape {X.shape}"
+        )
 
     def fit(
         self, X: NDArray[np.float64], y: NDArray[np.float64]
     ) -> None:
         X = self._prepare_X(X)
+        y = np.asarray(y, dtype=np.float64).ravel()
         if X.shape[0] != y.shape[0]:
-            X = X.T
+            raise ValueError(
+                f"X has {X.shape[0]} samples but y has {y.shape[0]}. "
+                f"X must have shape (n_samples, n_features); pass a 1-D "
+                f"array for a single feature."
+            )
         self.X = X
-        self.y = y.astype(np.float64)
+        self.y = y
         K = rbf_kernel(self.X, self.X, self.sigma_f, self.length_scale)
         K += self.sigma_n ** 2 * np.eye(len(self.X))
         self.L, lower = cho_factor(K, lower=True)
@@ -65,9 +81,12 @@ class GP:
         self, X_star: NDArray[np.float64]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         assert self.X is not None and self.alpha is not None
-        X_star = np.atleast_2d(X_star)
+        X_star = self._prepare_X(X_star)
         if X_star.shape[1] != self.X.shape[1]:
-            X_star = X_star.T
+            raise ValueError(
+                f"X_star has {X_star.shape[1]} features but the model was "
+                f"fitted on {self.X.shape[1]}. The feature dimension must match."
+            )
         K_star = rbf_kernel(self.X, X_star, self.sigma_f, self.length_scale)
         mu = K_star.T @ self.alpha
         v = cho_solve((self.L, self._lower), K_star)

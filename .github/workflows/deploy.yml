@@ -14,6 +14,13 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Opt every JavaScript-based action into the Node 24 runtime. GitHub is
+# deprecating the Node 20 runtime (forced default from June 2026, removed
+# September 2026); setting this now keeps the workflow green through the
+# transition without waiting for each action to ship a Node 24 release.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest

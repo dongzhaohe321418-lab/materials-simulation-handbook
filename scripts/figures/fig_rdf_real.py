@@ -243,30 +243,38 @@ def main() -> None:
     n_atoms = 4 * n_cells ** 3
     assert n_atoms == 500
 
-    # liquid Ar reference density ~ 30 atoms / nm^3 = 0.030 A^-3
-    rho = 0.030
-    box = (n_atoms / rho) ** (1.0 / 3.0)
-    a_fcc = box / n_cells
-
-    print(f"N = {n_atoms} atoms, box = {box:.3f} A, "
-          f"rho = {rho:.3f} A^-3, a_fcc = {a_fcc:.3f} A")
-    print(f"sigma = {SIGMA_A} A, eps/kB = {EPS_K} K")
-
     # MD parameters
     dt = 5e-3        # 5 fs in ps
     n_equil = 2000
     n_prod = 5000
     rcut = 2.5 * SIGMA_A
 
-    # Three temperatures
+    # Each phase is run at BOTH its characteristic temperature AND its
+    # characteristic density. Reusing one density for all three would
+    # just give the same fluid at three temperatures — a 600 K run at
+    # liquid density is a supercritical fluid, not a vapour. The reduced
+    # densities rho* = rho * sigma^3 of ~1.0 / 0.84 / 0.05 are the
+    # textbook solid / triple-point-liquid / dilute-gas values for the
+    # Lennard-Jones system.
+    sigma3 = SIGMA_A ** 3
     runs = [
-        ("Solid (T = 50 K)",  50.0, COLOURS["blue"]),
-        ("Liquid (T = 150 K)", 150.0, COLOURS["red"]),
-        ("Gas (T = 600 K)",   600.0, COLOURS["green"]),
+        # label,                T (K),  rho* (reduced), colour
+        ("Solid (T = 50 K)",     50.0,  1.00, COLOURS["blue"]),
+        ("Liquid (T = 150 K)",  150.0,  0.84, COLOURS["red"]),
+        ("Gas (T = 600 K)",     600.0,  0.05, COLOURS["green"]),
     ]
 
+    print(f"N = {n_atoms} atoms, sigma = {SIGMA_A} A, eps/kB = {EPS_K} K")
+
     fig, ax = plt.subplots(figsize=(9, 5))
-    for label, T, colour in runs:
+    max_half_box = 0.0
+    for label, T, rho_star, colour in runs:
+        rho = rho_star / sigma3                  # number density in A^-3
+        box = (n_atoms / rho) ** (1.0 / 3.0)
+        a_fcc = box / n_cells
+        max_half_box = max(max_half_box, box / 2.0)
+        print(f"  {label}: rho* = {rho_star:.2f}, rho = {rho:.4f} A^-3, "
+              f"box = {box:.2f} A")
         r, g = run_phase(
             T_target=T, box=box, n_cells=n_cells, a_fcc=a_fcc,
             n_equil=n_equil, n_prod=n_prod, dt=dt,
@@ -284,7 +292,7 @@ def main() -> None:
     ax.set_xlabel(r"$r / \sigma$")
     ax.set_ylabel(r"$g(r)$")
     ax.set_title(r"Radial distribution function from LJ-MD of 500 Ar atoms")
-    ax.set_xlim(0.0, (box / 2.0) / SIGMA_A)
+    ax.set_xlim(0.0, 6.0)
     ax.set_ylim(0.0, None)
     ax.legend(frameon=False, loc="upper right")
     ax.grid(alpha=0.3, linestyle="--")

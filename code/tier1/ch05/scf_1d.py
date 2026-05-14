@@ -25,7 +25,19 @@ class Grid:
 
 
 def kinetic_matrix(g: Grid) -> NDArray[np.float64]:
-    """Periodic-BC second-order finite-difference -1/2 d^2/dx^2."""
+    """Periodic-BC second-order finite-difference -1/2 d^2/dx^2.
+
+    The operator is genuinely sparse (tridiagonal plus two corner
+    elements from the periodic boundary). We nonetheless store it as a
+    dense array here on purpose: this 1-D model has only n ~ 300 grid
+    points, the SCF loop needs *all* eigenpairs (not just a few), and
+    ``numpy.linalg.eigh`` on a 300x300 dense matrix is faster and far
+    simpler than a sparse iterative solver in that regime. Production
+    3-D plane-wave codes face the opposite situation -- millions of
+    basis functions, only the occupied bands wanted -- and there the
+    sparse, iterative route (Davidson, LOBPCG) is mandatory. The lesson
+    is that "use sparse" is a scaling argument, not an absolute rule.
+    """
     n, dx = g.n, g.dx
     main = np.full(n, 1.0 / dx ** 2)
     off = np.full(n - 1, -0.5 / dx ** 2)
