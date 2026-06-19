@@ -1,5 +1,17 @@
 # 5.1 The Thomas–Fermi Idea
 
+!!! info "Why this section exists"
+    Here is the problem we are solving. In 1927, before there were any computers, could you do electronic structure — work out the energy of atoms and molecules — using only the electron density $n(\mathbf r)$ instead of the full wavefunction $\Psi$? The density is a function of just three coordinates; the wavefunction is a function of $3N$. Thomas and Fermi made the first serious attempt at this. It only half-works: it gets the gross size and energy of heavy atoms roughly right, but it cannot bind a single molecule. Studying *why* it half-works is the sharpest possible way to see what a genuine density functional has to capture, and it is the natural on-ramp to the rest of this chapter.
+
+!!! note "In plain language"
+    The Thomas–Fermi idea, in one breath: approximate the kinetic energy of the electrons with a *local* formula that depends only on how dense the electrons are at each point — a formula borrowed from the uniform electron gas (electrons spread out evenly, like a featureless jelly) — add the obvious electrostatic energies, and then slide the density around until the total energy is as low as possible while keeping the right number of electrons. That "slide until lowest" step is a variational principle: the best density is the one that minimises the energy.
+
+!!! note "New words in this section"
+    - **Functional** — a rule that takes a *whole function* as its input and returns a single number. Ordinary functions eat a number and give a number; a functional eats a function (here the density $n(\mathbf r)$, defined at every point in space) and gives a number (here an energy). We write the input in square brackets, $E[n]$, to signal "functional of $n$".
+    - **Kinetic energy functional** — the particular functional $T[n]$ that returns the electrons' kinetic energy given their density. Writing kinetic energy in terms of $n$ alone is the hard, central problem of this whole approach; Thomas–Fermi's guess for it, $T_\mathrm{TF}[n] = C_F\int n^{5/3}$, is what makes their theory tick — and what makes it fail.
+
+    New to this vocabulary? See the [beginner glossary](../undergraduate/glossary-for-beginners.md).
+
 !!! note "Why does this chapter exist?"
     Imagine you are a physicist in 1927. The Schrödinger equation has just been written down. You know in principle how to compute the properties of every atom and molecule in the universe — you just have to solve a partial differential equation in $3N$ variables, where $N$ is the number of electrons. For helium ($N=2$) that is six variables; for benzene ($N=42$) it is one hundred and twenty-six. Nobody has any hope of doing this on paper.
     
@@ -131,6 +143,20 @@ $$
 
 This is the first **local density approximation** in the history of electronic structure theory. It is not exact; it is the leading term in a gradient expansion. We will meet that expansion again, with a vengeance, in §5.4.
 
+!!! note "Symbol guide"
+    The symbols introduced so far in this section, gathered in one place (atomic units, where $\hbar = m_e = e = 4\pi\varepsilon_0 = 1$):
+
+    | Symbol | Meaning | Units (atomic) |
+    | --- | --- | --- |
+    | $n(\mathbf r)$ | electron density: electrons per unit volume at point $\mathbf r$ | $a_0^{-3}$ |
+    | $N$ | total number of electrons, $N = \int n\,\mathrm d\mathbf r$ | dimensionless |
+    | $\Psi$ | many-electron wavefunction (the thing we are trying to avoid) | $a_0^{-3N/2}$ |
+    | $k_F$ | Fermi wavevector, $k_F = (3\pi^2 n)^{1/3}$ | $a_0^{-1}$ |
+    | $\varepsilon_F$ | Fermi energy, $\varepsilon_F = \tfrac{1}{2}k_F^2$ | Ha |
+    | $C_F$ | Thomas–Fermi constant, $\tfrac{3}{10}(3\pi^2)^{2/3}\approx 2.871$ | Ha$\cdot a_0^{2}$ |
+    | $t(n)$ | kinetic energy *density* of the uniform gas, $C_F n^{5/3}$ | Ha$\cdot a_0^{-3}$ |
+    | $T_\mathrm{TF}[n]$ | Thomas–Fermi kinetic energy *functional*, $C_F\int n^{5/3}\,\mathrm d\mathbf r$ | Ha |
+
 ## 5.1.3 The other pieces
 
 ### External potential energy
@@ -250,6 +276,9 @@ It also has an important honourable mention: by minimising over a class of norma
 
 For chemistry — which is to say, for everything we care about in materials science: bond lengths, lattice constants, surface energies, reaction barriers — Thomas–Fermi is hopeless.
 
+!!! warning "Common misunderstanding"
+    It is tempting to conclude from this section that "density-based methods cannot work". That is the wrong lesson. Thomas–Fermi fails not because the density is an inadequate variable, but because one *specific* ingredient — a purely **local** kinetic-energy functional $C_F\int n^{5/3}$ — is too crude. It cannot see shell structure, and (Teller's theorem) it binds no molecule. The density itself is fine: Hohenberg and Kohn later prove it carries *all* the information. The fix, supplied by Kohn and Sham (§5.3), is not to abandon the density but to compute the kinetic energy from orbitals instead of from a local formula. So: blame the local kinetic functional, not the density.
+
 **No shell structure.** The 5/3 power in the kinetic functional treats the density in a hydrogen atom as if it were a slab of uniform gas of the same local density. Real atoms have shells, sharp radial features arising from the orthogonality of $\phi_{1s}, \phi_{2s}, \phi_{2p},\dots$ — quantum interference between orbitals. The local-uniform kinetic functional cannot represent this; the predicted radial density for, say, argon is a smooth monotone decay, with no hint of the K, L, M shells.
 
 **No covalent bonding: Teller's no-binding theorem.** Edward Teller proved in 1962 a striking and discouraging result: *within Thomas–Fermi theory, no molecule is stable*. That is, for any arrangement of nuclei, the Thomas–Fermi energy of the molecule as a function of internuclear separation has its minimum at infinite separation — atoms always prefer to dissociate. We state the theorem carefully and sketch the structure of the proof; for the full argument see Lieb and Simon's mathematically rigorous treatment (Adv. Math. **23**, 22 (1977)).
@@ -324,3 +353,15 @@ A practical density functional theory exists. The next sections build it.
 
 !!! note "Remark: historical attribution"
     Thomas published his analysis in *Proc. Camb. Phil. Soc.* **23**, 542 (1927), independently of Fermi who published in *Rend. Accad. Naz. Lincei* **6**, 602 (1927). Both papers proposed essentially the same functional, and the field has used "Thomas–Fermi" symmetrically ever since. Dirac's contribution (1930) added the exchange term and originated the name *exchange energy* in the DFT context, though the exchange operator itself goes back to Fock's 1930 paper on Hartree–Fock theory.
+
+!!! question "Check yourself"
+    1. What basic variable does Thomas–Fermi theory use *instead of* the many-electron wavefunction $\Psi$, and why is that such a large saving?
+    2. Why is Thomas–Fermi theory called *variational*? What quantity is minimised, and under what constraint?
+    3. The kinetic energy functional $T_\mathrm{TF}[n] = C_F\int n^{5/3}$ is "local". What does *local* mean here, and which physical feature does that locality fail to capture inside a real atom?
+    4. Name one concrete thing Thomas–Fermi gets wrong, and say in one sentence why.
+
+??? success "Answers"
+    1. It uses the **electron density** $n(\mathbf r)$, a function of just $3$ coordinates, in place of $\Psi(\mathbf r_1,\dots,\mathbf r_N)$, a function of $3N$ coordinates. For $N$ electrons the wavefunction needs of order (grid points)$^{N}$ numbers while the density needs only (grid points) numbers — the curse of dimensionality is removed.
+    2. Because the working principle is to **minimise the total energy functional** $E_\mathrm{TF}[n]$ over all candidate densities, subject to the constraint that they integrate to the correct electron number, $\int n\,\mathrm d\mathbf r = N$. The ground-state density is the minimiser; the constraint is enforced by the Lagrange multiplier $\mu$ in equation (5.9).
+    3. *Local* means the kinetic energy density at a point $\mathbf r$ is fixed by the value of $n$ *at that same point alone* — it uses the uniform-gas formula $C_F n(\mathbf r)^{5/3}$ and ignores how $n$ varies nearby (no $\nabla n$). Inside a real atom this misses **shell structure** (K, L, M shells), which comes from orbital orthogonality and shows up only through the spatial variation of the density.
+    4. Any one of: **no molecular binding** (Teller's theorem — the energy is lowest with the atoms infinitely apart, because the local kinetic functional overcharges for the density build-up in a bond); **no shell structure** (the predicted radial density is a smooth monotone decay); or **no negative ions** (TF cannot bind more electrons than the nuclear charge, since correlation, absent in TF, is what stabilises anions).

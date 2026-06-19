@@ -12,6 +12,9 @@ $$
 
 is, in principle, the answer to almost every question we want to ask about a material at zero temperature. In practice, the wavefunction $\Psi(\mathbf r_1,\sigma_1,\dots,\mathbf r_N,\sigma_N)$ lives in a $3N$-dimensional configuration space. Store it on a coarse $10^3$ grid for one electron and the cost is $10^3$ floats; for $N$ electrons, $10^{3N}$. For a single atom of iron — $N=26$ — that is $10^{78}$ numbers, more than the atoms in the visible universe. Hartree–Fock cuts this catastrophic scaling by restricting $\Psi$ to a single Slater determinant, but it pays for that simplicity in lost correlation energy that is qualitatively important for almost every chemical bond.
 
+!!! note "In plain language"
+    The exact answer to "how does this material behave?" is a single huge object — the many-electron wavefunction — and it is far too big to ever write down or store, even for one iron atom. Density functional theory makes a bold bet: that a much smaller and more familiar object, the electron density $n(\mathbf r)$ (just "how much electron charge sits at each point in space"), already contains everything we actually need to know. This chapter builds that idea up carefully, from why such a bet could possibly be allowed to how we cash it out in a calculation we can run.
+
 This chapter develops the framework that, for the past forty years, has dominated electronic structure calculations in materials science and chemistry: **density functional theory** (DFT). The central idea is breathtakingly economical. Rather than the $3N$-dimensional wavefunction, take the **electron density**
 
 $$
@@ -21,6 +24,15 @@ $$
 a single three-dimensional scalar field, as the fundamental variable. Hohenberg and Kohn proved in 1964 that this is enough: the ground-state density determines, in principle, every property of the system. Kohn and Sham then provided, in 1965, a practical scheme that turns the interacting many-body problem into a set of self-consistent single-particle equations of the same formal cost as Hartree–Fock — but with correlation included, at least in principle.
 
 What follows is a careful, derivation-first development.
+
+!!! tip "How to read this chapter (undergraduate)"
+    This chapter is dense, but it rewards a layered reading — match it to the three layers from the [undergraduate guide](../undergraduate/learning-paths.md):
+
+    - **Layer 1 — get the intuition.** Aim only to come away with three pictures: *why* the density is enough to work with, *what* the Kohn–Sham trick does (replace the hard interacting problem with an easier non-interacting one that has the same density), and *what* the self-consistent field (SCF) loop is (guess a density, build a potential, solve, get a new density, repeat until it stops changing). Sections 5.1, 5.3, and 5.5 carry these ideas.
+    - **Layer 2 — the derivations.** The full Hohenberg–Kohn proofs (Section 5.2) and the uniform-electron-gas derivation of LDA exchange (Section 5.4) are where the rigour lives. It is completely fine to skim these the first time and return once the intuition is solid.
+    - **Layer 3 — the judgement.** Choosing an exchange–correlation functional (Section 5.4) and knowing where DFT fails (Section 5.6) is the practitioner's craft. This matters most when you start running your own calculations in Chapter 6.
+
+    When the symbols pile up, lean on the [beginner glossary](../undergraduate/glossary-for-beginners.md) for unfamiliar terms and the [formula-reading guide](../undergraduate/formula-reading-guide.md) for decoding equations piece by piece.
 
 ## What you will find in this chapter
 

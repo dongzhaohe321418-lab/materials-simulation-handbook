@@ -1,5 +1,21 @@
 # 5.3 The Kohn–Sham Construction
 
+**What problem are we solving?** The Hohenberg–Kohn theorems (Section 5.2) guarantee that the ground-state energy *is* a functional of the density $n(\mathbf r)$ — but the hardest piece of that functional is the kinetic energy, and nobody knows how to write it accurately in terms of $n$ alone. Thomas–Fermi (Section 5.1) tried a purely local kinetic functional and it was too crude to bind a single molecule. Kohn and Sham's trick is to invent an *auxiliary* system of **non-interacting** electrons, deliberately chosen so that it has the *same density* as the real interacting system. For non-interacting electrons we have orbitals, and from orbitals we can compute almost all of the kinetic energy *exactly* — which is precisely the part that defeated every earlier attempt.
+
+!!! note "In plain language"
+    We swap one hard problem — many electrons all pushing on each other — for a set of easy ones: a handful of single-particle equations, each like an ordinary one-electron Schrödinger equation, solved over and over until they agree with themselves (self-consistency). The catch is that everything we *cannot* compute exactly gets swept into a single leftover term, the **exchange–correlation energy** $E_{xc}$. That one term is small, but it is where all the approximation lives.
+
+!!! note "Symbol guide"
+    | Symbol | Meaning | Units |
+    |---|---|---|
+    | $\psi_i$ (also $\phi_i$) | Kohn–Sham orbital $i$ of the auxiliary non-interacting system | $a_0^{-3/2}$ |
+    | $\varepsilon_i$ | Kohn–Sham eigenvalue (Lagrange multiplier) of orbital $i$ | hartree (Ha) |
+    | $n(\mathbf r)$ | electron density (same for auxiliary and real systems by design) | $a_0^{-3}$ |
+    | $v_\mathrm{KS}$ | Kohn–Sham (effective) potential of the auxiliary system | hartree |
+    | $v_H$ | Hartree potential — classical electrostatics of $n$ | hartree |
+    | $v_{xc}$ | exchange–correlation potential, $\delta E_{xc}/\delta n$ | hartree |
+    | $T_s$ | kinetic energy of the non-interacting auxiliary system (computed exactly from orbitals) | hartree |
+
 !!! note "Why does this chapter exist?"
     HK said: there exists an exact density functional. Wonderful — but they did not tell us *what it is*. We have the existence proof and no recipe. Without a recipe, DFT is a beautiful theorem with no calculations.
     
@@ -205,6 +221,11 @@ It is essential to be clear about the status of the various quantities in (5.29)
 
 This is a recurring source of misconceptions. We highlight the two most damaging.
 
+!!! warning "Common misunderstanding"
+    The Kohn–Sham orbitals $\psi_i$ and eigenvalues $\varepsilon_i$ belong to the *fictitious* non-interacting system. They are **not** the real electrons, and the $\varepsilon_i$ are **not** the true energy levels (the energies you would measure when adding or removing an electron). Treating $-\varepsilon_i$ as an ionisation energy, or reading $\varepsilon_a - \varepsilon_i$ off as an exact excitation energy, is reading more into the auxiliary system than the theory promises.
+
+    There are two important partial exceptions. (i) In *exact* DFT the highest occupied eigenvalue does have meaning: $\varepsilon_\mathrm{HOMO} = -I$, the negative of the first ionisation energy (see (5.32) below). (ii) Kohn–Sham gaps are not meaningless, but they *systematically underestimate* true fundamental gaps — a structural feature of the theory, not just a flaw of any one functional (Section 5.6).
+
 !!! warning "KS orbitals are not the real wavefunction"
     There is no physical electron in the orbital $\phi_3$. The interacting many-body wavefunction $\Psi$ is *not* a Slater determinant of $\{\phi_i\}$, and there is no claim that $\Psi \approx \mathrm{det}[\phi_i]$. The KS orbitals provide a way to compute $T_s$ and $n$; that is all they are. Visualising "the highest occupied molecular orbital" as a charge cloud, or interpreting bond patterns from individual $\phi_i$, is using KS orbitals beyond what the theory guarantees. They often *look* reasonable — they tend to resemble Hartree–Fock orbitals — but this is a happy coincidence, not a theorem.
 
@@ -256,6 +277,16 @@ This identifies $\varepsilon_i$ as the derivative of the total energy with respe
 Combining Janak's theorem with the variational principle gives a powerful diagnostic of approximate functionals. For the *exact* functional, the total energy $E(N)$ as a function of (continuous) electron number is piecewise *linear* between integers, with kinks at each integer. The slope between $N$ and $N+1$ is $-A$ (negative of the electron affinity); the slope between $N-1$ and $N$ is $-I$. The kink at integer $N$ is the *derivative discontinuity* $\Delta = I - A - (\varepsilon_\mathrm{LUMO}-\varepsilon_\mathrm{HOMO})$ discussed in §5.6.
 
 Approximate functionals (LDA, GGA) violate piecewise linearity: their $E(N)$ is *concave-up* between integers, with no kink. This violation is the formal expression of *self-interaction error*: electrons artificially want to delocalise to non-integer numbers because the approximate functional underpenalises fractional charges. The integral of this curvature error over an integer interval $\int_{N-1}^{N}[E_\mathrm{approx}(N')-E_\mathrm{linear}(N')]\,\mathrm dN' \sim 0.1$–$1\;\text{eV}$ is the diagnostic, and modern functional development (e.g., $\omega$B97X-V, optimally-tuned range-separated hybrids) explicitly minimises it.
+
+!!! question "Check yourself"
+    1. What *is* the auxiliary system in the Kohn–Sham construction, and what single property does it share — by design — with the real interacting system?
+    2. In the decomposition $E = T_s + U_H + E_{xc} + \int v_\mathrm{ext}\,n$, which pieces are computed exactly and which one holds all the approximation?
+    3. Are the Kohn–Sham eigenvalues $\varepsilon_i$ excitation energies? Is there any exception?
+
+    ??? success "Answers"
+        1. A fictitious system of **non-interacting** electrons moving in an effective potential $v_\mathrm{KS}$. It is chosen so that its ground-state density $n(\mathbf r) = \sum_i|\psi_i|^2$ equals the density of the real interacting system — that shared density is the only thing tying the two together.
+        2. $T_s$ (exact, from the orbitals), $U_H$ (exact, classical electrostatics) and $\int v_\mathrm{ext}\,n$ (exact) are all computed without approximation; every approximation in a real DFT calculation lives in $E_{xc}$ alone.
+        3. No — in general the $\varepsilon_i$ are Lagrange multipliers of the auxiliary system, not excitation or removal energies. The one guaranteed exception is the HOMO in *exact* DFT, where $\varepsilon_\mathrm{HOMO} = -I$. Differences such as $\varepsilon_a - \varepsilon_i$ are at best crude estimates, and KS gaps underestimate true gaps (Section 5.6).
 
 ## 5.3.5 The kinetic energy: $T_s$ versus $T$
 

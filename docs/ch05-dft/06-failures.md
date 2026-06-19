@@ -11,6 +11,19 @@ DFT is the workhorse of computational materials science because it is, on the wh
 
 This section gives an honest tour. Knowing where DFT breaks is the difference between a trustworthy calculation and a published mistake. For each failure mode we identify the symptom, the underlying physics, and the higher-level methods one reaches for instead.
 
+**What problem are we solving?** DFT is the workhorse of the field — but a workhorse is only safe in the hands of someone who knows where it stumbles. A calculation that has converged tidily and printed a clean number can still be *systematically* wrong, and it will not warn you. The purpose of this section is to make you a responsible user: someone who recognises the handful of situations where standard DFT gives a confident but incorrect answer, so you are never fooled into trusting a number just because the code ran without complaint.
+
+!!! note "In plain language"
+    DFT fails in a small number of recognisable *families*, and it is worth carrying them in your head:
+
+    - **Band gaps come out too small.** Plain LDA/GGA functionals underestimate semiconductor and insulator gaps, sometimes badly enough to predict a metal where there is none.
+    - **Van der Waals (dispersion) forces go missing.** The gentle "stickiness" between non-bonded fragments — graphite layers, molecular crystals, noble-gas dimers — is a long-range correlation effect that a local functional simply cannot see.
+    - **Strong correlation breaks the picture.** In some transition-metal oxides (NiO, CoO, FeO) and $f$-electron systems, electrons localise so strongly that the single-orbital Kohn–Sham picture is the wrong starting point, and DFT can wrongly predict a metal.
+    - **Self-interaction (delocalisation) error.** An electron spuriously feels its own charge, so functionals tend to over-spread electrons — visible most starkly when a stretched bond dissociates into unphysical fractional charges.
+    - **Excited states are out of reach.** Kohn–Sham DFT is a *ground-state* theory by construction; optical absorption, fluorescence and the like need a different framework (TD-DFT, GW+BSE).
+
+    None of these are bugs. They are the known limits of an approximate ground-state theory, and each has a known remedy described below.
+
 !!! abstract "Key idea (Chapter 5.6)"
     Approximate Kohn–Sham DFT fails for a small but important set of systems and properties: band gaps (LDA/GGA underestimate by 30–100%); van der Waals binding (no $-C_6/R^{6}$ tail); strongly correlated electrons (Mott insulators predicted as metals); charge-transfer states (fractional charges at dissociation); excited states (a fundamentally ground-state theory). Each failure has a known physical mechanism — self-interaction error, missing derivative discontinuity, missing non-local correlation — and a known remedy: hybrids, DFT+U, GW, DMFT, CCSD(T). Knowing the failure modes is as important as knowing the theory.
 
@@ -64,8 +77,14 @@ Even setting aside the derivative discontinuity, LDA/GGA *Kohn–Sham gaps thems
     
     The PBE gap error of $\sim 1\;\text{eV}$ is roughly half attributable to the derivative discontinuity (which PBE sets to zero) and half to self-interaction error in the Ti $3d$ states. HSE06 fixes about $70\%$ of the gap error through its 25% exact exchange; $G_0W_0$ corrects the remainder via dynamical screening. The price is a $\sim 100\times$ cost increase for $G_0W_0$ relative to PBE.
 
+!!! warning "Common misunderstanding: the underestimated gap is not a bug"
+    A natural first reaction to a too-small gap is to assume something went wrong: a loose convergence threshold, too few $k$-points, an unconverged SCF. **It is none of these.** Tightening every numerical setting will not move a PBE gap towards experiment. The underestimate is *intrinsic* to the theory, for two reasons. First, the quantity you read off is a difference of **Kohn–Sham eigenvalues**, which belong to the *auxiliary non-interacting system*, not to the real interacting electrons. Second, the exact fundamental gap contains the **derivative-discontinuity** contribution $\Delta_{xc}$ of Eq. (5.46), and any semi-local functional (LDA, GGA, meta-GGA) has $\Delta_{xc}=0$ — so it omits a structural piece of the gap of order $0.5$–$2$ eV. The cure is therefore a *better physical model*, not better numerics: a hybrid such as HSE06 restores part of the discontinuity, and **GW** (named above) supplies the proper quasiparticle correction.
+
 !!! warning "Do not over-interpret PBE band gaps"
     A PBE band gap is not "the band gap". It is the Kohn–Sham gap of a particular approximate functional. For predictions of optical or transport gaps, use HSE06 or GW; for ordering of mid-band features, PBE often suffices. Always state the functional alongside the gap.
+
+!!! note "Kohn–Sham eigenvalues are interpretive, not physical excitation energies"
+    The eigenvalues $\varepsilon_i$ of the Kohn–Sham equations are genuinely useful for interpretation — they order the states, sketch the band structure, and locate features — but they are properties of the fictitious non-interacting system (Section 5.3), not, in general, true excitation or removal energies. The one rigorous exception is the highest occupied eigenvalue, which in *exact* KS theory equals minus the ionisation potential. Treat the rest as a guide, and obtain real excitation energies from a method designed for them (GW, $\Delta$-SCF, TD-DFT).
 
 ## 5.6.2 Van der Waals dispersion
 
@@ -261,6 +280,16 @@ But it is not magic. There is no single functional that is best for everything; 
 
 Chapter 6 turns to the practical business of running DFT calculations: plane waves, pseudopotentials, $k$-point sampling, convergence testing, and the choice of code. Chapter 7 covers the post-DFT methods touched on here — GW, BSE, DMFT — in more depth. The Hohenberg–Kohn–Kohn–Sham theorem is, in the end, an existence proof; the practical art begins with knowing how to use it well, and when to put it down.
 
+!!! question "Check yourself"
+    1. Name **three** of DFT's systematic failure modes and, for each, the underlying cause in one phrase.
+    2. A colleague says "my silicon gap is too small, I'll just tighten the convergence and add more $k$-points." Will that fix it? Why or why not?
+    3. Why are excited states fundamentally hard for Kohn–Sham DFT?
+
+    ??? success "Answers"
+        1. Any three of, for example: **band-gap underestimation** (missing derivative discontinuity $\Delta_{xc}$ plus self-interaction error); **missing van der Waals binding** (a local functional cannot capture the long-range $-C_6/R^{6}$ dispersion correlation); **strong-correlation failures** in Mott insulators (the on-site repulsion $U$ dominates, so the single-determinant KS picture breaks down); **self-interaction / delocalisation error** (an electron feels its own charge, spreading density and giving fractional charges at dissociation); **excited states** (the framework is ground-state by construction).
+        2. **No.** The gap error is intrinsic, not numerical. Semi-local functionals set $\Delta_{xc}=0$ and the quantity read off is a Kohn–Sham eigenvalue difference for the auxiliary non-interacting system. No amount of tighter SCF convergence or denser $k$-mesh changes that; you need a better functional (HSE06) or a quasiparticle method (GW).
+        3. Because the Hohenberg–Kohn theorems (and the Kohn–Sham construction) establish that the *ground-state* density determines the system; they say nothing about excited states, and the KS eigenvalues are auxiliary objects (Section 5.3), not excitation energies. Accessing excited states requires an extended framework — TD-DFT for molecules, GW+BSE for solids, or wavefunction methods such as EOM-CCSD.
+
 ### Summary of §5.6 — what to remember in 3 months
 
 - **Band gaps**: LDA/GGA underestimate by 30–100%, due to missing derivative discontinuity + SIE. Use HSE06 (cheap fix) or GW (expensive correct).
@@ -273,3 +302,16 @@ Chapter 6 turns to the practical business of running DFT calculations: plane wav
 
 !!! note "Remark: ML potentials and DFT errors"
     Machine-learning interatomic potentials inherit the errors of the DFT functional they are trained on, *exactly*. If you train a GAP or MACE model on PBE forces, it will reproduce PBE-overbound vdW interactions, PBE band gaps, PBE bond lengths. The model is at best a surrogate for the functional; it cannot exceed the accuracy of the training labels. This is the *garbage-in-garbage-out* principle of ML, made specific. In Chapter 9 we shall see how to choose training functionals appropriate to downstream tasks.
+
+!!! success "What to remember from Chapter 5"
+    Stepping back over the whole chapter, the logical chain of density-functional theory is:
+
+    - The **electron density** $n(\mathbf r)$ replaces the many-body wavefunction as the basic variable — three coordinates instead of $3N$.
+    - The **Hohenberg–Kohn theorems** make this legitimate: the ground-state density determines the external potential, and hence everything, and a variational principle holds for the density.
+    - The **Kohn–Sham construction** makes it computable, mapping the interacting problem onto a fictitious system of non-interacting orbitals that reproduce the true density.
+    - The **exchange–correlation energy** $E_{xc}$ holds everything we do not know exactly and *must be approximated* (LDA, GGA, meta-GGA, hybrids) — this is where all the modelling choices, and most of the errors, live.
+    - The **self-consistent field (SCF) loop** solves the resulting coupled equations, iterating density and potential to self-consistency.
+    - The **Kohn–Sham eigenvalues** are auxiliary quantities — excellent for interpretation, but not in general physical excitation energies.
+    - And you should **know the failure modes** — band gaps, van der Waals, strong correlation, self-interaction, excited states — so you can recognise when DFT is being quietly wrong.
+
+    With the theory in hand, [Chapter 6](../ch06-running-dft/index.md) turns to running real DFT: plane waves, pseudopotentials, $k$-point sampling and convergence testing.

@@ -1,5 +1,29 @@
 # 5.4 Exchange–Correlation Functionals
 
+**What problem are we solving?** The Kohn–Sham equations (§5.3) are *exact* except for one piece: the exchange–correlation energy $E_{xc}[n]$. Everything in the many-electron problem that we cannot write down exactly — the subtle ways electrons avoid one another — is swept into this single term. We do not know it in closed form. The whole art of practical DFT is therefore choosing a good *approximation* to $E_{xc}[n]$; that one choice sets the accuracy of every number the calculation produces.
+
+!!! note "In plain language"
+    *Exchange* and *correlation* both describe how electrons stay out of each other's way, but for two different reasons.
+
+    - **Exchange** comes from the Pauli principle: two electrons of the *same spin* cannot be in the same place, because the wavefunction must be antisymmetric. So same-spin electrons automatically avoid each other, which lowers their repulsion. This part is "free" in the sense that even a single Slater determinant captures it.
+    - **Correlation** is the *extra* avoidance on top of that: *all* electrons (same spin or not) shuffle their motion to keep apart and reduce Coulomb repulsion further. This is the genuinely hard, many-body part.
+
+    "**Jacob's ladder**" (used throughout this section) is just a ranking of approximations by *how much information about the density they look at*: the density value $n$ alone (LDA), then its gradient $\nabla n$ (GGA), then the kinetic-energy density $\tau$ (meta-GGA), then a slice of exact exchange built from the orbitals (hybrid). Higher rungs use more information — they are not automatically "more correct" (see the warning below).
+
+!!! note "Symbol guide"
+    | Symbol | Meaning | Notes |
+    |---|---|---|
+    | $E_{xc}[n]$ | exchange–correlation **energy** (a functional of the whole density) | the one unknown term; units of energy (Ha or eV) |
+    | $\varepsilon_{xc}$ | exchange–correlation energy **per particle** at a point | $E_{xc}=\int n\,\varepsilon_{xc}\,\mathrm d\mathbf r$; written $\epsilon_{xc}$ elsewhere on this page |
+    | $n(\mathbf r)$ | electron number density at point $\mathbf r$ | the basic variable of DFT; units of (length)$^{-3}$ |
+    | $\nabla n$ | gradient of the density | how fast $n$ varies; the extra ingredient a GGA uses |
+    | **LDA** | local density approximation — rung 1 | uses $n$ only |
+    | **GGA** | generalised gradient approximation — rung 2 | uses $n$ and $\nabla n$ |
+    | **meta-GGA** | rung 3 | adds kinetic-energy density $\tau$ |
+    | **hybrid** | rung 4 | mixes in a fraction of exact exchange |
+
+    For a fuller list of beginner terms, see the [glossary for beginners](../undergraduate/glossary-for-beginners.md).
+
 !!! note "Why does this chapter exist?"
     Kohn–Sham theory (§5.3) is exact *in principle* — if we knew the exchange–correlation functional $E_{xc}[n]$ in closed form, we could compute the energy of any molecule or crystal to arbitrary accuracy. We do not know it in closed form. What we have is *approximations* — and over sixty years, hundreds of them. Choosing the right one is the central practical decision in any DFT calculation.
     
@@ -53,6 +77,24 @@ The first three rungs are purely *semi-local* — the value of $\epsilon_{xc}$ a
 
     If any of these is shaky, re-read the preceding section before continuing.
 
+!!! warning "Common misunderstanding"
+    A higher rung is **not** automatically more accurate for every property — and it always costs more.
+
+    - The ladder is a guide, not a guarantee. A well-built GGA can beat a poorly-built meta-GGA, and for some quantities LDA is still surprisingly competitive (see the cancellation argument above).
+    - **LDA and GGA remain the workhorses** of large-scale and high-throughput materials science precisely because they are cheap and robust.
+    - **Hybrids** (rung 4) substantially help band gaps, but they cost roughly $10$–$30\times$ a GGA because of the non-local exact-exchange term.
+    - **Van der Waals (dispersion) is a separate issue from the rung.** *No* semi-local functional — LDA, GGA, or meta-GGA — has a $-C_6/R^{6}$ tail. You must add an explicit correction (D3/D4, vdW-DF, or use SCAN+rVV10) for non-bonded fragments (§5.4.6).
+
+!!! question "Check yourself"
+    1. What exactly is swept into $E_{xc}[n]$, and why does it make Kohn–Sham theory only approximate in practice?
+    2. What *extra* piece of information does a GGA use that an LDA does not?
+    3. Why are hybrid functionals so much more expensive than LDA, GGA, or meta-GGA?
+
+    ??? success "Answers"
+        1. Everything we cannot compute exactly about electron–electron interaction beyond the classical Hartree term — specifically the exchange (same-spin Pauli avoidance) and correlation (all-electron extra avoidance) energies, plus the difference between the true kinetic energy and the Kohn–Sham non-interacting kinetic energy. Kohn–Sham is exact *if* $E_{xc}[n]$ is known; since it is not, we approximate it.
+        2. The gradient of the density, $\nabla n$ (entering through the dimensionless reduced gradient $s$ of equation 5.38). LDA sees only the local value $n$; a GGA also sees how fast $n$ is changing.
+        3. Hybrids include a fraction of *exact (Hartree–Fock) exchange*, which is **non-local**: it couples orbitals at two different points $\mathbf r$ and $\mathbf r'$ (equation 5.41). Evaluating it scales far worse than the $\mathcal O(N)$ semi-local functionals — typically $10$–$30\times$ the cost of a GGA on the same system.
+
 ## 5.4.2 LDA: the local density approximation
 
 The simplest approximation: pretend that, locally, the electron gas is uniform. Define an exchange–correlation energy density per particle, $\epsilon_{xc}^\mathrm{unif}(n)$, for a uniform electron gas of density $n$. Then
@@ -98,6 +140,9 @@ $$
 \epsilon_x^\mathrm{unif}(n) = -\frac{3}{4\pi}k_F = -\frac{3}{4}\Big(\frac{3}{\pi}\Big)^{1/3}\,n^{1/3}.
 \tag{5.35}
 $$
+
+!!! note "Reading the $n^{4/3}$ form"
+    The page already derives LDA exchange in full below, so we only flag the intuition: because $E_x^\mathrm{LDA}\propto\int n^{4/3}\,\mathrm d\mathbf r$, *denser regions contribute disproportionately more* exchange energy (the integrand grows faster than $n$ itself), and the exchange energy per particle scales as $n^{1/3}$ — exactly the density scaling made explicit by the $1/r_s$ form in the note that follows equation (5.36).
 
 Equation (5.35) is Dirac's 1930 result. The LDA exchange functional is therefore
 

@@ -8,7 +8,79 @@ Eight problems, with worked solutions inline. Difficulty levels:
 
 Answer in your own words, derive every step, and run the code yourself.
 
+!!! tip "How to use these exercises"
+
+    These exercises are now organised into five levels, from gentlest to hardest:
+
+    - **A. Recall** — short vocabulary and definition checks (one line each).
+    - **B. Explain in words** — conceptual short answers, no algebra required.
+    - **C. Work through the mathematics** — the existing derivations and pen-and-paper problems (Exercises 5.1–5.5).
+    - **D. Code and algorithms** — modify and run the SCF code (Exercises 5.6–5.8).
+    - **E. Apply and critique** — judgement calls: when to trust DFT, how to diagnose a wrong result.
+
+    If you are studying on your own for the first time, **start at A and B**. They build the vocabulary and intuition you need before the existing ★/★★ problems in C–E will make sense. Do not jump straight to Exercise 5.1 if the words "functional", "self-consistent", or "exchange–correlation" are still hazy.
+
 ---
+
+## A. Recall
+
+Short questions to check you know the vocabulary. Each should take one line.
+
+<span class="diff-easy">★ easy</span> **A1.** What variable does DFT use as its fundamental quantity, instead of the many-electron wavefunction?
+
+<span class="diff-easy">★ easy</span> **A2.** What two contributions does the universal functional $F[n]$ contain?
+
+<span class="diff-easy">★ easy</span> **A3.** What is the exchange–correlation energy $E_{xc}$, in words?
+
+<span class="diff-easy">★ easy</span> **A4.** In the Kohn–Sham scheme, what is computed from orbitals rather than directly from the density?
+
+<span class="diff-easy">★ easy</span> **A5.** What quantity does the SCF loop iterate until it stops changing (self-consistency)?
+
+<span class="diff-easy">★ easy</span> **A6.** What does "LDA" stand for, and what is its defining assumption?
+
+??? success "Answers"
+
+    **A1.** The electron density $n(\mathbf r)$, a function of three spatial coordinates — replacing the $3N$-coordinate wavefunction.
+
+    **A2.** The (interacting) kinetic energy and the electron–electron interaction energy. In the Kohn–Sham split it is written as the non-interacting kinetic energy $T_s[n]$, the Hartree energy $U_H[n]$, and the exchange–correlation energy $E_{xc}[n]$.
+
+    **A3.** Everything not captured by the non-interacting kinetic energy and the classical Hartree term: exchange, correlation, and the kinetic-energy correction. It is the small "everything we don't know exactly" term that must be approximated.
+
+    **A4.** The non-interacting kinetic energy $T_s$, evaluated from the Kohn–Sham orbitals $\phi_i$. This is the whole point of the Kohn–Sham construction.
+
+    **A5.** The electron density (equivalently the Kohn–Sham potential $v_{ks}[n]$ built from it). The loop stops when the density that comes out matches the density that went in.
+
+    **A6.** Local Density Approximation. It assumes that at each point the exchange–correlation energy density is that of a uniform electron gas with the local density $n(\mathbf r)$.
+
+---
+
+## B. Explain in words
+
+Conceptual short answers. No algebra — a paragraph each.
+
+<span class="diff-easy">★ easy</span> **B1.** In one paragraph, why did Kohn and Sham choose to compute the kinetic energy from orbitals instead of from an explicit functional of the density?
+
+<span class="diff-easy">★ easy</span> **B2.** Explain why a converged SCF calculation is not necessarily a *correct* result.
+
+<span class="diff-easy">★ easy</span> **B3.** Explain in words why semi-local DFT (LDA/GGA) systematically underestimates band gaps.
+
+<span class="diff-easy">★ easy</span> **B4.** A colleague says "DFT is exact, so any disagreement with experiment must be a bug." In a sentence or two, say what is right and what is wrong about this.
+
+??? success "Hints and answers"
+
+    **B1.** A pure density functional for the kinetic energy (Thomas–Fermi style) is very inaccurate — kinetic energy is large and sensitive to the shell structure of the density, which a local functional misses (you see this quantitatively in Exercise 5.3). By reintroducing a set of single-particle orbitals, the dominant part of the kinetic energy, $T_s$, can be evaluated essentially exactly, leaving only a small unknown remainder ($E_{xc}$) to approximate. The trade is more computational cost (solving for orbitals) in exchange for far higher accuracy.
+
+    **B2.** Convergence only means the loop reached a fixed point: the output density equals the input density for the *chosen* functional. The result is only as good as that functional. A converged LDA number can still be wrong because LDA is approximate (self-interaction, delocalisation, gap errors). Convergence is necessary, not sufficient — see Exercises 5.4 and 5.8.
+
+    **B3.** The Kohn–Sham gap (difference of the LUMO and HOMO eigenvalues) is not the true fundamental gap; they differ by the derivative discontinuity of $E_{xc}$, which semi-local functionals lack. On top of that, self-interaction and delocalisation errors push occupied and unoccupied levels closer together. The result is a systematic underestimate, often by 30–100%.
+
+    **B4.** Right: the *theory* (Hohenberg–Kohn plus Kohn–Sham) is exact in principle. Wrong: in practice we always use an *approximate* exchange–correlation functional, so disagreement with experiment is usually the functional's error, not a code bug — though convergence settings and pseudopotentials can also be at fault.
+
+---
+
+## C. Work through the mathematics
+
+*Level C (work through the mathematics)*
 
 ## Exercise 5.1 — Hohenberg–Kohn I in your own words **(★)**
 
@@ -30,6 +102,8 @@ $$
 Symmetrically, $E^{(2)} < E^{(1)} + \int n_0(v^{(2)} - v^{(1)})\,\mathrm d\mathbf r$. Adding gives $E^{(1)} + E^{(2)} < E^{(1)} + E^{(2)}$ — contradiction. Hence $v^{(1)} - v^{(2)} = \mathrm{const}$. $\blacksquare$
 
 ---
+
+*Level C*
 
 ## Exercise 5.2 — LDA exchange energy of a uniform density **(★)**
 
@@ -59,6 +133,8 @@ $$
 $0.05^{5/3} \approx 9.21\times 10^{-4}$, so $T_\mathrm{TF} \approx 2.871\times 0.921 \approx 2.64\;\mathrm{Ha}$. Note exchange is roughly $-5$ times the kinetic energy at this low density — characteristic of the low-density regime where exchange dominates.
 
 ---
+
+*Level C*
 
 ## Exercise 5.3 — Constrained search for two electrons in a 1D box **(★★)**
 
@@ -92,6 +168,8 @@ The Thomas–Fermi value (~0.25 Ha) underestimates the exact non-interacting kin
 
 ---
 
+*Level C*
+
 ## Exercise 5.4 — Self-interaction of one electron **(★★)**
 
 A single electron in a hydrogen-like 1s orbital has density $n(r) = (Z^{3}/\pi)e^{-2Zr}$.
@@ -118,6 +196,8 @@ Numerically for $Z = 1$: $(3/\pi)^{1/3}/\pi^{1/3} = (3)^{1/3}/\pi^{2/3} \approx 
 
 ---
 
+*Level C*
+
 ## Exercise 5.5 — Derive the Hartree potential **(★)**
 
 Starting from $U_H[n] = \tfrac{1}{2}\iint n(\mathbf r)n(\mathbf r')/|\mathbf r-\mathbf r'|\,\mathrm d\mathbf r\,\mathrm d\mathbf r'$, derive the Hartree potential $v_H(\mathbf r) = \delta U_H/\delta n(\mathbf r)$.
@@ -143,6 +223,10 @@ $$
 This is the classical electrostatic potential of the charge distribution $n$.
 
 ---
+
+## D. Code and algorithms
+
+*Level D (code and algorithms)*
 
 ## Exercise 5.6 — Modify the SCF code: change the XC functional **(★★)**
 
@@ -176,6 +260,8 @@ Add `v_c, _ = lda_correlation_potential(n)` and `v_ks += v_c` inside the loop; u
 
 ---
 
+*Level D (code and algorithms)*
+
 ## Exercise 5.7 — Initial guess sensitivity **(★★)**
 
 Re-run the SCF code with three different initial densities:
@@ -191,6 +277,8 @@ For each, report the number of SCF iterations to convergence and the converged t
 Caveat: for strongly correlated systems (which our toy LDA-X H chain is *not*) different initial guesses can converge to different local minima — broken-symmetry solutions, different magnetic orderings — and the choice of initial guess becomes a physically meaningful decision.
 
 ---
+
+*Level D (code and algorithms)*
 
 ## Exercise 5.8 — A Mott-like failure **(★★★)**
 
@@ -211,6 +299,30 @@ In the SCF code, modify the geometry: place two protons close together at $x = 9
 (c) For widely separated H$_2^{+}$, the exact energy is $-0.5$ Ha (one neutral H atom). LDA-X with the symmetric delocalised solution will give a *lower* (more negative) energy due to spurious self-interaction stabilisation — typically 0.1–0.2 Ha too low. This is the *delocalisation error* of semi-local functionals, the underlying cause of many DFT pathologies discussed in §5.6.
 
 The lesson: even a small toy SCF code, faithfully implemented, exhibits the same systematic failure modes as production DFT. Self-interaction error is not a numerical artefact; it is intrinsic to the choice of approximate functional and survives any amount of numerical care.
+
+---
+
+## E. Apply and critique
+
+Higher-level questions about choosing DFT, reading its output, and recognising when it fails. These are open-ended — there is no single numerical answer.
+
+**E1.** You compute a semiconductor's band gap and get a value substantially smaller than the experimental gap. List three plausible causes and, for each, how you would check it.
+
+??? note "Hint"
+
+    Think about (i) the functional itself — the well-known semi-local gap underestimate and the missing derivative discontinuity (see B3); (ii) the calculation setup — k-point sampling, plane-wave cutoff, pseudopotential, or an under-converged structure; and (iii) what "the gap" means — are you comparing the Kohn–Sham eigenvalue gap to an optical or fundamental gap? To check each: try a hybrid or $GW$ calculation for (i); run convergence tests for (ii); confirm which gap the experiment measured for (iii).
+
+**E2.** Give a situation where you would *not* trust standard semi-local DFT, and name the method you would reach for instead and why.
+
+??? note "Hint"
+
+    Strong correlation (transition-metal oxides, $f$-electron systems), fractional-charge or dissociation problems, and van der Waals–bound systems are classic failure modes. Depending on the case you might reach for DFT+U, a hybrid functional, a dispersion correction, or a higher-rung wavefunction method. Tie your choice to the specific error you are trying to fix (self-interaction, missing dispersion, static correlation).
+
+**E3.** A converged DFT relaxation gives a structure and a set of energies. Before quoting them, what three checks would you run to convince yourself the numbers are meaningful rather than artefacts?
+
+??? note "Hint"
+
+    Convergence with respect to the numerical parameters (k-points, cutoff, smearing); sensible comparison of *energy differences* rather than absolute energies; and a sanity check against a known reference (a related system, experiment, or a different functional). Recognising a failure mode early — as in Exercises 5.4 and 5.8 — is part of the job.
 
 ---
 

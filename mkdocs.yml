@@ -133,6 +133,15 @@ nav:
       - Self-Test: prerequisites-checker.md
       - Known Limits: known-limitations.md
       - Try in Jupyter (in browser): try-in-jupyter.md
+      - Undergraduate Guide:
+          - Overview: undergraduate/index.md
+          - Learning Paths: undergraduate/learning-paths.md
+          - Beginner Glossary: undergraduate/glossary-for-beginners.md
+          - Reading Formulas: undergraduate/formula-reading-guide.md
+          - Reading Code: undergraduate/code-reading-guide.md
+          - Chapter Expansion Template: undergraduate/chapter-expansion-template.md
+          - Undergraduate Projects: undergraduate/undergraduate-projects.md
+          - v1.4 Expansion Roadmap: undergraduate/expansion-roadmap-v1.4.md
   - I · Prereq:
       - Chapter 0 · Mathematics from Scratch:
           - Overview: ch00-math/index.md

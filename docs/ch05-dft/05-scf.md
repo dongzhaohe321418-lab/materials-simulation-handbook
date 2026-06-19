@@ -1,5 +1,10 @@
 # 5.5 The Self-Consistent Field Loop
 
+**What problem are we solving?** The Kohn–Sham potential $v_\mathrm{KS}$ tells us how the electrons move, so from it we can work out where the electrons are — the density $n$. But the potential itself is *built from* the density (through the Hartree and exchange–correlation terms). So we cannot compute the potential until we know the density, and we cannot compute the density until we know the potential: a chicken-and-egg loop. **Self-consistency** is how we break it. We make a guess, use it to compute a better guess, and repeat until the input and the output agree — at which point the density is *consistent with the potential it generates*. Everything in this section is machinery for doing that loop reliably.
+
+!!! note "In plain language"
+    The SCF loop is a *fixed-point iteration*: we are looking for a density that maps to itself under the rule "build the potential, solve for the orbitals, read off the new density". Concretely: **guess** a density; **build** the potential from it; **solve** the Kohn–Sham equations to get orbitals; **read off** a NEW density from those orbitals; **mix** the new density with the old one; and **repeat** until the density stops changing. A density that no longer changes is a *fixed point* — feeding it in gives the same thing back out. This is exactly the "$x = f(x)$, so iterate $x \leftarrow f(x)$" pattern described in the [formula-reading guide](../undergraduate/formula-reading-guide.md); here $x$ is the whole density $n(\mathbf r)$ and $f$ is one trip round the loop.
+
 !!! note "Why does this chapter exist?"
     The Kohn–Sham equations (§5.3) look like a one-electron Schrödinger equation: you put in a potential $v_\mathrm{KS}$, you get out orbitals and a density. But $v_\mathrm{KS}$ depends on the density! It's a chicken-and-egg problem: to compute the potential we need the density, to compute the density we need to know the orbitals, to compute the orbitals we need the potential. This circular dependence is *the* defining feature of mean-field theories — Hartree, Hartree–Fock, Kohn–Sham — and the standard cure is iteration: guess, solve, update, repeat.
     
@@ -58,6 +63,11 @@ The textbook KS-SCF loop is:
 6. **Mix.** $n^{(k+1)} = \mathcal M(n^{(k)}, n_\mathrm{out}^{(k)}; \text{history})$. Go to step 2.
 
 The interesting step is 6.
+
+!!! warning "Common misunderstanding"
+    **Convergence is not the same as correctness.** It is tempting to read "SCF converged" as "the answer is right" — but they are different claims. A calculation can converge tightly to a self-consistent density (input density $=$ output density to many decimal places) that is still *wrong*, because the physics fed into the loop — the choice of functional ($v_{xc}$), the basis or grid, the pseudopotential, the **k**-point sampling — may be inadequate. The loop only guarantees that the density is consistent with the potential it generates *for the model you specified*; it cannot tell you the model is a good description of reality.
+
+    A second, related trap: **mixing is a numerical convergence aid, not physics.** The mixing parameter $\alpha$, the Pulay history depth, and the Kerker preconditioner change how fast (and whether) you reach the fixed point — they do **not** change *which* fixed point you reach. Two runs with different $\alpha$ that both converge land on the *same* self-consistent density and the *same* energy. So you may freely tune mixing to make a stubborn calculation converge without worrying that you are biasing the physical result. (This is revisited in the closing warning of §5.5.7.)
 
 ## 5.5.2 Why naive iteration fails
 
@@ -429,6 +439,26 @@ if __name__ == "__main__":
     main()
 ```
 
+### Symbol guide: maths ↔ code
+
+Before reading the prose below, use this table to line up the equations in this section with the variable names in the listing.
+
+| Maths | Code variable | Meaning |
+|---|---|---|
+| $n^{(k)}$ (input density) | `n` (inside the loop) | the density fed *in* this iteration |
+| $n_\mathrm{out}^{(k)}$ (output density) | `n_out` | the NEW density read off the orbitals |
+| $v_\mathrm{ext}$ | `v_ext` | the fixed electron–nucleus potential |
+| $v_H[n]$ | `vH` | Hartree potential built from `n` |
+| $v_{xc}[n]$ (here LDA exchange only) | `vx` | exchange–correlation potential built from `n` |
+| $v_\mathrm{KS}$ | `v_ks` | total Kohn–Sham potential $=$ `v_ext + vH + vx` |
+| $\hat H_\mathrm{KS}$, $\{\varepsilon_i,\phi_i\}$ | `H`, `eigvals`, `eigvecs` | the KS Hamiltonian and its eigenpairs |
+| $\alpha$ (mixing parameter) | `alpha` | fraction of `n_out` blended in by linear mixing |
+| $r^{(k)} = n_\mathrm{out}-n$ (residual) | `residual` (and `res` inside `pulay_mix`) | how far from self-consistency we are |
+| tolerance | `tol` | stop once `residual < tol` |
+| $c_j$ (Pulay weights) | `coeffs` | optimal weights on the history of densities |
+
+The single most important line to find is `residual = float(np.max(np.abs(n_out - n)))`: this is $\max|n_\mathrm{out}-n^{(k)}|$, the quantity that must fall below `tol` for the loop to stop.
+
 ### How to read this code
 
 - **Grid and operators.** A uniform real-space grid of $n=256$ points on a 20-Bohr box, with periodic boundary conditions. The kinetic operator is the second-order central difference $T = -\tfrac{1}{2}D^{2}$ assembled as a dense matrix; for larger systems one would use a sparse representation.
@@ -520,6 +550,15 @@ To make the convergence behaviour concrete, we compare three mixing schemes on t
 
 The pattern is unsurprising: linear mixing with too small $\alpha$ is robust but slow; with too large $\alpha$ it oscillates; Pulay achieves the same final density in a fraction of the iterations. For production-quality plane-wave calculations on real materials (where each SCF step is $\sim 1\;\text{min}$ rather than $\sim 0.1\;\text{s}$), the speedup matters enormously.
 
+!!! tip "Running it and watching the residual fall"
+    Save the listing as `scf_1d_hchain.py` and run `python scf_1d_hchain.py`. Each line the loop prints is one trip round the SCF cycle, for example:
+
+    ```
+    iter   3   E = -2.340421    |dn|_inf = 3.50e-03
+    ```
+
+    Read it left to right: this is the 4th iteration (`iter 3`, counting from 0); the total energy is currently $-2.340421$ Ha; and `|dn|_inf` $= 3.5\times10^{-3}$ is the residual $\max|n_\mathrm{out}-n^{(k)}|$ — the largest the input and output densities disagree at any grid point. The number to watch is that last column: it should shrink towards zero. When it drops below `tol` $=10^{-6}$, the input and output densities agree everywhere to six decimal places, the loop prints `Converged`, and stops. The energy column settling (e.g. "stopped changing at the sixth decimal", $|\Delta E|<10^{-6}$) is a *convenient secondary signal* that you have reached the fixed point — but it is the density residual that is being tested here. Try changing `alpha=0.3` to `alpha=0.05` and watch the residual fall more slowly but more smoothly; that is linear mixing trading speed for stability.
+
 !!! example "Energy convergence trace"
     Running the SCF code with Pulay mixing and printing $|E^{(k+1)} - E^{(k)}|$ at each iteration produces a sequence like:
     
@@ -547,6 +586,18 @@ A field guide to common SCF pathologies and their symptoms:
 - *Energy decreasing but density residual stuck.* Numerical noise from under-converged eigensolver or too coarse a grid. Cure: tighten basis or eigensolver tolerance.
 - *DIIS divergence after looking converged.* The Pulay history has become near-singular (linearly dependent residuals). Cure: clear history and restart with linear mixing, or use trust-region DIIS.
 - *Energy NaN at iteration 1.* Almost always the Hartree integral singular due to a vanishing density at some grid point. Cure: floor the density at $n_\min\sim 10^{-10}$ before evaluating $v_{xc}$.
+
+!!! question "Check yourself"
+    1. Why is the Kohn–Sham problem *nonlinear*, even though each individual diagonalisation is a perfectly linear eigenvalue problem?
+    2. What does *mixing* actually do, and does it change the final converged density?
+    3. Why can naive iteration ($n^{(k+1)} = n_\mathrm{out}^{(k)}$) oscillate or diverge instead of settling down?
+    4. If an SCF run converges to a tight tolerance, does that guarantee the answer is physically correct?
+
+    ??? success "Answers"
+        1. The diagonalisation is linear *for a fixed potential*, but the potential $v_\mathrm{KS}[n]$ itself depends on the density $n$ that the diagonalisation produces. The map "density $\to$ potential $\to$ orbitals $\to$ new density" is therefore a nonlinear self-referential relation $n = \mathcal F[n]$, which is why it must be solved iteratively rather than in one shot.
+        2. Mixing blends the new (output) density with the previous (input) density — e.g. linear mixing keeps only a fraction $\alpha$ of the change — to damp out oscillations and reach the fixed point reliably. It is a *numerical aid only*: it changes the *path* taken to convergence and the *speed*, but not the destination. Any choice of mixing that converges lands on the same self-consistent density.
+        3. Because the SCF map can amplify errors: the screening response of the electrons can overshoot, so an excess of charge in one region provokes an over-correction that creates a deficit, then an excess again ("charge sloshing"). Formally, the SCF Jacobian can have eigenvalues with magnitude greater than 1 (especially for metals), so the error grows each step instead of shrinking. Mixing with small enough $\alpha$ brings the effective eigenvalues back inside the unit circle.
+        4. No. Convergence means the density is self-consistent *with the chosen functional, basis, pseudopotential and* **k***-points* — not that those choices describe reality. A tightly converged calculation built on an inadequate functional can give a confidently wrong answer. Convergence is necessary but not sufficient; see §5.6.
 
 ## 5.5.7 Closing the loop
 

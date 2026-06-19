@@ -1,5 +1,8 @@
 # 5.2 The Hohenberg–Kohn Theorems
 
+!!! info "Why this section exists"
+    Here is the question this whole section answers: can the ground-state *density* alone — a single function $n(\mathbf r)$ of three coordinates — in principle determine *everything* about a many-electron system? The full wavefunction $\Psi$ lives in $3N$-dimensional space and is impossibly complicated; the density is a humble object you could plot on a sheet of paper. It seems too cheap to be enough. Hohenberg and Kohn proved that, for the ground state, it *is* enough. That result is what makes "density functional theory" a legitimate, exact reformulation of quantum mechanics — not merely a convenient approximation that happens to work. Everything later in the chapter (Kohn–Sham, exchange–correlation functionals, real calculations) stands on this guarantee. If you are meeting functionals for the first time, the notation guide in `../undergraduate/formula-reading-guide.md` may help.
+
 !!! note "Why does this chapter exist?"
     Thomas and Fermi *guessed* that you could compute everything from the density alone (§5.1). It was a beautiful guess, but a guess. For thirty-five years, nobody knew whether the guess was *exactly* right or only approximately right. Was there some hidden information in the wavefunction that the density did not capture? Or did the density really determine everything — bond lengths, magnetism, the colour of a crystal — uniquely?
     
@@ -54,6 +57,24 @@ Equation (5.12) is the *only* non-trivial physics we will use in the proof of HK
 ### Where do degeneracies sit in this picture?
 
 If the ground state of $\hat H^{(1)}$ is $g$-fold degenerate, the inequality in Step 1 can become an equality when $|\Psi^{(2)}\rangle$ happens to lie in the degenerate ground-state manifold of $\hat H^{(1)}$ (which can occur even though it is the ground state of a *different* Hamiltonian). The clean fix is to work with ensembles or with the constrained-search formulation; we return to this in §5.2.5.
+
+!!! note "In plain language"
+    Strip away the formalism and the two theorems say something almost cheeky.
+
+    **Theorem I — the density is a secret fingerprint.** Two different physical systems are different because they have different external potentials $v_\mathrm{ext}$ (different nuclei in different places). Theorem I says the ground-state density quietly *encodes* that potential: no two distinct potentials can share the same ground-state density. So once you know $n_0(\mathbf r)$, you know $v_\mathrm{ext}$, which fixes the full Hamiltonian $\hat H$, which fixes the wavefunction and therefore *every* property of the system. The cheap object turns out to carry all the information of the expensive one.
+
+    **Theorem II — finding the ground state becomes a minimisation over densities.** There exists an energy functional $E[n]$ — a machine that eats a candidate density and returns a number — whose lowest value is the true ground-state energy $E_0$, reached exactly when you feed it the true ground-state density $n_0$. Any wrong density gives a *higher* energy. So instead of solving a $3N$-dimensional Schrödinger equation, we "merely" have to hunt for the density that minimises $E[n]$. This is the variational principle of DFT, now phrased in terms of the density rather than the wavefunction.
+
+    The full statements and proofs follow. The plain-language versions above are exactly correct in spirit; the formal ones add the precise hypotheses (non-degeneracy, "up to a constant", admissibility) that make them airtight.
+
+!!! note "Symbol guide"
+    | Symbol | Meaning | Units (atomic units) |
+    |---|---|---|
+    | $n(\mathbf r)$ | electron (number) density at point $\mathbf r$; $n_0$ is the *true* ground-state density | electrons per $a_0^{3}$ |
+    | $v_\mathrm{ext}(\mathbf r)$ | external one-body potential (the nuclei / applied field the electrons feel) | hartree |
+    | $E[n]$ | total-energy functional: a number assigned to each candidate density | hartree |
+    | $F[n]$ | universal functional $T[n]+V_{ee}[n]$ — same for every system, but not known in closed form | hartree |
+    | $\Psi$ | the $N$-electron wavefunction; $\Psi_0$ is the ground state | (normalised; dimensionless after integration) |
 
 ## 5.2.2 Theorem I: the density determines the potential
 
@@ -273,6 +294,13 @@ $$
 
 Minimising over $\alpha$ recovers $\alpha = \omega$ as expected, with minimum value $E_0 = \omega$. For any $\alpha\neq\omega$, $E_v[n_\alpha]>\omega$, illustrating the strict HK II inequality. This toy example also shows that the *minimum* over trial densities is what gives the ground-state energy — exactly the variational structure HK II guarantees.
 
+!!! warning "Common misunderstanding"
+    Three traps catch almost every newcomer to the Hohenberg–Kohn theorems.
+
+    - **"In principle" is doing enormous work.** HK guarantees that the universal functional $F[n]$ *exists* and is unique. It does **not** tell us how to write it down. You cannot open the HK paper, find a formula for $F[n]$, and start computing. The existence is exact; the recipe is missing — and supplying useful approximations to the missing piece has occupied the field for sixty years (this is §5.4).
+    - **The variational principle is over densities, not wavefunctions.** Ordinary quantum-mechanical variation searches over trial *wavefunctions* $\Psi$. HK II searches over trial *densities* $n(\mathbf r)$. That is the whole point — the density lives in 3 dimensions, the wavefunction in $3N$. Confusing the two collapses the entire advantage of DFT.
+    - **The theorems are about the GROUND state only.** Both theorems are statements about the ground state. They do *not* say that an excited-state density determines its potential, nor that excited-state energies follow from $E[n]$. Excited states need extra machinery (TD-DFT, ensemble DFT; see §5.6).
+
 ## 5.2.4 The universal functional $F[n]$ — exact, and unknowable
 
 We have proved that the functional
@@ -439,6 +467,18 @@ since $\hat h_\mathrm{KS}\phi_i = \varepsilon_i\phi_i$. The orbitals themselves 
 ### Asymptotic behaviour of the exact KS potential
 
 A surprisingly informative consequence of HK is the *asymptotic decay* of the exact KS potential. For a neutral finite system, the exact $v_\mathrm{KS}(\mathbf r)$ must satisfy $v_\mathrm{KS}(\mathbf r) \to -1/|\mathbf r|$ as $|\mathbf r|\to\infty$, because the outermost electron sees the unscreened nuclear charge (the inner $N-1$ electrons fully screen the other $N-1$ protons). The Hartree potential gives $-1/|\mathbf r|\cdot(N-1)/N$ for a system of $N$ electrons asymptotically; the exchange–correlation potential must therefore contribute the missing $-1/(N|\mathbf r|)$ to leading order. LDA and GGA potentials, however, decay *exponentially* with $n(\mathbf r)$ — they violate the $-1/|\mathbf r|$ asymptote by orders of magnitude at large $r$, with the result that Rydberg states, the HOMO, and the long-range tails of orbitals are all wrong. This is a structural failure that no semi-local functional can repair, and one of the motivations for range-separated hybrids (§5.4) and for asymptotically-corrected potentials.
+
+!!! question "Check yourself"
+    1. Theorem I says the ground-state density $n_0$ determines the external potential up to a constant. Starting from $n_0$, list the chain of objects you can then reconstruct, ending in "every ground-state property".
+    2. In Theorem II, *what* quantity is minimised, and *over what set* is the minimisation performed? What is the value at the minimum?
+    3. If the Hohenberg–Kohn theorems prove an exact energy functional exists, why can we still not compute molecular energies exactly from them?
+    4. True or false: HK II lets you variationally compute the energy of the first excited state by minimising $E[n]$ over excited-state densities.
+
+??? success "Answers"
+    1. $n_0 \;\rightarrow\; v_\mathrm{ext}$ (Theorem I, up to a constant) $\;\rightarrow\; \hat H = \hat T + \hat V_{ee} + \hat V_\mathrm{ext}$ (since $\hat T$ and $\hat V_{ee}$ are universal) $\;\rightarrow\; \Psi_0$ (solve the Schrödinger equation) $\;\rightarrow\;$ every ground-state observable $\langle\Psi_0|\hat O|\Psi_0\rangle$.
+    2. The total-energy functional $E_{v_\mathrm{ext}}[n] = F[n] + \int v_\mathrm{ext}\,n\,\mathrm d\mathbf r$ is minimised. The minimisation is over admissible trial *densities* $n(\mathbf r)$ (those that are $N$-representable: $n\geq 0$, $\int n = N$, finite $\int|\nabla\sqrt n|^{2}$). The value at the minimum is the true ground-state energy $E_0$, attained at $n = n_0$.
+    3. Because HK proves the universal functional $F[n]$ *exists* but gives no closed-form expression for it. Its constrained-search definition is as hard as the original many-body Schrödinger problem. We can only minimise $E[n]$ if we have a usable $F[n]$, and we do not — we have approximations (§5.4).
+    4. False. HK II is a *ground-state* variational principle; minimising $E[n]$ returns the ground-state energy and density, not excited states. Excited states require separate theory (§5.6).
 
 ## 5.2.6 Summary
 
