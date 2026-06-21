@@ -4,6 +4,80 @@ The full Hamiltonian (4.5.1) couples electrons and nuclei: every electron intera
 
 The BO separation has two pay-offs. First, it shrinks the electronic problem to a well-defined sub-problem: solve the electronic Schrödinger equation with nuclei held fixed. Second — and this is the dramatic one — it produces the **potential energy surface** $E_{\mathrm{BO}}(\mathbf R_1, \ldots, \mathbf R_{N_{\mathrm n}})$, the central object on which every classical molecular dynamics simulation, every geometry optimisation, every transition-state search, and every machine-learning interatomic potential is built. Without BO there is no PES; without a PES there is no atomistic simulation of the kind we will be doing for the rest of the book.
 
+!!! info "What problem are we solving?"
+    The exact Schrödinger equation for a molecule or solid contains
+    *both* the electrons and the nuclei as quantum particles, all moving
+    at once and all pulling on one another through the Coulomb force. The
+    wavefunction $\Psi(\mathbf r, \mathbf R)$ then depends on the
+    positions of *every* electron ($\mathbf r$) **and** *every* nucleus
+    ($\mathbf R$) simultaneously — far too many coupled variables to
+    solve. We want to split this single impossible problem into two
+    smaller, sequential problems: first work out what the electrons do
+    while the nuclei sit still, then let the nuclei move under the
+    averaged influence of the electrons. This section shows exactly when
+    that split is allowed and what we throw away to make it.
+
+!!! note "Plain-language version"
+    The trick rests on one fact: electrons are roughly two thousand times
+    lighter than nuclei, so they move roughly a hundred times faster. From
+    the electrons' point of view the nuclei are almost frozen; from the
+    nuclei's point of view the electrons are a fast-moving blur that has
+    already settled into place wherever the nuclei happen to be. So we
+    *freeze the nuclei*, solve for the fast electrons, and read off their
+    energy as a function of where we froze the nuclei. That energy,
+    plotted against nuclear positions, is the potential energy surface the
+    nuclei then roll around on. "Fast electrons, slow nuclei" is the whole
+    idea in four words.
+
+!!! note "Physical picture"
+    Imagine pulling two bonded atoms slowly apart. At every separation the
+    electron cloud between them re-shapes itself *instantly* to the
+    lowest-energy arrangement for that separation — it never lags behind.
+    Because the cloud is always in its electronic ground state for the
+    current geometry, its energy is a well-defined number $E_0(\mathbf R)$
+    that depends only on where the nuclei are, not on how fast they got
+    there. The nuclei then feel a force equal to minus the slope of this
+    energy landscape, exactly as a ball feels a force down a hill. The
+    word "adiabatic" means precisely this: the electrons follow the slow
+    change without ever jumping to an excited state.
+
+!!! tip "New vocabulary"
+    - **Born–Oppenheimer approximation** — the assumption that electrons
+      adjust instantaneously to the nuclear positions, letting us solve
+      the electronic and nuclear problems one after the other.
+    - **Potential energy surface (PES)** — the electronic ground-state
+      energy as a function of the nuclear positions, $E_0(\mathbf R)$. See
+      the [beginner glossary](../undergraduate/glossary-for-beginners.md).
+    - **Adiabatic** — a change slow enough that a system stays in the same
+      (instantaneous) eigenstate throughout; here, the electrons stay in
+      their ground state as the nuclei creep along.
+    - **Parametric dependence** — when a quantity depends on a variable
+      that is held fixed rather than differentiated. We write
+      $\psi_0(\mathbf r; \mathbf R)$ with a semicolon to flag that
+      $\mathbf R$ is a *parameter*, not a coordinate the electronic
+      operator acts on. Terms like *Hamiltonian*, *operator*,
+      *eigenvalue* and *wavefunction* are in the
+      [beginner glossary](../undergraduate/glossary-for-beginners.md).
+
+Before the algebra begins, here is every symbol used in this section in one place.
+
+| Symbol | Meaning | Units (SI) |
+|---|---|---|
+| $\mathbf r$ | collective coordinates of *all* electrons, $(\mathbf r_1, \ldots)$ | m |
+| $\mathbf R$ | collective coordinates of *all* nuclei, $(\mathbf R_1, \ldots, \mathbf R_{N_{\mathrm n}})$ | m |
+| $\Psi(\mathbf r, \mathbf R)$ | full electron-plus-nucleus wavefunction | — |
+| $\psi_k(\mathbf r; \mathbf R)$ | $k$-th electronic eigenstate at *fixed* nuclei $\mathbf R$ | — |
+| $\chi(\mathbf R)$ | nuclear wavefunction | — |
+| $\hat T_{\mathrm n}$ | nuclear kinetic-energy operator | J |
+| $\hat T_{\mathrm e}$ | electronic kinetic-energy operator | J |
+| $\hat H_{\mathrm e}(\mathbf r; \mathbf R)$ | electronic Hamiltonian at fixed nuclei (includes $\hat V_{\mathrm{nn}}$) | J |
+| $E_k(\mathbf R)$ | $k$-th electronic eigenvalue; $E_0$ is the ground-state PES | J |
+| $E$ | total energy of the whole system | J |
+| $\nabla_I$ | gradient with respect to the position of nucleus $I$ | m$^{-1}$ |
+| $m_{\mathrm e}$ | electron mass, $9.11\times10^{-31}$ kg | kg |
+| $M_I$ | mass of nucleus $I$ (proton $\approx 1836\,m_{\mathrm e}$) | kg |
+| $\mathbf A_I, B_I$ | non-adiabatic coupling matrix elements (4.6.10) | m$^{-1}$, m$^{-2}$ |
+
 ## 4.6.1 Mass and timescale disparity
 
 A proton is approximately 1836 times heavier than an electron. A typical nucleus (carbon, silicon, …) is 10$^4$ – 10$^5$ times heavier. From this single fact a great deal follows.
@@ -13,6 +87,39 @@ Suppose we have an electron and a nucleus, both with comparable kinetic energies
 $$\frac{v_{\mathrm{n}}}{v_{\mathrm{e}}} = \sqrt{\frac{m_{\mathrm e}}{M}}\sim \sqrt{\frac{1}{1836}} \approx 0.023. \tag{4.6.1}$$
 
 Nuclei move roughly a hundredth of the speed of electrons. Equivalently, the characteristic *timescale* of nuclear motion is two orders of magnitude longer than that of electronic motion. Typical molecular vibrations are at $\sim 10^{13}$–$10^{14}$ Hz (period $\sim 10$ fs); typical electronic transitions are at $\sim 10^{15}$–$10^{16}$ Hz (period $\sim 0.1$ fs).
+
+??? note "Full derivation: why nuclear energies are $\sqrt{m_{\mathrm e}/M}$ times electronic ones"
+    The single small parameter $m_{\mathrm e}/M \sim 1/1836$ controls *every* energy scale in the problem. Here is the dimensional argument Born and Oppenheimer made precise; it tells us how big vibrational and rotational energies are compared with electronic ones, and is the reason the approximation works.
+
+    **Electronic scale.** An electron is confined by the molecule to a region of size $a$ (an atomic bond length, $\sim 1$ Å). By the uncertainty principle its momentum is at least $p_{\mathrm e}\sim \hbar/a$, so its kinetic — and hence its characteristic total — energy is
+
+    $$E_{\mathrm e}\sim \frac{p_{\mathrm e}^2}{2m_{\mathrm e}} \sim \frac{\hbar^2}{2 m_{\mathrm e} a^2}. \tag{4.6.1a}$$
+
+    This sets the spacing of *electronic* energy levels (a few eV for valence electrons).
+
+    **Vibrational scale.** Now consider a nucleus vibrating in the bottom of the PES. Near the minimum the surface is harmonic, $E_0(\mathbf R)\approx E_0^{\min} + \tfrac12 M\omega_{\mathrm{vib}}^2 (\Delta R)^2$. What is the curvature $M\omega_{\mathrm{vib}}^2$? It is set by the *electronic* energy: if you displace a nucleus by the full bond length $a$ you change the molecular energy by roughly one electronic quantum $E_{\mathrm e}$ — that is what "the bond breaks" means. So the spring constant is
+
+    $$k = M\omega_{\mathrm{vib}}^2 \sim \frac{E_{\mathrm e}}{a^2} \sim \frac{\hbar^2}{2 m_{\mathrm e} a^4}, \tag{4.6.1b}$$
+
+    using (4.6.1a). The crucial point is that $k$ contains the *electron* mass, not the nuclear mass — the stiffness comes from the electron cloud, which is the glue. Solving for the vibrational frequency,
+
+    $$\omega_{\mathrm{vib}} = \sqrt{\frac{k}{M}} \sim \sqrt{\frac{\hbar^2}{2 m_{\mathrm e} a^4 M}}, \tag{4.6.1c}$$
+
+    so the vibrational quantum is
+
+    $$E_{\mathrm{vib}} = \hbar\omega_{\mathrm{vib}} \sim \frac{\hbar^2}{2 m_{\mathrm e} a^2}\sqrt{\frac{m_{\mathrm e}}{M}} = E_{\mathrm e}\,\sqrt{\frac{m_{\mathrm e}}{M}}. \tag{4.6.1d}$$
+
+    There it is: **a vibrational quantum is smaller than an electronic one by the factor $\sqrt{m_{\mathrm e}/M} = (m_{\mathrm e}/M)^{1/2}\approx 0.023$.** With $E_{\mathrm e}\sim$ a few eV this gives $E_{\mathrm{vib}}\sim$ a few $\times 10^{-2}$ eV $\sim 0.1$ eV $\sim$ a few hundred cm$^{-1}$ to a few thousand cm$^{-1}$, exactly the infrared range observed.
+
+    **Rotational scale.** A rotating molecule of moment of inertia $I\sim Ma^2$ has rotational quantum $E_{\mathrm{rot}}\sim \hbar^2/(2I)\sim \hbar^2/(2Ma^2)$. Comparing with (4.6.1a),
+
+    $$E_{\mathrm{rot}} \sim E_{\mathrm e}\,\frac{m_{\mathrm e}}{M} = E_{\mathrm e}\,(m_{\mathrm e}/M)^{1}. \tag{4.6.1e}$$
+
+    **The hierarchy.** Writing $\kappa \equiv (m_{\mathrm e}/M)^{1/4}\approx 0.15$ (so $\kappa^2 = (m_{\mathrm e}/M)^{1/2}\approx 0.023$, $\kappa^4 = m_{\mathrm e}/M \approx 5\times10^{-4}$), the three energy scales separate cleanly as powers of $\kappa$:
+
+    $$E_{\mathrm e} : E_{\mathrm{vib}} : E_{\mathrm{rot}} \;\sim\; 1 : \kappa^2 : \kappa^4. \tag{4.6.1f}$$
+
+    Each is smaller than the last by two powers of $\kappa$, i.e. by roughly a factor of $0.15^2 \approx 0.02$. This is precisely the clean separation — electronic (eV, visible), vibrational ($10^{-2}$–$10^{-1}$ eV, infrared), rotational ($10^{-3}$ eV, microwave) — referred to in the historical note at the end of the section, and it is *why* the single-surface ansatz works: the energy a slow nucleus carries is far too small to bridge the electronic gap and excite the electrons.
 
 !!! example "A concrete timescale calculation"
     The C–H stretching vibration in methane has wavenumber $\tilde\nu \approx 3000$ cm$^{-1}$. Its period is
@@ -78,6 +185,21 @@ with the electronic matrix elements
 
 $$\mathbf A_I(\mathbf R) \equiv \int \psi_0^* \nabla_I \psi_0\, d\mathbf r, \qquad B_I(\mathbf R) \equiv \int \psi_0^* \nabla_I^2 \psi_0\, d\mathbf r. \tag{4.6.10}$$
 
+!!! example "Step-by-step: substituting the ansatz and projecting onto $\psi_0$"
+    The jump from (4.6.6) to (4.6.9) packs three operations into one line. Here it is broken out.
+
+    1. **Write out the full Hamiltonian acting on the product.** With $\hat H = \hat T_{\mathrm n} + \hat H_{\mathrm e}$ and $\Psi = \chi\,\psi_0$, the Schrödinger equation $\hat H\Psi = E\Psi$ reads
+       $$\hat T_{\mathrm n}\bigl[\chi\,\psi_0\bigr] + \hat H_{\mathrm e}\bigl[\chi\,\psi_0\bigr] = E\,\chi\,\psi_0.$$
+    2. **The electronic term is easy.** $\hat H_{\mathrm e}$ acts only on electronic coordinates, and $\chi(\mathbf R)$ is a constant as far as it is concerned, so $\hat H_{\mathrm e}[\chi\,\psi_0] = \chi\,\hat H_{\mathrm e}\psi_0 = \chi\, E_0(\mathbf R)\,\psi_0$, using (4.6.4). This is equation (4.6.7).
+    3. **The nuclear-kinetic term needs the product rule.** $\hat T_{\mathrm n}=-\sum_I \tfrac{\hbar^2}{2M_I}\nabla_I^2$ differentiates with respect to the nuclei, and *both* $\chi(\mathbf R)$ and $\psi_0(\mathbf r;\mathbf R)$ depend on $\mathbf R$. Applying $\nabla_I^2$ to a product of two $\mathbf R$-dependent factors gives three pieces — this is equation (4.6.8):
+       $$\nabla_I^2(\chi\,\psi_0) = \psi_0\,\nabla_I^2\chi + 2(\nabla_I\chi)\cdot(\nabla_I\psi_0) + \chi\,\nabla_I^2\psi_0.$$
+       (Recall $\nabla^2(fg)=g\nabla^2 f + 2\nabla f\cdot\nabla g + f\nabla^2 g$ — the operator version of $(fg)''=f''g+2f'g'+fg''$.)
+    4. **Project onto $\psi_0$.** Multiply the whole equation from the left by $\psi_0^*(\mathbf r;\mathbf R)$ and integrate over *electronic* coordinates only, $\int(\cdots)\,d\mathbf r$. The nuclear factor $\chi$ and the operators $\nabla_I$ acting on it pass straight through this integral, because they do not touch $\mathbf r$. Term by term:
+       - From $\psi_0\nabla_I^2\chi$: $\;\int\psi_0^*\psi_0\,d\mathbf r\;\nabla_I^2\chi = \nabla_I^2\chi$, since $\psi_0$ is **normalised**, $\int|\psi_0|^2\,d\mathbf r = 1$.
+       - From $2(\nabla_I\chi)\cdot(\nabla_I\psi_0)$: $\;2\Bigl(\int\psi_0^*\nabla_I\psi_0\,d\mathbf r\Bigr)\cdot\nabla_I\chi = 2\,\mathbf A_I\cdot\nabla_I\chi$, defining $\mathbf A_I$ as in (4.6.10).
+       - From $\chi\,\nabla_I^2\psi_0$: $\;\Bigl(\int\psi_0^*\nabla_I^2\psi_0\,d\mathbf r\Bigr)\chi = B_I\,\chi$, defining $B_I$.
+    5. **Collect.** The electronic term contributes $E_0(\mathbf R)\,\chi\int|\psi_0|^2 d\mathbf r = E_0(\mathbf R)\,\chi$, and the right-hand side gives $E\,\chi$ the same way. Putting the kinetic pieces together yields exactly (4.6.9). The terms $2\mathbf A_I\cdot\nabla_I\chi$ and $B_I\chi$ — the ones that survive *only because $\psi_0$ depends on $\mathbf R$* — are the non-adiabatic couplings we are about to neglect.
+
 These extra terms — $\mathbf A_I$ (a "geometric vector potential") and $B_I$ (a "diagonal correction") — encode how the electronic wavefunction *changes* as the nuclei move. They are present because $\psi_0(\mathbf r; \mathbf R)$ depends on $\mathbf R$.
 
 The Born–Oppenheimer approximation, in its strict form, is the statement that these terms are negligible compared to the leading $\nabla_I^2 \chi$:
@@ -103,6 +225,36 @@ Three statements summarise the achievement.
 3. **The PES $E_0(\mathbf R)$ becomes a function of the $3N_{\mathrm n}$ nuclear coordinates only.** This is the central object of atomistic simulation. Geometry optimisation = find a local minimum of $E_0(\mathbf R)$. MD = integrate Newton's equations $M_I \ddot{\mathbf R}_I = -\nabla_I E_0(\mathbf R)$. Reaction pathways = trace minimum-energy paths on $E_0$. Vibrational analysis = diagonalise $\nabla\nabla E_0$ at a minimum (recall §4.4.5). Machine-learning potentials = learn $E_0(\mathbf R)$ from training data.
 
 In short, the BO approximation cleanly separates the problem of *electronic structure* (Chapter 5: DFT) from the problem of *nuclear motion* (Chapters 7–9: MD, lattice dynamics, ML potentials). Modern computational materials science is largely a matter of computing $E_0$ accurately enough by electronic-structure methods and then using it efficiently in some nuclear-dynamics scheme.
+
+!!! warning "Common misunderstandings"
+    - **"Born–Oppenheimer is exact."** It is not. It is an *approximation*
+      — we deliberately dropped the terms $\mathbf A_I$ and $B_I$ in
+      (4.6.11). The full wavefunction is the Born expansion
+      $\Psi=\sum_n\chi_n\psi_n$ over *all* electronic states; BO keeps one
+      term. The approximation is superbly accurate when the electronic gap
+      is large, but it is never identically exact. (Many later chapters
+      *treat* it as exact — that is a working convenience, not a claim
+      about the underlying physics.)
+    - **"BO works everywhere."** It fails wherever two electronic surfaces
+      come close: at level crossings, in metals (zero gap), and most
+      dramatically at **conical intersections**, where the dropped
+      couplings (4.6.NA) diverge. We deal with this in §4.6.6 — do not
+      read the single-surface picture as universal.
+    - **"Fixing the nuclei means the nuclei have no kinetic energy."** No.
+      We fix the nuclei only to *solve the electronic problem* (Step 1).
+      The nuclei still move — their kinetic energy reappears in the
+      nuclear equation (4.6.12). "Clamped nuclei" is a calculational
+      stage, not a physical claim that the nuclei are frozen.
+    - **"$E_0(\mathbf R)$ depends on the nuclear masses."** It does not.
+      The PES comes from the electronic Hamiltonian (4.6.3), which
+      contains no nuclear masses. Swapping H for D leaves the surface
+      identical; only the nuclear motion *on* it changes (hence isotope
+      effects, §4.6.5).
+    - **The semicolon in $\psi_0(\mathbf r; \mathbf R)$ is not decoration.**
+      It means $\mathbf R$ is a *parameter*: the electronic operator never
+      differentiates with respect to it. The *nuclear* operator
+      $\nabla_I$, by contrast, does — which is exactly why the coupling
+      terms appear.
 
 ## 4.6.5 Classical limit and the force theorem
 
@@ -166,6 +318,26 @@ that we dropped become very large. A useful identity helps see why. Take the gra
 
 $$\mathbf A_I^{(mn)} = \frac{\langle\psi_m|\nabla_I \hat H_{\mathrm e}|\psi_n\rangle}{E_n - E_m}, \qquad m \neq n. \tag{4.6.NA}$$
 
+??? note "Full derivation: the off-diagonal coupling and where the gap comes from"
+    We want $\mathbf A_I^{(mn)}=\langle\psi_m|\nabla_I\psi_n\rangle$ for two *different* electronic states, $m\neq n$. (The diagonal case $m=n$ behaves quite differently — see the remark at the end.)
+
+    1. **Start from the electronic eigenvalue equation** for state $n$ at every $\mathbf R$:
+       $$\hat H_{\mathrm e}\,|\psi_n\rangle = E_n\,|\psi_n\rangle.$$
+    2. **Differentiate both sides with respect to a nuclear coordinate** $R_I^\alpha$ (write $\nabla_I$ for short). Use the product rule on each side:
+       $$(\nabla_I\hat H_{\mathrm e})|\psi_n\rangle + \hat H_{\mathrm e}|\nabla_I\psi_n\rangle = (\nabla_I E_n)|\psi_n\rangle + E_n|\nabla_I\psi_n\rangle.$$
+    3. **Project onto a different eigenstate $\langle\psi_m|$ with $m\neq n$.** Take the inner product of the whole equation with $\langle\psi_m|$:
+       $$\langle\psi_m|\nabla_I\hat H_{\mathrm e}|\psi_n\rangle + \langle\psi_m|\hat H_{\mathrm e}|\nabla_I\psi_n\rangle = (\nabla_I E_n)\underbrace{\langle\psi_m|\psi_n\rangle}_{=\,0} + E_n\langle\psi_m|\nabla_I\psi_n\rangle.$$
+       The first right-hand term dies because eigenstates of a Hermitian operator with different labels are **orthogonal**, $\langle\psi_m|\psi_n\rangle=0$ for $m\neq n$.
+    4. **Move the Hamiltonian onto the bra.** $\hat H_{\mathrm e}$ is Hermitian, so $\langle\psi_m|\hat H_{\mathrm e} = E_m\langle\psi_m|$. The second left-hand term becomes $E_m\langle\psi_m|\nabla_I\psi_n\rangle$. The equation is now
+       $$\langle\psi_m|\nabla_I\hat H_{\mathrm e}|\psi_n\rangle + E_m\langle\psi_m|\nabla_I\psi_n\rangle = E_n\langle\psi_m|\nabla_I\psi_n\rangle.$$
+    5. **Solve for the coupling.** Collect the $\langle\psi_m|\nabla_I\psi_n\rangle$ terms:
+       $$\langle\psi_m|\nabla_I\hat H_{\mathrm e}|\psi_n\rangle = (E_n - E_m)\,\langle\psi_m|\nabla_I\psi_n\rangle,$$
+       and divide by the gap $(E_n-E_m)$, which is non-zero precisely while the states are distinct:
+       $$\mathbf A_I^{(mn)} = \langle\psi_m|\nabla_I\psi_n\rangle = \frac{\langle\psi_m|\nabla_I\hat H_{\mathrm e}|\psi_n\rangle}{E_n - E_m},$$
+       which is (4.6.NA). The numerator is a smooth, finite quantity (the same kind of object that gave us forces in the Hellmann–Feynman theorem); all the danger sits in the denominator.
+
+    **Why the diagonal case is different.** Setting $m=n$ in step 3 would put $\langle\psi_n|\psi_n\rangle=1$, not $0$, and the $(E_n-E_m)$ factor in step 5 would vanish — division by zero. So this derivation says *nothing* about $\mathbf A_I^{(nn)}$; that diagonal term is instead fixed (to a pure phase) by differentiating the normalisation $\langle\psi_n|\psi_n\rangle=1$, exactly as in the Hellmann–Feynman proof above, and can be made zero by a suitable choice of phase for $\psi_n$.
+
 The denominator is the electronic energy gap. When the gap shrinks toward zero, the coupling diverges. The neglect of $\mathbf A_I, B_I$ is justified precisely as long as the gap is large compared to the typical "kick" delivered by nuclear motion, $\hbar\omega_{\mathrm n} \sim 10$ meV. For typical insulators with gaps of several eV, the suppression is by a factor of $\sim 100$, and BO is excellent. For metals (zero gap at the Fermi level) and for photo-excited molecules near a level crossing, BO can fail.
 
 The electronic state of the system can no longer be assumed to be the ground state at all times; nuclear motion can "kick" the system from $\psi_0$ to $\psi_1$. This is the regime of photochemistry, internal conversion in molecules, and electronic stopping in radiation damage.
@@ -211,3 +383,20 @@ For the electronic problem, the bare wavefunction approach is still exponentiall
     Because nuclei are heavy, the electrons solve their own Schrödinger equation at every fixed nuclear configuration, producing an effective potential $E_0(\mathbf R)$ on which the nuclei then move according to Newton's (or Schrödinger's) equations. The full coupled $(\mathbf r, \mathbf R)$ problem reduces to two sequential, decoupled problems — and the entire field of atomistic simulation is the systematic exploitation of this fact.
 
 A historical note. Born and Oppenheimer's original 1927 paper treated the corrections as a power series in $\kappa = (m_{\mathrm e}/M)^{1/4}$ and showed that the leading effects on the electronic spectrum scale as $\kappa^2$ (vibrational levels), $\kappa^4$ (rotational levels), and $\kappa^6$ (non-adiabatic mixing). For typical molecules these correspond to electronic transitions in the visible, vibrational transitions in the infrared, and rotational transitions in the microwave — a clean hierarchy that explains why molecular spectroscopy is taught as three separate subjects. The BO expansion is so successful that violations of it (e.g.\ in NO$_2$ or in ozone, where vibronic coupling is strong) are flagged as "anomalies".
+
+!!! question "Check yourself"
+    1. In the ansatz $\Psi(\mathbf r,\mathbf R)\approx\chi(\mathbf R)\,\psi_0(\mathbf r;\mathbf R)$, which factor describes the electrons and which the nuclei? What does the semicolon in $\psi_0(\mathbf r;\mathbf R)$ tell you?
+    2. The full nuclear equation (4.6.9) has three terms inside the brackets: $\nabla_I^2\chi$, $2\mathbf A_I\cdot\nabla_I\chi$ and $B_I\chi$. Which two does the Born–Oppenheimer approximation drop, and what physical situation makes them small?
+    3. Using $E_{\mathrm e}\sim 5$ eV and the scaling $E_{\mathrm{vib}}\sim E_{\mathrm e}\sqrt{m_{\mathrm e}/M}$, estimate the size of a vibrational quantum (take $\sqrt{m_{\mathrm e}/M}\approx 0.023$). Does your answer sit in the infrared, as claimed?
+    4. What is a potential energy surface, and why is it the *same* curve for an H$_2$ molecule and a D$_2$ (deuterium) molecule even though their vibrational frequencies differ?
+    5. Name the two ways the BO approximation breaks down, and state in one phrase what the two electronic states do to each other in each case.
+
+    ??? note "Hint"
+        For 2, look at (4.6.10) and (4.6.11): the dropped terms are the ones containing *derivatives of the electronic wavefunction* with respect to the nuclei. For 3, just multiply. For 4, ask which Hamiltonian — electronic or nuclear — the masses appear in. For 5, re-read §4.6.6: one mode involves a small but finite gap, the other a gap that closes to zero.
+
+    ??? success "Answer"
+        1. $\chi(\mathbf R)$ is the **nuclear** wavefunction; $\psi_0(\mathbf r;\mathbf R)$ is the **electronic** ground state. The semicolon marks $\mathbf R$ as a *parameter*: the electronic Hamiltonian depends on the nuclear positions but never differentiates with respect to them — the nuclei are clamped while we solve for the electrons.
+        2. BO drops $2\mathbf A_I\cdot\nabla_I\chi$ and $B_I\chi$ (the non-adiabatic couplings of (4.6.10)), keeping only $\nabla_I^2\chi$. They are small when the electronic ground state is **well separated in energy** from the excited states (a large gap) and the nuclei move slowly, so the electronic wavefunction changes only gently with $\mathbf R$. Their size relative to the kept term is of order $m_{\mathrm e}/M$.
+        3. $E_{\mathrm{vib}}\sim 5\ \text{eV}\times 0.023 \approx 0.12\ \text{eV}$. Converting, $0.12\ \text{eV}\approx 0.12/(1.24\times10^{-4})\ \text{cm}^{-1}\approx 9\times10^{2}\ \text{cm}^{-1}$ — a few hundred to a thousand cm$^{-1}$, squarely in the infrared. Yes.
+        4. A PES is the electronic ground-state energy as a function of nuclear positions, $E_0(\mathbf R)$. It is produced by the **electronic** Hamiltonian (4.6.3), which contains *no nuclear masses*. Replacing H by D changes only the nuclear mass $M$, which enters the *nuclear* equation (4.6.12), so the surface is unchanged but the vibrational levels — set by $\omega=\sqrt{V''/\mu}$ with the heavier reduced mass $\mu$ — shift down. This is the origin of isotope effects.
+        5. **Non-adiabatic coupling**: two states with a small-but-finite gap mix, so nuclear motion can kick the system from $\psi_0$ into $\psi_1$. **Conical intersection**: two surfaces actually *touch* (gap $\to 0$), the coupling (4.6.NA) diverges, and the electronic wavefunction becomes undefined — single-surface BO fails completely.

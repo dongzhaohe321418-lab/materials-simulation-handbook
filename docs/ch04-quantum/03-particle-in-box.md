@@ -32,6 +32,46 @@ With this intuition in place, the analytical solution that follows is no more my
 
 ## 4.3.1 The model
 
+!!! info "What problem are we solving?"
+    We want the *allowed energies* of a single quantum particle trapped
+    between two impenetrable walls a distance $L$ apart, and the
+    *wavefunction* that goes with each energy. "Allowed" is the key word:
+    classically the particle could have any energy at all, but quantum
+    mechanically only a discrete ladder of energies will turn out to be
+    possible. Our task is to find that ladder — the numbers $E_1, E_2,
+    E_3, \dots$ — directly from the Schrödinger equation, with no
+    quantisation put in by hand. We then redo the whole calculation on a
+    computer, so that the *same code* will later solve problems we cannot
+    do with pencil and paper.
+
+!!! note "Plain-language version"
+    A guitar string fixed at both ends can only vibrate at certain
+    frequencies, because a half-wavelength has to fit a whole number of
+    times into the string. A quantum particle in a box is the identical
+    idea applied to its de Broglie wave: the wavefunction must vanish at
+    both walls, so only waves with the right wavelengths "fit", and only
+    those waves are allowed. Each allowed wave carries a definite energy.
+    That is where the discrete energy ladder comes from.
+
+Before the symbols arrive, here is a guide to every one used in this
+section. Refer back to it whenever a letter looks unfamiliar; for the
+words (wavefunction, eigenvalue, operator, boundary condition) see the
+[beginner glossary](../undergraduate/glossary-for-beginners.md).
+
+| Symbol | Meaning | Units (SI) |
+|---|---|---|
+| $x$ | position inside the box, $0 \le x \le L$ | m |
+| $L$ | width of the box (wall-to-wall distance) | m |
+| $m$ | mass of the particle | kg |
+| $V(x)$ | potential energy as a function of position | J |
+| $\psi(x)$ | wavefunction; $\lvert\psi\rvert^2$ is the probability density | m$^{-1/2}$ (1D) |
+| $E$ | energy eigenvalue (an allowed energy) | J |
+| $\hbar$ | reduced Planck constant, $1.055\times10^{-34}$ | J s |
+| $k$ | wavenumber, $k = 2\pi/\lambda$ | m$^{-1}$ |
+| $n$ | quantum number labelling the state, $n = 1,2,3,\dots$ | dimensionless |
+| $A,\,B$ | amplitudes (integration constants) in the general solution | m$^{-1/2}$ |
+| $A_n$ | normalisation constant of state $n$ | m$^{-1/2}$ |
+
 Consider a single particle of mass $m$ in one dimension, with potential
 
 $$V(x) = \begin{cases} 0, & 0 < x < L,\\ \infty, & \text{otherwise.}\end{cases} \tag{4.3.1}$$
@@ -64,6 +104,80 @@ $$k^2 \equiv \frac{2mE}{\hbar^2}, \tag{4.3.4}$$
 so that (4.3.3) becomes $\psi'' + k^2 \psi = 0$. The general real solution is
 
 $$\psi(x) = A\sin(kx) + B\cos(kx). \tag{4.3.5}$$
+
+??? note "Full derivation: where (4.3.5) comes from"
+    Why is (4.3.5) the *general* solution, and why does $k^2 \equiv 2mE/\hbar^2$
+    rearrange (4.3.3) so cleanly? Take it one line at a time.
+
+    Start from the time-independent Schrödinger equation inside the box,
+    equation (4.3.3):
+
+    $$-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} = E\,\psi.$$
+
+    Multiply both sides by $-2m/\hbar^2$ to isolate the second derivative:
+
+    $$\frac{d^2\psi}{dx^2} = -\frac{2mE}{\hbar^2}\,\psi.$$
+
+    The combination $2mE/\hbar^2$ is a single positive number (we expect
+    $E>0$ for a confined free particle), so it is natural to give it a
+    name. Define $k^2 \equiv 2mE/\hbar^2$, i.e.\ $k = \sqrt{2mE}/\hbar$.
+    Then the equation reads
+
+    $$\psi'' = -k^2\,\psi, \qquad\text{equivalently}\qquad \psi'' + k^2\psi = 0.$$
+
+    This is the equation "what function equals minus a constant times its
+    own second derivative?". Two independent functions do this:
+    $\sin(kx)$ and $\cos(kx)$, because
+
+    $$\frac{d^2}{dx^2}\sin(kx) = -k^2\sin(kx), \qquad
+      \frac{d^2}{dx^2}\cos(kx) = -k^2\cos(kx).$$
+
+    A second-order linear ODE has exactly two independent solutions, and
+    every solution is a linear combination of them. Hence the general
+    solution is
+
+    $$\psi(x) = A\sin(kx) + B\cos(kx)$$
+
+    for arbitrary constants $A$ and $B$, which is (4.3.5). (Equivalently
+    one could write $\psi = C\,e^{ikx} + D\,e^{-ikx}$; the sine/cosine form
+    is the same thing rewritten with $e^{\pm ikx} = \cos kx \pm i\sin kx$,
+    and is more convenient here because our boundary conditions are real.)
+
+!!! warning "Common misunderstandings"
+    - $k$ is **not** an independent free parameter we may set to anything.
+      Through $k^2 = 2mE/\hbar^2$ it is tied to the energy $E$. Fixing the
+      allowed $k$ values (next) *is* fixing the allowed energies.
+    - The constant $E$ is the **eigenvalue** (one number); $\psi(x)$ is the
+      **eigenfunction** (a whole function). They come as a pair. Do not
+      confuse "the energy of state $n$" ($E_n$, a number) with "state $n$"
+      ($\psi_n$, a function) — a beginner error we return to below.
+    - We have assumed $E>0$ so that $k$ is real. A bound state of this
+      potential cannot have $E<0$: with $V=0$ inside, $E<0$ would force
+      $k$ imaginary and $\psi$ a sum of growing/decaying exponentials,
+      which cannot vanish at *both* walls except trivially.
+
+!!! example "Step-by-step: how two boundary conditions quantise the energy"
+    Two conditions, $\psi(0)=0$ and $\psi(L)=0$, do two different jobs.
+    Keep them separate:
+
+    1. **First wall, $\psi(0)=0$.** Put $x=0$ into (4.3.5). Since
+       $\sin 0 = 0$ and $\cos 0 = 1$, only the cosine survives:
+       $\psi(0) = A\cdot 0 + B\cdot 1 = B$. Demanding $\psi(0)=0$ forces
+       $B=0$. *Effect:* it kills the cosine; the wavefunction must be a
+       pure sine, $\psi(x) = A\sin(kx)$.
+    2. **Second wall, $\psi(L)=0$.** Now $\psi(L) = A\sin(kL) = 0$. We do
+       not want $A=0$ (that gives $\psi\equiv0$ everywhere — no particle),
+       so we need $\sin(kL)=0$.
+    3. **Solve $\sin(kL)=0$.** The sine vanishes exactly at integer
+       multiples of $\pi$: $kL = n\pi$ for $n=1,2,3,\dots$ This is the
+       *eigenvalue condition* — the single equation that selects which
+       $k$ (and hence which $E$) are allowed.
+    4. **Read off energies.** From $k_n = n\pi/L$ and $E = \hbar^2k^2/2m$,
+       the allowed energies are $E_n = n^2\pi^2\hbar^2/(2mL^2)$.
+
+    The first condition fixes the *shape* (a sine); the second fixes the
+    *wavelength* (which sines fit), and quantisation is the result of the
+    sine having to fit a whole number of half-waves into the box.
 
 Apply the boundary conditions. At $x = 0$,
 
@@ -101,6 +215,47 @@ $$\int_0^L \sin^2\!\left(\frac{n\pi x}{L}\right) dx = \frac{L}{2},$$
 
 so $A_n^2 \cdot L/2 = 1$, hence $A_n = \sqrt{2/L}$. The normalised eigenfunctions are
 
+??? note "Full derivation: the normalisation integral and the constant $\sqrt{2/L}$"
+    The claim is that $\int_0^L \sin^2(n\pi x/L)\,dx = L/2$, and that
+    therefore $A_n = \sqrt{2/L}$. Here is every step.
+
+    **The integrand.** Use the power-reduction identity
+    $\sin^2\theta = \tfrac12(1-\cos 2\theta)$ with $\theta = n\pi x/L$:
+
+    $$\sin^2\!\Big(\frac{n\pi x}{L}\Big)
+      = \frac12 - \frac12\cos\!\Big(\frac{2n\pi x}{L}\Big).$$
+
+    **Integrate term by term over $[0,L]$.** The constant term gives
+
+    $$\int_0^L \frac12\,dx = \frac{L}{2}.$$
+
+    The cosine term integrates to a sine:
+
+    $$\int_0^L \frac12\cos\!\Big(\frac{2n\pi x}{L}\Big)dx
+      = \frac12\cdot\frac{L}{2n\pi}\,
+        \Big[\sin\!\Big(\frac{2n\pi x}{L}\Big)\Big]_0^L
+      = \frac{L}{4n\pi}\big[\sin(2n\pi) - \sin 0\big].$$
+
+    Because $n$ is an integer, $\sin(2n\pi) = 0$ and $\sin 0 = 0$, so this
+    whole term **vanishes**. Hence
+
+    $$\int_0^L \sin^2\!\Big(\frac{n\pi x}{L}\Big)dx = \frac{L}{2} - 0 = \frac{L}{2}.$$
+
+    (Sanity check: $\sin^2$ oscillates between $0$ and $1$ with average
+    $\tfrac12$, so over a length $L$ its integral is $\tfrac12 \times L$.
+    The exact algebra confirms the average-value argument.)
+
+    **Solve for $A_n$.** The normalisation condition $\int_0^L |\psi_n|^2\,dx = 1$
+    reads $A_n^2 \cdot (L/2) = 1$, so
+
+    $$A_n^2 = \frac{2}{L}, \qquad A_n = \sqrt{\frac{2}{L}}.$$
+
+    We take the positive root by convention; an overall sign (or, more
+    generally, a phase) on a wavefunction never affects $|\psi|^2$ and so
+    carries no physics. Notice the units work: $[A_n] = \mathrm{m}^{-1/2}$,
+    which is exactly what a 1D wavefunction needs so that $\int|\psi|^2dx$
+    is dimensionless.
+
 $$\boxed{\; \psi_n(x) = \sqrt{\frac{2}{L}}\, \sin\!\left(\frac{n\pi x}{L}\right). \;} \tag{4.3.9}$$
 
 One quick sanity check: the eigenfunctions are orthogonal. For $m \neq n$,
@@ -108,6 +263,71 @@ One quick sanity check: the eigenfunctions are orthogonal. For $m \neq n$,
 $$\int_0^L \psi_m^* \psi_n\, dx = \frac{2}{L}\int_0^L \sin\!\left(\frac{m\pi x}{L}\right)\sin\!\left(\frac{n\pi x}{L}\right) dx = 0,$$
 
 using the standard sine-sine integral. This is the orthogonality theorem of §4.2.6 made explicit.
+
+??? note "Full derivation: orthogonality of distinct box eigenstates"
+    We prove that for integers $m \neq n$,
+
+    $$\int_0^L \sin\!\Big(\frac{m\pi x}{L}\Big)\sin\!\Big(\frac{n\pi x}{L}\Big)\,dx = 0,$$
+
+    so that $\int_0^L \psi_m^*\psi_n\,dx = 0$. (The eigenfunctions are real,
+    so the complex conjugate does nothing here.)
+
+    **Turn the product of sines into a difference of cosines.** The
+    product-to-sum identity is
+
+    $$\sin\alpha\,\sin\beta = \tfrac12\big[\cos(\alpha-\beta) - \cos(\alpha+\beta)\big].$$
+
+    With $\alpha = m\pi x/L$ and $\beta = n\pi x/L$,
+
+    $$\sin\!\Big(\frac{m\pi x}{L}\Big)\sin\!\Big(\frac{n\pi x}{L}\Big)
+      = \frac12\cos\!\Big(\frac{(m-n)\pi x}{L}\Big)
+      - \frac12\cos\!\Big(\frac{(m+n)\pi x}{L}\Big).$$
+
+    **Integrate each cosine over $[0,L]$.** For any non-zero integer $p$,
+
+    $$\int_0^L \cos\!\Big(\frac{p\pi x}{L}\Big)dx
+      = \frac{L}{p\pi}\Big[\sin\!\Big(\frac{p\pi x}{L}\Big)\Big]_0^L
+      = \frac{L}{p\pi}\big[\sin(p\pi) - \sin 0\big] = 0,$$
+
+    because $\sin(p\pi)=0$ for every integer $p$. Apply this with
+    $p = m-n$ and with $p = m+n$. Since $m \neq n$ and both are positive
+    integers, $m-n$ is a non-zero integer and $m+n$ is a non-zero integer,
+    so **both** cosine integrals vanish:
+
+    $$\int_0^L \sin\!\Big(\frac{m\pi x}{L}\Big)\sin\!\Big(\frac{n\pi x}{L}\Big)dx
+      = \frac12\cdot 0 - \frac12\cdot 0 = 0.$$
+
+    **Why the $m=n$ case is different.** If $m=n$ the first term has
+    $p = m-n = 0$, and $\cos 0 = 1$ does *not* integrate to zero — it gives
+    $\int_0^L 1\,dx = L$. That non-zero piece is exactly the normalisation
+    integral $L/2$ computed above. So the two results combine into one
+    statement, $\int_0^L \psi_m^*\psi_n\,dx = \delta_{mn}$: the box
+    eigenfunctions are **orthonormal**. This is the concrete realisation of
+    the general orthogonality theorem for Hermitian operators (§4.2.6):
+    eigenfunctions belonging to *different* eigenvalues are automatically
+    orthogonal.
+
+!!! warning "Common misunderstandings (nodes and zero-point energy)"
+    - **Counting nodes.** A *node* is a point strictly *inside* the box
+      where $\psi_n$ crosses zero. State $\psi_n = \sqrt{2/L}\sin(n\pi x/L)$
+      has $n-1$ interior nodes — the ground state ($n=1$) has **none**. The
+      zeros *at the walls* are forced by the boundary condition and are not
+      counted as nodes. A common slip is to label the ground state as
+      "$n=0$" and expect it to have zero energy; here $n$ starts at $1$.
+    - **Zero-point energy is not a mistake.** The lowest energy is
+      $E_1>0$, *not* zero. A quantum particle in a box can never be
+      perfectly at rest, unlike a classical ball that can sit motionless in
+      the middle. This is not an artefact of the model; it is the
+      uncertainty principle: confining the particle to width $L$ forces a
+      momentum spread $\Delta p \gtrsim \hbar/L$ and hence a kinetic energy
+      $\sim\hbar^2/(2mL^2)$. Setting $E=0$ would mean $\Delta p = 0$ with
+      the particle pinned inside the box, which the uncertainty relation
+      forbids.
+    - **$\lvert\psi_n\rvert^2$, not $\psi_n$, is the probability.** The
+      wavefunction $\psi_n$ goes negative (it is a sine); a probability
+      density cannot. The measurable quantity is $\lvert\psi_n\rvert^2 =
+      (2/L)\sin^2(n\pi x/L)$, which is everywhere $\ge 0$ as it must be.
+      Where $\psi_n$ has a node, the particle is *never* found.
 
 !!! example "Numerical scale"
     For an electron ($m_e = 9.109 \times 10^{-31}$ kg) in a box of $L = 1$ nm, the ground-state energy is
@@ -137,6 +357,52 @@ For $\langle x^2\rangle_n$, use $\sin^2 u = (1 - \cos 2u)/2$:
 $$\langle x^2\rangle_n = \frac{2}{L}\int_0^L x^2 \cdot \frac{1 - \cos(2n\pi x/L)}{2}\, dx = \frac{L^2}{3} - \frac{L^2}{2 n^2 \pi^2}. \tag{4.3.E1}$$
 
 The first term comes from $\int_0^L x^2\,dx/L = L^2/3$ (the classical answer for a uniform distribution); the second term, the integral of $x^2 \cos(2n\pi x/L)$, evaluates by twice integration by parts to $L^3/(2 n^2\pi^2)$, giving the negative correction.
+
+??? note "Full derivation: the $\langle x^2\rangle$ integral by parts"
+    We evaluate
+
+    $$J \equiv \int_0^L x^2\cos\!\Big(\frac{2n\pi x}{L}\Big)\,dx$$
+
+    and show $J = L^3/(2n^2\pi^2)$. Write $a \equiv 2n\pi/L$ for brevity, so
+    $J = \int_0^L x^2\cos(ax)\,dx$.
+
+    **First integration by parts** ($u=x^2$, $dv=\cos(ax)\,dx$, so
+    $du = 2x\,dx$, $v = \sin(ax)/a$):
+
+    $$J = \Big[\frac{x^2\sin(ax)}{a}\Big]_0^L - \frac{2}{a}\int_0^L x\sin(ax)\,dx.$$
+
+    At $x=L$, $\sin(aL) = \sin(2n\pi) = 0$; at $x=0$ the term is $0$. So the
+    boundary term vanishes and
+
+    $$J = -\frac{2}{a}\int_0^L x\sin(ax)\,dx.$$
+
+    **Second integration by parts** ($u=x$, $dv=\sin(ax)\,dx$, so
+    $du=dx$, $v=-\cos(ax)/a$):
+
+    $$\int_0^L x\sin(ax)\,dx
+      = \Big[-\frac{x\cos(ax)}{a}\Big]_0^L + \frac{1}{a}\int_0^L \cos(ax)\,dx.$$
+
+    The remaining integral $\int_0^L\cos(ax)\,dx = [\sin(ax)/a]_0^L = 0$
+    again (since $\sin(aL)=\sin(2n\pi)=0$). The boundary term at $x=L$ is
+    $-L\cos(aL)/a = -L\cos(2n\pi)/a = -L/a$ (because $\cos(2n\pi)=1$), and at
+    $x=0$ it is $0$. Hence
+
+    $$\int_0^L x\sin(ax)\,dx = -\frac{L}{a}.$$
+
+    **Combine.** Substituting back,
+
+    $$J = -\frac{2}{a}\cdot\Big(-\frac{L}{a}\Big) = \frac{2L}{a^2}
+        = \frac{2L}{(2n\pi/L)^2} = \frac{2L\cdot L^2}{4n^2\pi^2}
+        = \frac{L^3}{2n^2\pi^2}.$$
+
+    Finally,
+
+    $$\langle x^2\rangle_n = \frac{2}{L}\int_0^L \frac{x^2}{2}\,dx
+        - \frac{2}{L}\cdot\frac12 J
+        = \frac{1}{L}\cdot\frac{L^3}{3} - \frac{1}{L}\cdot\frac{L^3}{2n^2\pi^2}
+        = \frac{L^2}{3} - \frac{L^2}{2n^2\pi^2},$$
+
+    which is (4.3.E1).
 
 The variance is therefore
 
@@ -178,7 +444,181 @@ For $n = 1$: $(\Delta x)(\Delta p) \approx 0.568\,\hbar > \hbar/2$. The bound is
 
     If any of these is shaky, re-read the preceding section before continuing.
 
+## 4.3.2b The three-dimensional box and degeneracy
+
+Real boxes — quantum dots, nanocrystals, the cubic cavity of a microwave
+resonator — are three-dimensional. The good news is that a *rectangular*
+3D box needs no new mathematics: it factorises into three independent 1D
+boxes. The technique that does this, **separation of variables**, is one
+of the most useful in all of physics, and the box is the cleanest place to
+meet it.
+
+!!! info "What problem are we solving?"
+    We have an electron confined to a 3D rectangular room with sides
+    $L_x, L_y, L_z$ and impenetrable walls. We want its allowed energies
+    and wavefunctions. Rather than solve a partial differential equation in
+    three variables from scratch, we will *guess* that the answer is a
+    product of three 1D solutions, substitute the guess in, and watch the
+    problem fall apart into three copies of the 1D box we already solved.
+
+The particle is free inside the region $0<x<L_x$, $0<y<L_y$, $0<z<L_z$, and
+$\psi$ must vanish on every wall. Inside, the time-independent Schrödinger
+equation is
+
+$$-\frac{\hbar^2}{2m}\left(\frac{\partial^2}{\partial x^2}
+  + \frac{\partial^2}{\partial y^2}
+  + \frac{\partial^2}{\partial z^2}\right)\psi(x,y,z) = E\,\psi(x,y,z).
+  \tag{4.3.14}$$
+
+!!! note "Plain-language version"
+    Because the box is rectangular, what the particle does along $x$ has
+    nothing to do with what it does along $y$ or $z$ — the walls in each
+    direction act independently. So we *try* a wavefunction that is one
+    factor per direction, $\psi = X(x)Y(y)Z(z)$. Substituting this product
+    into the equation, each direction's piece separates off and obeys its
+    own 1D box equation. The total energy is then just the sum of three 1D
+    energies.
+
+??? note "Full derivation: separation of variables for the 3D box"
+    **The product ansatz.** Assume the solution factorises,
+
+    $$\psi(x,y,z) = X(x)\,Y(y)\,Z(z).$$
+
+    Each second derivative in (4.3.14) then acts on only one factor; for
+    example $\partial^2\psi/\partial x^2 = X''(x)\,Y(y)\,Z(z)$. Substituting
+    and dividing through by $\psi = XYZ$ gives
+
+    $$-\frac{\hbar^2}{2m}\left(\frac{X''}{X} + \frac{Y''}{Y} + \frac{Z''}{Z}\right) = E.$$
+
+    **The separation argument.** Look at the three ratios. The term
+    $X''/X$ depends on $x$ alone, $Y''/Y$ on $y$ alone, $Z''/Z$ on $z$
+    alone, yet their sum is the *constant* $-2mE/\hbar^2$ for all
+    $x,y,z$. The only way a function of $x$ plus a function of $y$ plus a
+    function of $z$ can be constant everywhere is if each function is
+    *separately* constant. Name those constants $-k_x^2, -k_y^2, -k_z^2$:
+
+    $$\frac{X''}{X} = -k_x^2,\qquad
+      \frac{Y''}{Y} = -k_y^2,\qquad
+      \frac{Z''}{Z} = -k_z^2,$$
+
+    with $k_x^2 + k_y^2 + k_z^2 = 2mE/\hbar^2$.
+
+    **Three 1D boxes.** Each line, e.g.\ $X'' + k_x^2 X = 0$ with
+    $X(0)=X(L_x)=0$, is *exactly* the 1D box problem we already solved.
+    Hence $X(x)\propto \sin(n_x\pi x/L_x)$ with $k_x = n_x\pi/L_x$, and
+    likewise for $Y$ and $Z$, each with its own positive integer
+    $n_x, n_y, n_z$.
+
+    **Assemble.** The wavefunction is the product of three normalised
+    sines,
+
+    $$\psi_{n_x n_y n_z}(x,y,z)
+      = \sqrt{\frac{8}{L_xL_yL_z}}\,
+        \sin\!\Big(\frac{n_x\pi x}{L_x}\Big)
+        \sin\!\Big(\frac{n_y\pi y}{L_y}\Big)
+        \sin\!\Big(\frac{n_z\pi z}{L_z}\Big),$$
+
+    where the normalisation constant is the product of three factors
+    $\sqrt{2/L}$, giving $\sqrt{2/L_x}\cdot\sqrt{2/L_y}\cdot\sqrt{2/L_z}
+    = \sqrt{8/(L_xL_yL_z)}$. The energy is the sum of three 1D energies,
+    $E = \hbar^2(k_x^2+k_y^2+k_z^2)/2m$.
+
+The result is the 3D spectrum
+
+$$E_{n_x n_y n_z} = \frac{\pi^2\hbar^2}{2m}
+  \left(\frac{n_x^2}{L_x^2} + \frac{n_y^2}{L_y^2} + \frac{n_z^2}{L_z^2}\right),
+  \qquad n_x, n_y, n_z = 1, 2, 3, \ldots \tag{4.3.15}$$
+
+with three independent quantum numbers, one per direction.
+
+### Degeneracy in the cubic box
+
+Something new happens when the box is a **cube**, $L_x = L_y = L_z = L$.
+Then (4.3.15) collapses to
+
+$$E_{n_x n_y n_z} = \frac{\pi^2\hbar^2}{2mL^2}\,(n_x^2 + n_y^2 + n_z^2),
+  \tag{4.3.16}$$
+
+so the energy depends only on the *sum of squares* $n_x^2+n_y^2+n_z^2$.
+Different triples can give the same sum, and therefore the same energy,
+while being genuinely different states (different wavefunctions). This is
+**degeneracy**: several independent eigenstates sharing one eigenvalue.
+
+!!! tip "New vocabulary"
+    - **Separation of variables** — the technique of solving a
+      multi-variable equation by assuming the solution is a product of
+      one-variable factors, turning one hard equation into several easy
+      ones.
+    - **Degeneracy** — when two or more distinct eigenstates have exactly
+      the same energy. The number of such states is the *degree of
+      degeneracy*. Here it arises from the cube's symmetry; in the
+      [beginner glossary](../undergraduate/glossary-for-beginners.md) see
+      *eigenvalue* and *eigenvector* for the underlying idea.
+
+!!! example "Worked example: the lowest cubic-box levels and their degeneracies"
+    Write energies in units of $\varepsilon \equiv \pi^2\hbar^2/(2mL^2)$, so
+    $E = (n_x^2+n_y^2+n_z^2)\,\varepsilon$. Enumerate the smallest
+    sum-of-squares:
+
+    | $(n_x,n_y,n_z)$ | $n_x^2+n_y^2+n_z^2$ | $E/\varepsilon$ | degeneracy |
+    |---|---|---|---|
+    | $(1,1,1)$ | $3$ | $3$ | $1$ |
+    | $(2,1,1)$ and permutations | $6$ | $6$ | $3$ |
+    | $(2,2,1)$ and permutations | $9$ | $9$ | $3$ |
+    | $(3,1,1)$ and permutations | $11$ | $11$ | $3$ |
+    | $(2,2,2)$ | $12$ | $12$ | $1$ |
+    | $(3,2,1)$ and permutations | $14$ | $14$ | $6$ |
+
+    The ground state $(1,1,1)$ is unique. The first excited level at
+    $6\varepsilon$ is **three-fold degenerate**: the three states
+    $(2,1,1)$, $(1,2,1)$, $(1,1,2)$ differ only in *which* axis carries the
+    extra excitation, and the cube cannot tell its axes apart, so they must
+    have equal energy. The level at $14\varepsilon$ is **six-fold
+    degenerate** because all three quantum numbers differ and there are
+    $3! = 6$ ways to assign $\{1,2,3\}$ to the three axes. Notice too that
+    $E=9\varepsilon$ and $E=11\varepsilon$ are degenerate for the
+    "permutation" reason, whereas a coincidence like two *unrelated*
+    triples sharing a sum (an "accidental" degeneracy) can also occur at
+    higher energies.
+
+!!! warning "Common misunderstandings (degeneracy)"
+    - Degenerate states are **distinct states**, not one state counted
+      several times. $(2,1,1)$ and $(1,2,1)$ are different functions of
+      position; they merely happen to cost the same energy.
+    - Degeneracy is a consequence of **symmetry**. Stretch the cube into a
+      rectangular box ($L_x \neq L_y$) and the three $6\varepsilon$ states
+      split apart into three different energies — the symmetry that forced
+      them equal is gone. This "lifting of degeneracy by lowering symmetry"
+      is exactly how crystal fields split atomic levels in Chapter 5.
+    - The *number* of states up to a given energy, not the individual
+      levels, is what matters for counting electrons in a metal; this is
+      the origin of the free-electron density of states (see the
+      [beginner glossary](../undergraduate/glossary-for-beginners.md) entry
+      *density of states*).
+
 ## 4.3.3 Discretising the Hamiltonian
+
+!!! info "What problem are we solving?"
+    The pencil-and-paper solution worked because the box has a tidy
+    closed-form answer. Almost no other potential does. We therefore want
+    a *recipe a computer can follow* for any $V(x)$: feed in the potential,
+    get back the allowed energies and wavefunctions. The trick is to stop
+    thinking of $\psi$ as a continuous function and instead store its
+    values at a finite list of points. Once we do that, the operator
+    $\hat H$ becomes an ordinary matrix, "solve the Schrödinger equation"
+    becomes "find the eigenvalues of a matrix", and that is a job
+    `numpy.linalg.eigh` does in one line.
+
+!!! note "Plain-language version"
+    Replace the smooth wavefunction by its height at $N$ evenly spaced
+    pegs across the box. The Schrödinger equation links each peg's height
+    to its two neighbours (through the second derivative). "Each entry
+    depends on its neighbours" is precisely what a **tridiagonal matrix**
+    encodes. Diagonalising that matrix hands back the special height
+    patterns that the operator merely rescales — the discrete versions of
+    $\sin(n\pi x/L)$ — and the rescaling factors are the energies $E_n$.
+    The continuous eigenvalue problem $\hat H\psi = E\psi$ has become the
+    matrix eigenvalue problem $\mathbf H\mathbf v = E\mathbf v$.
 
 We now solve exactly the same problem numerically, with the explicit aim that the method should generalise to any 1D potential $V(x)$. The strategy is:
 
@@ -231,7 +671,106 @@ The off-diagonal kinetic-energy part is the same for every problem. This is what
 
 **Boundary conditions.** Note that at the first grid point $i = 1$, the second-difference formula involves $\psi_0 \equiv \psi(0)$, which the Dirichlet boundary condition sets to zero — and so the term $-\psi_0/h^2$ simply does not contribute. Similarly at $i = N$. The matrix (4.3.11) implicitly enforces $\psi(0) = \psi(L) = 0$. Other boundary conditions (periodic, von Neumann, …) would modify the corners of the matrix.
 
+!!! example "Minimal example: the whole method on a $3\times3$ matrix by hand"
+    Before trusting a 400-point computer run, do the calculation with so few
+    grid points that the matrix fits on a napkin. Take $N=3$ interior
+    points. Then the spacing is $h = L/(N+1) = L/4$, and the three pegs sit
+    at $x_1 = L/4$, $x_2 = L/2$, $x_3 = 3L/4$. With the prefactor
+    $t \equiv \hbar^2/(2mh^2)$, the Hamiltonian (4.3.12) is the $3\times3$
+    matrix
+
+    $$\mathbf H = t\begin{pmatrix} 2 & -1 & 0\\ -1 & 2 & -1\\ 0 & -1 & 2\end{pmatrix}.$$
+
+    **Find the eigenvalues by hand.** We need the $\lambda$ for which
+    $\det(\mathbf M - \lambda\mathbf I)=0$, where $\mathbf M$ is the bare
+    integer matrix (so the energies are $E = t\lambda$). Expanding the
+    determinant of
+
+    $$\begin{pmatrix} 2-\lambda & -1 & 0\\ -1 & 2-\lambda & -1\\ 0 & -1 & 2-\lambda\end{pmatrix}$$
+
+    along the top row gives
+
+    $$(2-\lambda)\big[(2-\lambda)^2 - 1\big] - (-1)\big[-(2-\lambda)\big]
+      = (2-\lambda)\big[(2-\lambda)^2 - 2\big] = 0.$$
+
+    So either $2-\lambda = 0$, giving $\lambda = 2$; or
+    $(2-\lambda)^2 = 2$, giving $2-\lambda = \pm\sqrt2$, i.e.\
+    $\lambda = 2\mp\sqrt2$. The three eigenvalues are
+
+    $$\lambda_1 = 2-\sqrt2 \approx 0.5858,\qquad
+      \lambda_2 = 2,\qquad
+      \lambda_3 = 2+\sqrt2 \approx 3.4142.$$
+
+    **Compare with theory.** The exact box eigenvalues, in the same units
+    $t$, would be $(k_n h)^2 = (n\pi/(N+1))^2$, namely $(\pi/4)^2 = 0.617$,
+    $(2\pi/4)^2 = 2.47$ and $(3\pi/4)^2 = 5.55$. The lowest comes out at
+    $0.586$ versus $0.617$ — already within 5% on a *three-point* grid;
+    the highest, $3.41$ versus $5.55$, is badly wrong, illustrating the
+    rule that only the lowest fraction of the spectrum is trustworthy. As
+    $N$ grows the agreement improves everywhere except near the top.
+
+    **The exact pattern.** It is a standard result that the $N\times N$
+    matrix $\mathrm{tridiag}(-1,2,-1)$ has eigenvalues and eigenvectors
+
+    $$\lambda_k = 2 - 2\cos\!\Big(\frac{k\pi}{N+1}\Big)
+               = 4\sin^2\!\Big(\frac{k\pi}{2(N+1)}\Big),
+      \qquad
+      v^{(k)}_i = \sin\!\Big(\frac{ik\pi}{N+1}\Big),$$
+
+    for $k=1,\dots,N$. The eigenvector entries are *samples of the
+    continuum sine* $\sin(k\pi x/L)$ at the grid points $x_i = ih$ — the
+    discrete eigenstates literally are the continuous ones, sampled. And for
+    small $k/(N+1)$ the small-angle expansion
+    $4\sin^2(\theta) \approx 4\theta^2$ gives
+    $\lambda_k \approx (k\pi/(N+1))^2 = (k\pi h/L)^2$, so
+    $E_k = t\lambda_k \approx \hbar^2 (k\pi/L)^2/(2m)$ — the exact spectrum
+    (4.3.7). The matrix method reproduces the analytical answer in the limit
+    of a fine grid, and you have just seen exactly *why*.
+
+!!! warning "Common misunderstandings (numerical method)"
+    - **Eigenvalue vs eigenvector.** Diagonalising returns *both*: a number
+      $E_n$ (the energy, an eigenvalue) and a column vector (the sampled
+      wavefunction, an eigenvector). They are a matched pair. "The third
+      eigenvalue" is an energy; "the third eigenvector" is a state — do not
+      use the words interchangeably.
+    - **The grid points are not the walls.** The walls at $x=0$ and $x=L$
+      are *excluded* from the grid; the boundary condition $\psi=0$ there is
+      enforced by leaving them out, which is why a length-$L$ box with $N$
+      interior points uses spacing $h=L/(N+1)$, not $L/N$ or $L/(N-1)$. Off
+      by one here shifts every energy.
+    - **A returned eigenvector may point the "wrong" way.** Eigenvectors are
+      fixed only up to an overall sign (and, in general, a phase). A solver
+      may hand you $-\psi_n$ instead of $+\psi_n$; both describe the same
+      physical state because $|\psi|^2$ is unchanged. The plotting code in
+      §4.3.4 flips the sign to match the analytic sine for display only.
+
 ## 4.3.4 A complete Python implementation
+
+!!! note "What should the answer roughly look like? (predict before you run)"
+    Forming an expectation *before* running code is the single best habit
+    in computational science: it turns a silent bug into an obvious one.
+    For an electron in an $L = 1$ nm box, predict the following from the
+    analytic formula (4.3.7) with $E_1 = 0.376$ eV:
+
+    - **Energies.** They must climb as $n^2$: roughly $0.38$, $1.50$,
+      $3.38$, $6.02$ eV for $n = 1,2,3,4$. If the code prints equally
+      spaced levels, or levels going as $n$, something is wrong (a likely
+      culprit: the wrong power of $h$, or counting grid points incorrectly).
+    - **Wavefunctions.** The $n$-th state should be a sine with exactly
+      $n-1$ interior **nodes** (zero-crossings strictly inside the box):
+      the ground state has none, the first excited state one, and so on.
+      It must vanish at both walls. If the lowest state has a node, you are
+      almost certainly looking at the wrong eigenvector (an off-by-one in
+      the column index) or the solver returned states out of order.
+    - **Sign and scale.** Each eigenvector comes out normalised but with an
+      arbitrary overall sign; do not be alarmed if a curve is flipped.
+    - **Accuracy.** On a few-hundred-point grid the finite-difference
+      energies should agree with theory to about four decimals, with the
+      error *growing* for higher $n$ (shorter wavelengths resolve worse).
+
+    Hold these predictions in mind; the printed table below should match
+    them. A result that violates them is telling you about a bug, not about
+    physics.
 
 The script below solves the particle-in-a-box numerically and compares with the analytical answer. It uses SI units and is parameterised on $m$ and $L$, so you can change the mass or the box width with a single line.
 
@@ -522,3 +1061,63 @@ We have solved the simplest quantum mechanical problem twice over and met every 
 - a numerical scheme (finite differences) that turns the spectral problem into matrix diagonalisation.
 
 In §4.4 we keep the numerical machinery exactly as it is and substitute a different potential — the harmonic oscillator. The analytical solution is more elaborate (Hermite polynomials), but the *code* is the same, with two lines changed. That is the point of working numerically: once the infrastructure is in place, every new physical problem reduces to specifying $V(x)$.
+
+## 4.3.7 Check yourself
+
+!!! question "Check yourself"
+    Try these from memory before unfolding the answers. They cover the
+    whole section: the analytical solution, the numerical method and the
+    3D extension.
+
+    1. Starting from $\psi(x) = A\sin(kx) + B\cos(kx)$, which boundary
+       condition forces $B = 0$, and which one then gives the quantisation
+       condition $k_n = n\pi/L$?
+    2. Show in two lines that $\int_0^L \sin^2(n\pi x/L)\,dx = L/2$, and
+       hence that the normalisation constant is $\sqrt{2/L}$.
+    3. The ground-state energy of an electron in a 1 nm box is about
+       $0.38$ eV. Without a calculator, what is the energy of the $n=3$
+       state, and how many interior nodes does $\psi_3$ have?
+    4. In the finite-difference method, the kinetic-energy part of the
+       Hamiltonian is the matrix $\mathrm{tridiag}(-1, 2, -1)$ times a
+       prefactor. What is that prefactor, and where do the boundary
+       conditions $\psi(0)=\psi(L)=0$ enter the matrix?
+    5. Why are only the *lowest* numerical eigenvalues trustworthy, and
+       roughly how many of the $N$ returned values can you believe?
+    6. In a *cubic* box, the first excited level is three-fold degenerate.
+       Which three states are they, and what symmetry makes them equal in
+       energy? What happens to the degeneracy if you stretch one side of
+       the box?
+
+    ??? success "Answer"
+        1. $\psi(0) = B = 0$ kills the cosine (since $\cos 0 = 1$,
+           $\sin 0 = 0$), leaving a pure sine. Then $\psi(L) = A\sin(kL)=0$
+           with $A\neq 0$ requires $\sin(kL)=0$, i.e.\ $kL = n\pi$, so
+           $k_n = n\pi/L$.
+        2. With $\sin^2\theta = \tfrac12(1-\cos2\theta)$,
+           $\int_0^L\sin^2(n\pi x/L)\,dx = \int_0^L \tfrac12\,dx
+           - \tfrac12\int_0^L\cos(2n\pi x/L)\,dx = L/2 - 0 = L/2$, the
+           cosine integral vanishing because $\sin(2n\pi)=0$. Then
+           $A_n^2(L/2)=1 \Rightarrow A_n = \sqrt{2/L}$.
+        3. $E_n = n^2 E_1$, so $E_3 = 9 \times 0.376 \approx 3.4$ eV.
+           $\psi_3 = \sqrt{2/L}\sin(3\pi x/L)$ has $n-1 = 2$ interior nodes.
+        4. The prefactor is $\hbar^2/(2mh^2)$ with $h = L/(N+1)$. The
+           boundary conditions enter by *excluding* the wall points from the
+           grid: the rows for $i=1$ and $i=N$ would reference $\psi_0$ and
+           $\psi_{N+1}$, but those are set to zero and so simply do not
+           appear, which is why the matrix is exactly $N\times N$.
+        5. High eigenvalues correspond to states whose wavelength
+           $\lambda_n = 2L/n$ approaches the grid spacing $h$; the
+           second-difference formula is then inaccurate. As a rule of thumb
+           only about the lowest $N/10$ eigenvalues are reliable.
+        6. The states $(2,1,1)$, $(1,2,1)$, $(1,1,2)$ all have
+           $n_x^2+n_y^2+n_z^2 = 6$. They are equal in energy because the
+           cube is symmetric under swapping its axes, so it cannot
+           distinguish which direction carries the extra excitation.
+           Stretching one side ($L_x\neq L_y\neq L_z$) breaks that symmetry
+           and splits the level into three different energies.
+
+    ??? note "Hint"
+        For 2, the only fact you need is that $\sin$ of an integer multiple
+        of $\pi$ is zero. For 3, remember $E_n\propto n^2$ and that the
+        ground state has *no* interior nodes. For 6, think about what the
+        cube's symmetry does and does not allow it to tell apart.

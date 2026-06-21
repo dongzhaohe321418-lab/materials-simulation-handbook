@@ -8,6 +8,37 @@ for a system of $N$ interacting electrons in the external potential of fixed nuc
 
 This section sketches the HF construction. We will not derive the equations in full painful detail — that is a long calculation done correctly in any quantum chemistry textbook — but we will state every essential ingredient, identify the structure of the resulting equations, and pinpoint exactly what HF gets wrong.
 
+!!! info "What problem are we solving?"
+    The exact electronic Schrödinger equation (4.7.1) asks for one function $\psi(\mathbf r_1, \ldots, \mathbf r_N)$ of *all* the electron coordinates at once. Because the electrons repel one another, this function cannot be split into independent one-electron pieces, and storing or solving for it costs an effort that grows exponentially with the number of electrons $N$ (as §4.5 showed). We want a way to turn this one impossible $N$-electron problem into $N$ manageable *one*-electron problems — accepting some loss of accuracy in exchange for a calculation we can actually run. Hartree–Fock is the simplest principled way to do that.
+
+!!! note "Plain-language version: a mean field"
+    Imagine you are one electron in a crowd of $N$. Tracking the exact instantaneous position of every other electron, and dodging each one individually, is hopeless. So instead you pretend the other electrons are a *smooth, frozen cloud* of negative charge — a static "field" — and you just solve for your own orbital in that averaged cloud. Every electron does the same. Of course your cloud depends on everyone else's orbitals, and theirs on yours, so you have to iterate: guess everyone's orbitals, build the averaged cloud, re-solve, repeat until nothing changes. This "each particle in the averaged field of all the others" idea is called a **mean-field** approximation, and it is the heart of both Hartree and Hartree–Fock. The single extra ingredient that turns Hartree into Hartree–Fock is making the wavefunction properly *antisymmetric* — obeying the Pauli principle — which adds one genuinely quantum term (exchange) on top of the classical averaged repulsion.
+
+!!! note "Physical picture: the averaged field plus the exchange hole"
+    Two things are happening to each electron in HF.
+
+    *The averaged field.* Each electron feels the pull of the nuclei plus the smeared-out electrostatic repulsion of the averaged charge cloud of all the other electrons. This is purely classical electrostatics applied to a cloud — it is the **Hartree** part, and it is what the $\hat J$ operator below encodes.
+
+    *The exchange hole.* On top of this, the Pauli principle forbids two same-spin electrons from being at the same place. The antisymmetric (determinant) wavefunction builds in an automatic avoidance between same-spin electrons: around each electron there is a small region — the **exchange hole** — that other same-spin electrons keep out of. Because they keep their distance, their mutual repulsion is *reduced*, which *lowers* the energy. This reduction is the **exchange** energy, the $-\hat K$ term, and it has no classical counterpart at all: it comes purely from the antisymmetry of the wavefunction, not from any force in the Hamiltonian. What HF still misses is that *opposite*-spin electrons also avoid each other dynamically (they too repel), and a single determinant cannot represent that avoidance — that missing piece is called correlation.
+
+| Symbol | Meaning | Units (SI) |
+|---|---|---|
+| $\mathbf x_i = (\mathbf r_i, s_i)$ | combined space–spin coordinate of electron $i$ | — |
+| $\chi_i(\mathbf x)$ | spin-orbital: one-electron state (space $\times$ spin) | $\mathrm{m^{-3/2}}$ |
+| $\phi_i(\mathbf r)$ | spatial part of a spin-orbital | $\mathrm{m^{-3/2}}$ |
+| $\sigma_i(s)$ | spin part, $\alpha$ (up) or $\beta$ (down) | — |
+| $\Psi$ | the full $N$-electron wavefunction (a determinant in HF) | $\mathrm{m^{-3N/2}}$ |
+| $\hat h(\mathbf r)$ | one-electron operator: kinetic $+$ external (nuclear) potential | J |
+| $\hat F$ | Fock operator (effective one-electron Hamiltonian) | J |
+| $\varepsilon_i$ | orbital energy (eigenvalue of $\hat F$) | J |
+| $J_{ij},\ \hat J$ | Coulomb integral / operator (classical averaged repulsion) | J |
+| $K_{ij},\ \hat K$ | exchange integral / operator (quantum, same-spin only) | J |
+| $\varepsilon_{ij}$ | Lagrange multipliers enforcing orbital orthonormality | J |
+| $r_{12} = |\mathbf r_1 - \mathbf r_2|$ | distance between two electrons | m |
+| $E_{\mathrm{corr}}$ | correlation energy, $E_{\mathrm{exact}} - E_{\mathrm{HF}}$ | J (or Ha) |
+
+For any unfamiliar word — *operator*, *eigenvalue*, *wavefunction*, *self-consistent field* — see the [beginner glossary](../undergraduate/glossary-for-beginners.md), which defines each slowly before the formal version.
+
 ## 4.7.0 The plan
 
 The strategy of Hartree–Fock has three logical steps. Knowing them in advance makes the algebra below much easier to navigate.
@@ -25,6 +56,25 @@ The mathematical engine of HF (and DFT, and many other electronic-structure meth
 $$\langle \Psi | \hat{H} | \Psi \rangle \geq E_0, \tag{4.7.2}$$
 
 with equality if and only if $\Psi$ is the exact ground state. We met this idea in Chapter 0.3 in the context of finding minimum-energy configurations; here it becomes the cornerstone of approximate quantum mechanics.
+
+!!! note "Plain-language version: never undershoot the ground state"
+    The variational principle says something reassuringly simple: *whatever trial wavefunction you guess, the energy you compute from it can never be lower than the true ground-state energy.* The true ground state is the bottom of the energy well; any guess sits at or above it. So if you have two guesses, the one giving the *lower* energy is the better one — and "minimise the energy over my adjustable knobs" becomes a rigorous recipe for getting as close to the truth as your trial form allows. It can never cheat by going below the real answer.
+
+??? note "Full derivation: why the variational bound holds"
+    We want to show $\langle\Psi|\hat H|\Psi\rangle \ge E_0$ for any normalised $\Psi$.
+
+    Step 1 — expand in the exact eigenbasis. The Hamiltonian $\hat H$ has a complete orthonormal set of eigenstates $\{|\Phi_n\rangle\}$ with $\hat H|\Phi_n\rangle = E_n|\Phi_n\rangle$ and energies ordered $E_0 \le E_1 \le E_2 \le \cdots$. Any state can be written as a superposition of them:
+    $$|\Psi\rangle = \sum_n c_n |\Phi_n\rangle, \qquad c_n = \langle\Phi_n|\Psi\rangle.$$
+
+    Step 2 — use normalisation. Because $\langle\Phi_m|\Phi_n\rangle = \delta_{mn}$,
+    $$\langle\Psi|\Psi\rangle = \sum_{m,n} c_m^* c_n \langle\Phi_m|\Phi_n\rangle = \sum_n |c_n|^2 = 1.$$
+
+    Step 3 — evaluate the energy. Apply $\hat H$ to each $|\Phi_n\rangle$ inside the bracket:
+    $$\langle\Psi|\hat H|\Psi\rangle = \sum_{m,n} c_m^* c_n \langle\Phi_m|\hat H|\Phi_n\rangle = \sum_{m,n} c_m^* c_n E_n \langle\Phi_m|\Phi_n\rangle = \sum_n |c_n|^2 E_n.$$
+
+    Step 4 — bound it. Every eigenvalue obeys $E_n \ge E_0$, and every weight $|c_n|^2 \ge 0$, so replacing each $E_n$ by the smallest one $E_0$ can only lower the sum:
+    $$\sum_n |c_n|^2 E_n \ \ge\ \sum_n |c_n|^2 E_0 = E_0 \sum_n |c_n|^2 = E_0.$$
+    Equality holds only when all the weight sits on the ground state ($c_0 = 1$, all other $c_n = 0$), i.e. when $\Psi = \Phi_0$ exactly. $\blacksquare$
 
 **Proof sketch.** Expand $|\Psi\rangle$ in the orthonormal eigenbasis $\{|\Phi_n\rangle\}$ of $\hat{H}$, $|\Psi\rangle = \sum_n c_n |\Phi_n\rangle$, with eigenvalues $E_0 \leq E_1 \leq E_2 \leq \ldots$. Normalisation gives $\sum_n |c_n|^2 = 1$. Then
 
@@ -65,6 +115,25 @@ $$E_{\mathrm H} = \langle\Psi_{\mathrm H}|\hat H_{\mathrm e}|\Psi_{\mathrm H}\ra
 
 where $\hat h = -\hbar^2\nabla^2/(2m_{\mathrm e}) + v_{\mathrm{ext}}$. The first term is one-electron, summing kinetic and external-potential expectation values across the $N$ orbitals; the second is two-electron, the Coulomb energy between the *charge densities* $|\phi_i|^2$ and $|\phi_j|^2$.
 
+??? note "Full derivation: the Hartree energy, term by term"
+    Start from the electronic Hamiltonian (4.5.3), written as a sum of one-electron operators plus pairwise repulsion:
+    $$\hat H_{\mathrm e} = \sum_{k} \hat h(\mathbf r_k) + \tfrac12 \sum_{k \ne l} \frac{e^2}{|\mathbf r_k - \mathbf r_l|}, \qquad \hat h(\mathbf r) = -\frac{\hbar^2}{2m_{\mathrm e}}\nabla^2 + v_{\mathrm{ext}}(\mathbf r).$$
+    The factor $\tfrac12$ stops us counting each pair $\{k,l\}$ twice. We sandwich this between the product state $\Psi_{\mathrm H} = \phi_1(\mathbf r_1)\cdots\phi_N(\mathbf r_N)$, assuming the orbitals are orthonormal, $\int \phi_i^*\phi_j\, d\mathbf r = \delta_{ij}$.
+
+    *One-electron terms.* Take the term $\hat h(\mathbf r_k)$. It acts only on coordinate $\mathbf r_k$, so in
+    $$\Big\langle \prod_m \phi_m(\mathbf r_m) \Big| \hat h(\mathbf r_k) \Big| \prod_n \phi_n(\mathbf r_n) \Big\rangle$$
+    every integral except the one over $\mathbf r_k$ is just $\int |\phi_m|^2\, d\mathbf r_m = 1$ (normalisation). What survives is $\int \phi_k^*(\mathbf r_k)\, \hat h\, \phi_k(\mathbf r_k)\, d\mathbf r_k$. Summing over the $N$ choices of $k$:
+    $$\sum_k \int \phi_k^*(\mathbf r)\,\hat h(\mathbf r)\,\phi_k(\mathbf r)\, d\mathbf r.$$
+
+    *Two-electron terms.* Take the pair term for electrons $k$ and $l$. It acts only on $\mathbf r_k$ and $\mathbf r_l$; all other coordinates integrate to 1. What survives is
+    $$\int\!\!\int \phi_k^*(\mathbf r_k)\phi_l^*(\mathbf r_l)\,\frac{e^2}{|\mathbf r_k - \mathbf r_l|}\,\phi_k(\mathbf r_k)\phi_l(\mathbf r_l)\, d\mathbf r_k\, d\mathbf r_l = \int\!\!\int \frac{e^2|\phi_k(\mathbf r_1)|^2 |\phi_l(\mathbf r_2)|^2}{|\mathbf r_1 - \mathbf r_2|}\, d\mathbf r_1 d\mathbf r_2,$$
+    where the last step just renames the dummy integration variables $\mathbf r_k \to \mathbf r_1$, $\mathbf r_l \to \mathbf r_2$. Each electron's wavefunction modulus-squared $|\phi|^2$ is a charge density, so this is the classical Coulomb repulsion between two charge clouds. Reinstating the $\tfrac12 \sum_{k\ne l}$ prefactor gives the second term of $E_{\mathrm H}$ above. (Note the product ansatz has no $k=l$ self-term in the Hamiltonian, so the spurious self-repulsion never appears here — but, crucially, neither is there any antisymmetry.)
+
+!!! tip "New vocabulary"
+    - **Spin-orbital** — a one-electron state that carries *both* a spatial part $\phi(\mathbf r)$ and a spin label (up/down), written $\chi(\mathbf x) = \phi(\mathbf r)\sigma(s)$. An ordinary spatial orbital can hold two electrons (one up, one down); a spin-orbital holds exactly one.
+    - **Slater determinant** — the antisymmetric many-electron wavefunction you build by arranging $N$ spin-orbitals into an $N\times N$ determinant. Swapping two electrons swaps two rows and flips the sign, which is exactly the antisymmetry the Pauli principle demands.
+    - **Self-consistent field (SCF)** — the guess-build-resolve-repeat iteration used to solve the (nonlinear) mean-field equations. Defined slowly in the [beginner glossary](../undergraduate/glossary-for-beginners.md).
+
 !!! note "Why this step? — the mean field appears here"
     The pairwise Coulomb interaction $e^2/|\mathbf r_1 - \mathbf r_2|$ in the original Hamiltonian (4.5.3) couples the coordinates of two specific electrons. In a product wavefunction the integration *factorises*: the two-electron integral becomes a product of one-electron integrals, with each electron seeing only the *average* charge density of the others. This is the mean-field reduction — the two-body operator collapses into a sum of one-body operators, each depending on the orbitals through the density.
 
@@ -99,6 +168,35 @@ In general, the determinant of an $N\times N$ matrix is a sum of $N!$ signed pro
 
 Now compute the energy expectation value $E_{\mathrm{HF}} = \langle\Psi_{\mathrm{HF}}|\hat{H}_{\mathrm e}|\Psi_{\mathrm{HF}}\rangle$. The calculation is tedious but elementary; the result is
 
+!!! info "What problem are we solving here?"
+    We have a properly antisymmetric trial wavefunction (the Slater determinant) and the full electronic Hamiltonian. We now want a *formula for its energy* in terms of the unknown orbitals, so that — in the next step — we can minimise that energy over the orbitals. The pay-off of doing the algebra carefully is that the two-electron repulsion splits into exactly two pieces: a classical Coulomb piece $J$ that the Hartree picture already had, and an extra exchange piece $K$ that is *new*, that only couples same-spin electrons, and that has no classical interpretation. Seeing exactly where the minus sign on $K$ comes from is the whole point of the derivation below.
+
+??? note "Full derivation: the determinant energy gives $J$ and $K$"
+    We compute $E_{\mathrm{HF}} = \langle\Psi_{\mathrm{HF}}|\hat H_{\mathrm e}|\Psi_{\mathrm{HF}}\rangle$ for the normalised $N$-electron determinant. We use the two-electron version explicitly and then state the general pattern; the full $N$-electron result follows by the same bookkeeping (the *Slater–Condon rules*).
+
+    **The two-electron case.** Take
+    $$\Psi(\mathbf x_1,\mathbf x_2) = \frac{1}{\sqrt2}\big[\chi_a(\mathbf x_1)\chi_b(\mathbf x_2) - \chi_b(\mathbf x_1)\chi_a(\mathbf x_2)\big],$$
+    and the Hamiltonian $\hat H_{\mathrm e} = \hat h(1) + \hat h(2) + g(1,2)$, with $g(1,2) = e^2/r_{12}$.
+
+    *One-electron part.* Consider $\langle\Psi|\hat h(1)|\Psi\rangle$. Expanding the bra and ket each into two terms gives four products. Using orthonormality $\langle\chi_a|\chi_b\rangle = \delta_{ab}$ on the coordinate-2 integral, the two "cross" terms vanish (they leave a factor $\langle\chi_a|\chi_b\rangle = 0$), and the two "direct" terms each give $\tfrac12 \langle\chi_a|\hat h|\chi_a\rangle$ or $\tfrac12 \langle\chi_b|\hat h|\chi_b\rangle$. Adding $\hat h(1)$ and $\hat h(2)$ and collecting:
+    $$\langle\Psi|\hat h(1)+\hat h(2)|\Psi\rangle = h_{aa} + h_{bb}, \qquad h_{ii} \equiv \langle\chi_i|\hat h|\chi_i\rangle.$$
+    So the one-electron energy is simply the sum of one-electron expectation values over the occupied spin-orbitals — equation (4.7.8) summed over $i$.
+
+    *Two-electron part.* Now $\langle\Psi|g(1,2)|\Psi\rangle$. Write $\Psi = \tfrac{1}{\sqrt2}(ab - ba)$ as shorthand, where $ab$ means $\chi_a(\mathbf x_1)\chi_b(\mathbf x_2)$. Then
+    $$\langle\Psi|g|\Psi\rangle = \tfrac12\big[\langle ab|g|ab\rangle - \langle ab|g|ba\rangle - \langle ba|g|ab\rangle + \langle ba|g|ba\rangle\big].$$
+    Because $g$ is symmetric under $1\leftrightarrow2$, the first and last terms are equal, and the two middle terms are equal, so
+    $$\langle\Psi|g|\Psi\rangle = \langle ab|g|ab\rangle - \langle ab|g|ba\rangle.$$
+    Writing these out as integrals:
+    $$\langle ab|g|ab\rangle = \int\!\!\int \chi_a^*(\mathbf x_1)\chi_b^*(\mathbf x_2)\,\frac{e^2}{r_{12}}\,\chi_a(\mathbf x_1)\chi_b(\mathbf x_2)\, d\mathbf x_1 d\mathbf x_2 = J_{ab},$$
+    $$\langle ab|g|ba\rangle = \int\!\!\int \chi_a^*(\mathbf x_1)\chi_b^*(\mathbf x_2)\,\frac{e^2}{r_{12}}\,\chi_b(\mathbf x_1)\chi_a(\mathbf x_2)\, d\mathbf x_1 d\mathbf x_2 = K_{ab}.$$
+    So the two-electron energy is $J_{ab} - K_{ab}$. The **first** term is the ordinary Coulomb repulsion between charge clouds $|\chi_a|^2$ and $|\chi_b|^2$; the **second** — the *exchange* term — arose entirely from the cross-term in the antisymmetrised product, i.e. from the minus sign in the determinant. It has no analogue in classical electrostatics because there is no "charge density" being integrated against another: in $K$ the two orbitals are *swapped* between the bra and ket, so the integrand is $\chi_a^*(\mathbf x_1)\chi_b(\mathbf x_1)$ — a product of two *different* orbitals at the same point, which is not a density.
+
+    **Why exchange is same-spin only.** Each spin-orbital factorises as $\chi_i(\mathbf x) = \phi_i(\mathbf r)\sigma_i(s)$ with $\sigma$ either $\alpha$ (up) or $\beta$ (down), and the spins are orthonormal: $\sum_s \alpha^*(s)\alpha(s) = 1$, $\sum_s \alpha^*(s)\beta(s) = 0$. In $K_{ab}$ the spin sum over coordinate 1 is $\sum_{s_1}\sigma_a^*(s_1)\sigma_b(s_1)$ and over coordinate 2 is $\sum_{s_2}\sigma_b^*(s_2)\sigma_a(s_2)$. If $a$ and $b$ have *opposite* spin, each of these factors is zero, so $K_{ab} = 0$. In $J_{ab}$, by contrast, the spin sums are $\sum_{s_1}|\sigma_a(s_1)|^2 = 1$ and $\sum_{s_2}|\sigma_b(s_2)|^2 = 1$ regardless of spin, so $J$ survives for any spin pairing. Hence: Coulomb acts between all pairs; exchange acts only between same-spin pairs.
+
+    **General $N$.** For an $N\times N$ determinant the same logic — keep only terms that survive orthonormality — gives, for the two-electron part, a sum over all *ordered* pairs of every $J_{ij}$ minus every $K_{ij}$, with a $\tfrac12$ to avoid double-counting:
+    $$E_{\mathrm{HF}} = \sum_i h_{ii} + \frac12 \sum_{i,j} \big(J_{ij} - K_{ij}\big),$$
+    which is (4.7.7). The double sum includes $i = j$: there $J_{ii} = K_{ii}$ (the exchange-of-identical-orbitals integral equals the Coulomb-of-identical-orbitals integral), so $J_{ii} - K_{ii} = 0$ and the electron contributes no spurious self-repulsion — the self-interaction cancels exactly, as noted below.
+
 $$E_{\mathrm{HF}} = \sum_i h_{ii} + \frac{1}{2}\sum_{ij}\bigl(J_{ij} - K_{ij}\bigr), \tag{4.7.7}$$
 
 with the one-electron integrals
@@ -120,7 +218,34 @@ The Coulomb term $J_{ij}$ is the classical electrostatic repulsion between the c
 
 ## 4.7.4 The HF equations
 
+!!! info "What problem are we solving?"
+    We have the energy (4.7.7) as a functional of the orbitals. The variational principle tells us the *best* single determinant is the one whose orbitals make this energy as small as possible. So we now minimise $E_{\mathrm{HF}}$ over the orbitals. The one complication is that we are not free to vary the orbitals arbitrarily — they must stay orthonormal (a determinant of non-orthonormal orbitals is not normalised, and equal orbitals make it vanish). Minimising a quantity subject to constraints is exactly what **Lagrange multipliers** are for, and the output of that minimisation is the set of Hartree–Fock equations.
+
+!!! note "Plain-language version: orbitals that don't lower the energy any further"
+    The Hartree–Fock equations are just the statement "I have wiggled every orbital in every possible way, keeping them orthonormal, and the energy no longer goes down." At that stationary point each orbital satisfies a Schrödinger-like equation $\hat F\chi_i = \varepsilon_i\chi_i$, where the effective Hamiltonian $\hat F$ (the Fock operator) already contains the averaged repulsion from all the orbitals. Because $\hat F$ is built from the very orbitals we are solving for, the equation has to be solved by iteration — guess, build $\hat F$, solve, repeat.
+
 Minimise $E_{\mathrm{HF}}$ with respect to the spin-orbitals $\chi_i$, subject to orthonormality $\langle\chi_i|\chi_j\rangle = \delta_{ij}$. Use Lagrange multipliers $\varepsilon_{ij}$ to enforce the constraints, take the variation, and diagonalise the multiplier matrix. The result is the canonical form of the **Hartree–Fock equations**:
+
+??? note "Full derivation: from energy minimisation to $\hat F\chi_i = \varepsilon_i\chi_i$"
+    **Set up the constrained problem.** We minimise $E_{\mathrm{HF}}[\{\chi_i\}]$ of (4.7.7) subject to $\langle\chi_i|\chi_j\rangle = \delta_{ij}$ for all $i,j$. Introduce one Lagrange multiplier $\varepsilon_{ji}$ for each constraint and form the Lagrangian
+    $$\mathcal L = E_{\mathrm{HF}} - \sum_{i,j} \varepsilon_{ji}\big(\langle\chi_i|\chi_j\rangle - \delta_{ij}\big).$$
+    At the minimum, $\mathcal L$ is stationary against any small variation $\chi_i \to \chi_i + \delta\chi_i$.
+
+    **Vary the energy.** Treat $\chi_i^*$ and $\chi_i$ as independent (the standard trick for complex functions: making $\mathcal L$ stationary in $\chi_i^*$ also makes it stationary in $\chi_i$, by taking the complex conjugate). Vary $\chi_i^* \to \chi_i^* + \delta\chi_i^*$. From the one-electron part $\sum_i h_{ii}$:
+    $$\delta\Big(\sum_i h_{ii}\Big) = \langle\delta\chi_i|\hat h|\chi_i\rangle.$$
+    From the two-electron part $\tfrac12\sum_{j,k}(J_{jk} - K_{jk})$, only the $j=i$ and $k=i$ terms involve $\chi_i^*$. Because the expression is symmetric in its two indices, the factor of $\tfrac12$ and the two equal contributions ($j=i$ and $k=i$) cancel, leaving
+    $$\delta\Big(\tfrac12\sum_{j,k}(J_{jk}-K_{jk})\Big) = \sum_j \Big\langle\delta\chi_i\Big|\,\hat J_j - \hat K_j\,\Big|\chi_i\Big\rangle,$$
+    where $\hat J_j$ and $\hat K_j$ are the one-electron Coulomb and exchange operators built from orbital $\chi_j$ (defined explicitly in (4.7.13)–(4.7.14), summed over $j$). The variation of the constraint term is $\sum_j \varepsilon_{ji}\langle\delta\chi_i|\chi_j\rangle$.
+
+    **Collect terms.** Setting $\delta\mathcal L = 0$ for arbitrary $\delta\chi_i$ means the bracketed coefficient must vanish:
+    $$\Big[\hat h + \sum_j(\hat J_j - \hat K_j)\Big]\chi_i = \sum_j \varepsilon_{ji}\,\chi_j.$$
+    Define the **Fock operator** $\hat F = \hat h + \sum_j(\hat J_j - \hat K_j)$. Then
+    $$\hat F\,\chi_i = \sum_j \varepsilon_{ji}\,\chi_j. \tag{4.7.4a}$$
+    This is the Hartree–Fock equation in its raw form: the Fock operator acting on one orbital gives a *mixture* of all the orbitals, weighted by the multiplier matrix $\varepsilon_{ji}$.
+
+    **Diagonalise.** The multiplier matrix $\boldsymbol\varepsilon = (\varepsilon_{ji})$ is Hermitian (it can be shown that $\varepsilon_{ji} = \varepsilon_{ij}^*$ because $\hat F$ is Hermitian and the $\chi_i$ orthonormal). Any Hermitian matrix can be diagonalised by a unitary transformation $\mathbf U$ of the orbitals, $\chi_i' = \sum_k U_{ki}\chi_k$. Crucially, a *unitary mixing of the occupied orbitals leaves the determinant unchanged* (up to an overall phase) and therefore leaves both $\hat F$ and the total energy unchanged — so we are free to choose the rotation that makes $\boldsymbol\varepsilon$ diagonal, $\varepsilon_{ji} \to \varepsilon_i\delta_{ji}$. In this **canonical** basis (4.7.4a) collapses to
+    $$\hat F\,\chi_i = \varepsilon_i\,\chi_i,$$
+    a genuine eigenvalue equation — equation (4.7.11). The diagonal multipliers $\varepsilon_i$ are now the orbital energies, and Koopmans' theorem (below) gives them physical meaning.
 
 $$\boxed{\; \hat F\, \chi_i(\mathbf x) = \varepsilon_i\, \chi_i(\mathbf x), \;} \tag{4.7.11}$$
 
@@ -161,6 +286,23 @@ $$E(\Psi_N) - E(\Psi_{N-1}) = h_{ii} + \sum_{j \neq i}(J_{ij} - K_{ij}) = \varep
 
 where the last equality follows by inspecting the HF equation $\hat F \chi_i = \varepsilon_i \chi_i$ — the eigenvalue $\varepsilon_i$ is precisely the diagonal matrix element of the Fock operator, which equals $h_{ii}$ plus the Coulomb and exchange contributions from all *other* electrons. Hence the energy lost in removing the electron is $\varepsilon_i$, and the ionisation energy is $-\varepsilon_i > 0$ (since $\varepsilon_i < 0$ for bound electrons).
 
+??? note "Full derivation: $\varepsilon_i$ equals the energy of removing electron $i$"
+    Two facts combine to give Koopmans' theorem. First we show $\varepsilon_i = h_{ii} + \sum_{j\ne i}(J_{ij}-K_{ij})$; then we show the energy difference equals the same thing.
+
+    **Step 1 — the orbital energy is the diagonal Fock element.** Left-multiply the canonical HF equation $\hat F\chi_i = \varepsilon_i\chi_i$ by $\chi_i^*$ and integrate. Using $\langle\chi_i|\chi_i\rangle = 1$,
+    $$\varepsilon_i = \langle\chi_i|\hat F|\chi_i\rangle = \langle\chi_i|\hat h|\chi_i\rangle + \sum_j \langle\chi_i|\hat J_j - \hat K_j|\chi_i\rangle.$$
+    The first term is $h_{ii}$. From the definitions (4.7.13)–(4.7.14), $\langle\chi_i|\hat J_j|\chi_i\rangle = J_{ij}$ and $\langle\chi_i|\hat K_j|\chi_i\rangle = K_{ij}$. The $j=i$ term contributes $J_{ii}-K_{ii} = 0$ (self-interaction cancels). Hence
+    $$\varepsilon_i = h_{ii} + \sum_{j\ne i}(J_{ij}-K_{ij}). \tag{4.7.Ka}$$
+    In words: an orbital energy is its own one-electron energy *plus* its Coulomb–exchange interaction with every *other* occupied orbital.
+
+    **Step 2 — the energy of removing electron $i$.** Write the total HF energy (4.7.7) by separating the orbital $i$ from the rest. Splitting the double sum into the $i$-row, the $i$-column, and the remainder:
+    $$E(\Psi_N) = \underbrace{\sum_{k} h_{kk}}_{\text{includes }h_{ii}} + \tfrac12\sum_{k,l}(J_{kl}-K_{kl}).$$
+    Now remove orbital $i$ (the frozen-orbital assumption keeps all other $\chi_j$ unchanged). The new energy $E(\Psi_{N-1})$ is the same sums but with $i$ deleted from the orbital list. Subtracting,
+    $$E(\Psi_N) - E(\Psi_{N-1}) = h_{ii} + \tfrac12\Big[\underbrace{\sum_{j}(J_{ij}-K_{ij})}_{k=i\text{ row}} + \underbrace{\sum_{j}(J_{ji}-K_{ji})}_{l=i\text{ column}}\Big].$$
+    The $i$–$i$ self-term ($J_{ii}-K_{ii}=0$) drops out, and since $J_{ij}=J_{ji}$ and $K_{ij}=K_{ji}$ (the integrals are symmetric in their two indices) the row sum and column sum are equal. The two halves combine, the $\tfrac12$ cancels, and
+    $$E(\Psi_N) - E(\Psi_{N-1}) = h_{ii} + \sum_{j\ne i}(J_{ij}-K_{ij}) = \varepsilon_i,$$
+    using (4.7.Ka) for the last equality. The ionisation energy is the energy you must *put in* to remove the electron, $I_i = E(\Psi_{N-1}) - E(\Psi_N) = -\varepsilon_i$. Because bound orbitals have $\varepsilon_i < 0$, this is positive, as it must be. $\blacksquare$
+
 !!! note "Why this step?"
     The crucial input is the *frozen orbital* assumption: the remaining $N-1$ electrons are not allowed to relax in response to the missing electron. In reality they *do* relax — the remaining electrons collapse inward toward the nucleus once the screening from electron $i$ is removed — and the true ionisation energy is slightly less than $-\varepsilon_i$ (by the "orbital relaxation energy"). Koopmans is therefore an *approximation*, but a remarkably good one for valence ionisations (accurate to within $\sim 0.5$ eV for many molecules). The errors partly cancel for HF: orbital relaxation lowers the ionisation energy, but correlation typically raises it, and the two cancel by symmetry. Koopmans fails badly for core ionisation, where relaxation is enormous.
 
@@ -176,6 +318,11 @@ Koopmans' theorem gives HF a direct interpretation in photoelectron spectroscopy
     If any of these is shaky, re-read the preceding section before continuing.
 
 ## 4.7.5 What HF means and where it fails
+
+!!! warning "Common misunderstandings"
+    - **"Hartree–Fock includes electron correlation."** It does not — and this is true *by definition*. The standard definition of the correlation energy is $E_{\mathrm{corr}} = E_{\mathrm{exact}} - E_{\mathrm{HF}}$ (equation (4.7.15)): correlation is *precisely the part of the energy that HF leaves out*. A single Slater determinant treats the averaged repulsion (Coulomb) and the same-spin avoidance (exchange) exactly, but it cannot represent opposite-spin electrons dodging each other instant by instant. So saying "HF includes correlation" is a contradiction in terms. HF does include *exchange* exactly — do not confuse the two; exchange is the same-spin Pauli effect, correlation is everything beyond the single-determinant mean field.
+    - **"Hartree–Fock is just DFT (or DFT is just HF)."** They look structurally similar — both produce one-electron equations solved self-consistently — but they are different theories. HF is an *approximation*: a single determinant that is provably missing correlation. Kohn–Sham DFT is, *in principle, exact*: there exists an exact exchange–correlation functional $E_{\mathrm{xc}}[n]$ that would give the true ground-state energy and density. The catch is that we do not know that functional and must approximate it. So HF is "exact ansatz solved exactly but missing physics"; DFT is "exact theory solved with an approximate ingredient". They also differ in the exchange term: HF uses the exact *non-local* exchange operator $\hat K$, whereas DFT folds exchange and correlation together into a (usually) *local* potential $v_{\mathrm{xc}}(\mathbf r)$. See the forward-reference box at the end of this section.
+    - **"The orbital energies $\varepsilon_i$ add up to the total energy."** They do not. Summing (4.7.Ka) over all occupied $i$ double-counts every electron–electron interaction, so $\sum_i\varepsilon_i = \sum_i h_{ii} + \sum_{ij}(J_{ij}-K_{ij})$ — which exceeds the true $E_{\mathrm{HF}}$ of (4.7.7) by $\tfrac12\sum_{ij}(J_{ij}-K_{ij})$. The total energy must be computed from (4.7.7), not from the eigenvalue sum.
 
 Hartree–Fock has a clear physical interpretation:
 
@@ -264,6 +411,16 @@ This is the form in which every quantum-chemistry code from the 1950s onwards ha
 
 ## 4.7.7 A bridge to DFT
 
+!!! tip "Where this appears later"
+    Everything in this section reappears, repackaged, in [Chapter 5 (DFT)](../ch05-dft/index.md):
+
+    - The **single Slater determinant** returns as the Kohn–Sham determinant of fictitious one-electron orbitals (Section 5.2 there).
+    - The **Fock operator's structure** (kinetic + external + Hartree + exchange) becomes the Kohn–Sham Hamiltonian, with exchange and correlation bundled into $v_{\mathrm{xc}}$.
+    - The **SCF cycle** of Section 4.7.4 is run in practice for real materials in [Chapter 6 (running DFT)](../ch06-running-dft/index.md).
+    - The **self-interaction cancellation** that HF achieves exactly becomes the "self-interaction error" that approximate functionals struggle with — a recurring theme in Chapter 5.
+
+    The key contrast to carry forward: Kohn–Sham DFT has the *same one-electron structure* as HF but is, in principle, *exact* — provided one knew the exact exchange–correlation functional. HF is exact-by-construction for exchange but provably missing correlation; DFT is exact-in-principle but limited in practice by the functional we choose.
+
 Here is the conceptual leap that makes DFT — and the rest of this book — possible. Hohenberg and Kohn proved in 1964 that the ground-state electron density $n(\mathbf r) = \sum_i |\chi_i(\mathbf r)|^2$ contains all the information of the wavefunction. The exact ground-state energy is a functional of $n$ alone, $E[n]$, even though we do not know its form. Kohn and Sham proposed in 1965 to write
 
 $$E[n] = T_{\mathrm s}[n] + \int v_{\mathrm{ext}}(\mathbf r) n(\mathbf r) d^3 r + E_{\mathrm H}[n] + E_{\mathrm{xc}}[n], \tag{4.7.16}$$
@@ -278,3 +435,22 @@ For now: you have all the conceptual scaffolding you need to read the rest of th
     A useful preview. Modern hybrid DFT functionals (B3LYP, PBE0, HSE) mix a *fraction* of exact HF exchange into the Kohn–Sham potential:
     $$v_{\mathrm{xc}}^{\mathrm{hybrid}} = (1 - a)\,v_{\mathrm x}^{\mathrm{DFT}} + a\,v_{\mathrm x}^{\mathrm{HF}} + v_{\mathrm c}^{\mathrm{DFT}}.$$
     The HF-exchange admixture corrects for the self-interaction error of pure DFT functionals and improves band gaps in semiconductors, the description of charge-transfer states, and reaction barrier heights. The price is computational: the non-local HF exchange operator must be evaluated, which makes hybrid DFT roughly 10× more expensive than pure GGA DFT. This is the practical sense in which Hartree–Fock lives on — not as a stand-alone method, but as a component of every accurate modern density functional. Chapter 5 will develop this lineage in detail.
+
+## 4.7.8 Check yourself
+
+!!! question "Check yourself"
+    1. The two-electron part of the HF energy is $J_{ij} - K_{ij}$. Which of these two terms has a classical electrostatic interpretation, and which has none? In one sentence, where did the term *without* a classical interpretation come from in the derivation?
+    2. Show in one line that an electron does not spuriously repel itself in HF. (What is $J_{ii} - K_{ii}$, and why?)
+    3. The exchange integral $K_{ij}$ is zero when orbitals $i$ and $j$ have opposite spin. Which integral in the derivation forced this, and what mathematical fact about the spin functions made it vanish?
+    4. The Hartree–Fock equation $\hat F\chi_i = \varepsilon_i\chi_i$ looks like a one-electron Schrödinger equation. Why can you *not* simply diagonalise $\hat F$ once and read off the answer? What is the name of the iteration you must run instead?
+    5. A colleague says "Hartree–Fock already includes electron correlation, since the determinant correlates the electrons' positions." Correct them precisely: what *does* the determinant correlate, what does it *not*, and how is the correlation energy defined?
+
+    ??? success "Answer"
+        1. $J_{ij}$ is classical — it is the Coulomb repulsion between the charge clouds $|\chi_i|^2$ and $|\chi_j|^2$. $K_{ij}$ has *no* classical interpretation; in its integrand the two orbitals are swapped between bra and ket ($\chi_i^*(\mathbf x_1)\chi_j(\mathbf x_1)$), so it is not the interaction of two densities. It arose from the *cross-term* in the antisymmetrised (determinant) product — i.e. directly from the minus sign that enforces the Pauli principle.
+        2. $J_{ii} - K_{ii} = 0$, because setting $i=j$ in the definitions (4.7.9) and (4.7.10) makes the two integrals identical (the swap $j\to i$ does nothing when $j$ already equals $i$). Their difference vanishes, so an electron has no self-interaction in HF.
+        3. The exchange integral $K_{ij}$. Writing $\chi = \phi\,\sigma$, the spin sums in $K_{ij}$ are $\sum_{s}\sigma_i^*(s)\sigma_j(s)$, which equals zero when the spins differ because the up and down spin functions are orthonormal ($\langle\alpha|\beta\rangle = 0$). In $J_{ij}$ the spin sums are instead $\sum_s|\sigma(s)|^2 = 1$, so $J$ survives for any spin pairing.
+        4. Because $\hat F$ is built from the Coulomb and exchange operators $\hat J$ and $\hat K$, which themselves depend on *all* the occupied orbitals $\chi_j$ — the equation is nonlinear. You do not know $\hat F$ until you know its own eigenvectors. So you guess the orbitals, build $\hat F$, diagonalise to get new orbitals, and repeat to convergence. This is the **self-consistent field (SCF)** iteration.
+        5. The determinant correlates the positions of *same-spin* electrons only — that is the exchange (Pauli) effect, and HF captures it exactly. It does *not* correlate opposite-spin electrons: they may, within HF, sit on top of one another paying only the average Coulomb cost. The missing dynamical avoidance of opposite-spin (and the residual same-spin) electrons is the **correlation energy**, defined as $E_{\mathrm{corr}} = E_{\mathrm{exact}} - E_{\mathrm{HF}}$ — i.e. exactly what HF leaves out, by definition.
+
+    ??? note "Hint"
+        For 1–3, look at the "Full derivation: the determinant energy gives $J$ and $K$" box: the exchange term comes from the cross-term in the antisymmetrised product, and the spin sums decide whether $K$ survives. For 4, recall that $\hat F$ in (4.7.12) contains $\hat J$ and $\hat K$, which are themselves built from the orbitals. For 5, the definition of $E_{\mathrm{corr}}$ in (4.7.15) is the whole answer.
