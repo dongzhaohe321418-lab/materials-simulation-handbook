@@ -125,7 +125,10 @@ $$
 This is *exact*: every approximation in DFT now lives in $E_{xc}[n]$ alone. The kinetic energy is treated exactly for the non-interacting system; the dominant Coulomb energy (classical Hartree) is treated exactly; only the small remainder — typically 1–10% of the total energy in solids — needs to be approximated.
 
 !!! example "How small is $E_{xc}$ for a real system?"
-    For a silicon atom, the total energy is $E\approx -288.9\;\text{Ha}$, comprising $T_s\approx +287\;\text{Ha}$, $V_\mathrm{ext}\approx -700\;\text{Ha}$, $U_H\approx +135\;\text{Ha}$, $E_x\approx -25\;\text{Ha}$ (LDA), and $E_c\approx -1\;\text{Ha}$ (LDA). Exchange is roughly $9\%$ of the total kinetic energy and correlation is roughly $0.3\%$. In a typical chemical bonding context, the energies *we care about* (binding energies, barriers) are $\sim 0.1\;\text{Ha}$, which is also the typical *error* in $E_{xc}$. So the bond-energy accuracy of a DFT calculation is governed almost entirely by the quality of the XC approximation — exactly the point that motivates the entire functional-development industry of §5.4.
+    For a silicon atom, the total energy is $E\approx -288.9\;\text{Ha}$, comprising $T_s\approx +288.9\;\text{Ha}$, $V_\mathrm{ext}\approx -697.0\;\text{Ha}$, $U_H\approx +145.2\;\text{Ha}$, $E_x\approx -24.6\;\text{Ha}$ (LDA), and $E_c\approx -1.4\;\text{Ha}$ (LDA). These balance: $288.9 - 697.0 + 145.2 - 24.6 - 1.4 = -288.9\;\text{Ha}$, and $T_s\approx -E$ as the virial theorem requires for a Coulombic system. Exchange is roughly $8.5\%$ of the total kinetic energy and correlation roughly $0.5\%$. In a typical chemical bonding context, the energies *we care about* (binding energies, barriers) are $\sim 0.1\;\text{Ha}$, which is also the typical *error* in $E_{xc}$. So the bond-energy accuracy of a DFT calculation is governed almost entirely by the quality of the XC approximation — exactly the point that motivates the entire functional-development industry of §5.4.
+
+    !!! note "Numbers are representative"
+        These are representative LDA self-consistent all-electron results for the neutral Si atom (14 electrons), rounded so the ledger balances exactly ($E = T_s + V_\mathrm{ext} + U_H + E_x + E_c$, with $T_s\approx -E$ from the virial theorem); precise values depend on the code, basis, and functional variant. The qualitative conclusion — exchange a few per cent of $T_s$, correlation a fraction of a per cent — is what matters.
 
 That is the central trick of Kohn–Sham theory.
 
@@ -182,6 +185,101 @@ $$
 
 !!! note "Why this step?"
     The chain rule $\delta E/\delta\phi_i^{*} = (\delta E/\delta n)\,\delta n/\delta\phi_i^{*}$ exploits the fact that $U_H$, $E_{xc}$ and $\int v_\mathrm{ext} n$ depend on $\phi_i^{*}$ *only* through $n$. The kinetic functional $T_s$, in contrast, depends on $\phi_i^{*}$ directly through its gradient and so contributes the $-\tfrac{1}{2}\nabla^{2}\phi_i$ term separately. This split is the technical reason the KS Hamiltonian comes out as a *local* operator plus a kinetic operator — and is also why hybrid functionals, which depend on the *orbitals* through Fock exchange, give a Hamiltonian with a *non-local* exchange operator (the generalised Kohn–Sham scheme).
+
+??? note "Full derivation: from the energy functional to the KS equations"
+    The four steps above are each compressed to their result. Here we carry out every algebraic line, in the order (a) chain rule, (b) kinetic variation, (c) Hartree variation, (d) the Lagrange-multiplier constraint and the rotation to canonical form.
+
+    **(a) The functional chain rule and the delta function.** The Hartree, exchange–correlation and external pieces of $E$ depend on $\phi_i^{*}(\mathbf r)$ *only* through the density $n(\mathbf r') = \sum_j |\phi_j(\mathbf r')|^{2}$. For a functional $E[n]$ the chain rule for functional derivatives reads
+
+    $$
+    \frac{\delta E}{\delta\phi_i^{*}(\mathbf r)} = \int \frac{\delta E}{\delta n(\mathbf r')}\,\frac{\delta n(\mathbf r')}{\delta\phi_i^{*}(\mathbf r)}\,\mathrm d\mathbf r'.
+    \tag{5.29a}
+    $$
+
+    The inner factor is obtained by differentiating $n(\mathbf r') = \sum_j \phi_j^{*}(\mathbf r')\phi_j(\mathbf r')$ with respect to $\phi_i^{*}(\mathbf r)$. Only the $j=i$ term survives, and $\delta\phi_i^{*}(\mathbf r')/\delta\phi_i^{*}(\mathbf r) = \delta(\mathbf r-\mathbf r')$, so
+
+    $$
+    \frac{\delta n(\mathbf r')}{\delta\phi_i^{*}(\mathbf r)} = \phi_i(\mathbf r')\,\delta(\mathbf r-\mathbf r') = \phi_i(\mathbf r)\,\delta(\mathbf r-\mathbf r').
+    \tag{5.29b}
+    $$
+
+    Inserting (5.29b) into (5.29a), the delta function collapses the integral, evaluating $\delta E/\delta n$ at $\mathbf r' = \mathbf r$:
+
+    $$
+    \frac{\delta E}{\delta\phi_i^{*}(\mathbf r)}\bigg|_{n\text{-part}} = \frac{\delta E}{\delta n(\mathbf r)}\,\phi_i(\mathbf r).
+    \tag{5.29c}
+    $$
+
+    This is the $(\delta E/\delta n)\,\phi_i$ term quoted in the main text.
+
+    **(b) The kinetic variation.** $T_s$ is *not* a functional of $n$ alone; it depends on the orbitals directly. From (5.23),
+
+    $$
+    T_s = -\tfrac12 \sum_j \int \phi_j^{*}(\mathbf r')\,\nabla'^{2}\phi_j(\mathbf r')\,\mathrm d\mathbf r'.
+    $$
+
+    Differentiating with respect to $\phi_i^{*}(\mathbf r)$, only the $j=i$ term contributes, and $\delta\phi_i^{*}(\mathbf r')/\delta\phi_i^{*}(\mathbf r) = \delta(\mathbf r-\mathbf r')$ again collapses the integral:
+
+    $$
+    \frac{\delta T_s}{\delta\phi_i^{*}(\mathbf r)} = -\tfrac12 \int \delta(\mathbf r-\mathbf r')\,\nabla'^{2}\phi_i(\mathbf r')\,\mathrm d\mathbf r' = -\tfrac12\nabla^{2}\phi_i(\mathbf r).
+    \tag{5.29d}
+    $$
+
+    **(c) The Hartree variation and the factor-of-2 cancellation.** Write the Hartree energy (5.26) with the symmetric kernel $K(\mathbf r_1,\mathbf r_2) = |\mathbf r_1 - \mathbf r_2|^{-1} = K(\mathbf r_2,\mathbf r_1)$:
+
+    $$
+    U_H[n] = \tfrac12 \iint n(\mathbf r_1)\,K(\mathbf r_1,\mathbf r_2)\,n(\mathbf r_2)\,\mathrm d\mathbf r_1\,\mathrm d\mathbf r_2.
+    $$
+
+    A first-order change $n \to n + \delta n$ produces two linear-in-$\delta n$ terms, one from varying the first $n$ and one from varying the second:
+
+    $$
+    \delta U_H = \tfrac12 \iint \delta n(\mathbf r_1)\,K(\mathbf r_1,\mathbf r_2)\,n(\mathbf r_2)\,\mathrm d\mathbf r_1\,\mathrm d\mathbf r_2
+    + \tfrac12 \iint n(\mathbf r_1)\,K(\mathbf r_1,\mathbf r_2)\,\delta n(\mathbf r_2)\,\mathrm d\mathbf r_1\,\mathrm d\mathbf r_2.
+    $$
+
+    In the second term relabel $\mathbf r_1 \leftrightarrow \mathbf r_2$ and use $K(\mathbf r_2,\mathbf r_1) = K(\mathbf r_1,\mathbf r_2)$; it becomes *identical* to the first. The two equal halves add, cancelling the $\tfrac12$:
+
+    $$
+    \delta U_H = \iint \delta n(\mathbf r_1)\,K(\mathbf r_1,\mathbf r_2)\,n(\mathbf r_2)\,\mathrm d\mathbf r_1\,\mathrm d\mathbf r_2
+    = \int \delta n(\mathbf r_1)\left[\int \frac{n(\mathbf r_2)}{|\mathbf r_1-\mathbf r_2|}\,\mathrm d\mathbf r_2\right]\mathrm d\mathbf r_1.
+    $$
+
+    Reading off the coefficient of $\delta n$ gives the functional derivative
+
+    $$
+    \frac{\delta U_H}{\delta n(\mathbf r)} = \int \frac{n(\mathbf r')}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r' \equiv v_H(\mathbf r).
+    \tag{5.29e}
+    $$
+
+    The factor of 2 from the two symmetric terms is exactly what cancels the $\tfrac12$ in the definition of $U_H$ — this is why $v_H$ carries no $\tfrac12$. (By contrast $\delta E_{xc}/\delta n \equiv v_{xc}$ is *defined* as the XC functional derivative; it has no closed form because $E_{xc}$ has none.)
+
+    **(d) The constraint variation and the rotation to canonical form.** Collecting (5.29c), (5.29d), (5.29e) and $\delta(\int v_\mathrm{ext} n)/\delta n = v_\mathrm{ext}$, the variation of the energy is
+
+    $$
+    \frac{\delta E}{\delta\phi_i^{*}(\mathbf r)} = \Big[-\tfrac12\nabla^{2} + v_\mathrm{ext}(\mathbf r) + v_H(\mathbf r) + v_{xc}(\mathbf r)\Big]\phi_i(\mathbf r) = \Big[-\tfrac12\nabla^{2} + v_\mathrm{KS}(\mathbf r)\Big]\phi_i(\mathbf r).
+    $$
+
+    The orthonormality constraints $\langle\phi_i|\phi_j\rangle - \delta_{ij} = 0$ are enforced by the full multiplier matrix $\varepsilon_{ij}$ (one multiplier per constraint; the constraints are not independent of each other, so in general the matrix is *not* diagonal). Varying the constraint term,
+
+    $$
+    \frac{\delta}{\delta\phi_i^{*}(\mathbf r)}\sum_{kl}\varepsilon_{kl}\Big(\langle\phi_k|\phi_l\rangle - \delta_{kl}\Big) = \sum_{l}\varepsilon_{il}\,\phi_l(\mathbf r),
+    $$
+
+    since $\delta\langle\phi_k|\phi_l\rangle/\delta\phi_i^{*}(\mathbf r) = \delta_{ki}\,\phi_l(\mathbf r)$. Setting $\delta\mathcal L/\delta\phi_i^{*} = 0$ gives the **off-diagonal Euler–Lagrange equation**
+
+    $$
+    \Big[-\tfrac12\nabla^{2} + v_\mathrm{KS}(\mathbf r)\Big]\phi_i(\mathbf r) = \sum_{j}\varepsilon_{ij}\,\phi_j(\mathbf r).
+    \tag{5.29f}
+    $$
+
+    Here $\varepsilon_{ij}$ is the full Hermitian multiplier *matrix* (Hermiticity follows because $\langle\phi_i|\phi_j\rangle = \langle\phi_j|\phi_i\rangle^{*}$, so the multipliers satisfy $\varepsilon_{ij} = \varepsilon_{ji}^{*}$). It is *not yet* the diagonal $\varepsilon_i\delta_{ij}$ of the canonical equation. To diagonalise it, perform a unitary rotation of the occupied orbitals, $\tilde\phi_i = \sum_j U_{ji}\phi_j$ with $U^{\dagger}U = \mathbb 1$. Because both $-\tfrac12\nabla^{2}+v_\mathrm{KS}$ (which depends only on $n$, and $n = \sum_i|\phi_i|^{2}$ is invariant under any unitary mixing of occupied orbitals) and the constraint structure are unchanged, (5.29f) transforms covariantly into
+
+    $$
+    \Big[-\tfrac12\nabla^{2} + v_\mathrm{KS}\Big]\tilde\phi_i = \sum_j (U^{\dagger}\varepsilon\,U)_{ij}\,\tilde\phi_j.
+    $$
+
+    Choosing $U$ as the matrix of eigenvectors of the Hermitian matrix $\varepsilon$ makes $U^{\dagger}\varepsilon\,U = \mathrm{diag}(\varepsilon_1,\dots,\varepsilon_N)$. In this **canonical basis** the right-hand side collapses to $\varepsilon_i\tilde\phi_i$, and dropping the tilde recovers the diagonal form (5.29). Thus $\varepsilon_{ij}$ is the full multiplier matrix and $\varepsilon_i$ are its real eigenvalues — the canonical KS eigenvalues. The density and total energy are identical in any choice of $U$; only the canonical basis yields the clean one-electron eigenvalue equation.
 
 Putting everything together and diagonalising $\varepsilon_{ij}$ into its eigenbasis $\varepsilon_i \delta_{ij}$, the variational condition $\delta\mathcal L/\delta\phi_i^{*} = 0$ gives
 
@@ -245,6 +343,9 @@ Consider the helium atom (two electrons, both in the 1s orbital). The exact ioni
 
 The LDA and PBE HOMOs are off by 8–9 eV. The reason is self-interaction error and the wrong long-range behaviour of $v_{xc}$ (§5.6). The exact KS construction — found by inverting an exact reference density (e.g., from quantum Monte Carlo) — recovers the correct HOMO eigenvalue, confirming (5.32). The Hartree–Fock orbital energy happens to be a good approximation here because helium has only two electrons and self-interaction in HF exchange is exactly zero by construction.
 
+!!! note "The exact-KS HOMO in the table is not hand-reproducible"
+    The "Exact KS (van Leeuwen reconstruction)" row is *not* something you can derive with pencil and paper. It is obtained by numerically *inverting* an essentially exact reference density: one starts from a highly accurate interacting density $n_0(\mathbf r)$ (from a near-exact wavefunction calculation, e.g. quantum Monte Carlo or a large configuration-interaction expansion) and iteratively searches for the local potential $v_s(\mathbf r)$ whose non-interacting ground-state density reproduces $n_0$ (van Leeuwen and Baerends, 1994). The resulting $v_s$, and hence $\varepsilon_\mathrm{HOMO}$, come out of a numerical optimisation, not a closed-form expression. The value $-0.904\;\text{Ha}$ is quoted to *illustrate* that the exact KS theory satisfies (5.32) — it is a confirmation of the theorem, not a calculation you should expect to repeat by hand.
+
 ### The HOMO exception: Janak's theorem and exact DFT
 
 There is exactly one KS eigenvalue with a guaranteed physical interpretation. In *exact* Kohn–Sham theory (with the exact, unknown $E_{xc}$), the highest occupied KS eigenvalue $\varepsilon_\mathrm{HOMO}$ equals minus the first ionisation potential of the system:
@@ -255,6 +356,44 @@ $$
 $$
 
 This follows from the asymptotic decay of the density: the density of a finite system decays as $n(\mathbf r) \sim e^{-2\sqrt{2I}\,r}$ for large $r$, and since the KS orbitals must reproduce this decay, and the most slowly-decaying occupied orbital governs it, $\varepsilon_\mathrm{HOMO}$ must equal $-I$ exactly. (The derivation is due to Almbladh and von Barth.)
+
+??? note "Full derivation: equating the asymptotic exponents"
+    **The KS-orbital tail.** A finite neutral system has $v_s(\mathbf r) \to 0$ as $r\to\infty$ (the effective potential decays to zero far from the molecule). In that region the canonical KS equation (5.29) for an occupied orbital of eigenvalue $\varepsilon < 0$ reduces to
+
+    $$
+    -\tfrac12\nabla^{2}\phi(\mathbf r) = \varepsilon\,\phi(\mathbf r), \qquad r\to\infty.
+    $$
+
+    Seeking a spherically-symmetric decaying solution $\phi \sim e^{-\kappa r}$, the dominant large-$r$ term of the radial Laplacian is $\nabla^{2}\phi \to \kappa^{2}\phi$ (the $-2\kappa/r$ correction is subleading). Substituting,
+
+    $$
+    -\tfrac12\,\kappa^{2}\,\phi = \varepsilon\,\phi \;\;\Longrightarrow\;\; \kappa = \sqrt{2|\varepsilon|}, \qquad \phi(\mathbf r) \sim e^{-\sqrt{2|\varepsilon|}\,r}.
+    \tag{5.32a}
+    $$
+
+    A more negative $\varepsilon$ gives a faster decay; therefore the *slowest*-decaying occupied orbital is the one with the *least* negative eigenvalue — the HOMO. At large $r$ the density $n = \sum_i f_i|\phi_i|^{2}$ is dominated by this slowest tail, so
+
+    $$
+    n(\mathbf r) \sim |\phi_\mathrm{HOMO}|^{2} \sim e^{-2\sqrt{2|\varepsilon_\mathrm{HOMO}|}\,r}.
+    \tag{5.32b}
+    $$
+
+    **The exact many-body tail.** Independently, the exact interacting density of a finite system decays as
+
+    $$
+    n(\mathbf r) \sim e^{-2\sqrt{2I}\,r}, \qquad r\to\infty,
+    \tag{5.32c}
+    $$
+
+    where $I = E(N-1) - E(N)$ is the first ionisation potential. This is a rigorous many-body result (Morrell, Parr and Levy, 1975; Almbladh and von Barth, 1985): the rate of decay of the density is set by the energy required to remove the most weakly-bound electron.
+
+    **Equate the exponents.** By construction the KS density equals the exact density, so the two tails (5.32b) and (5.32c) must have identical exponents:
+
+    $$
+    2\sqrt{2|\varepsilon_\mathrm{HOMO}|}\,r = 2\sqrt{2I}\,r \;\;\Longrightarrow\;\; |\varepsilon_\mathrm{HOMO}| = I.
+    $$
+
+    Since the HOMO of a bound system has $\varepsilon_\mathrm{HOMO} < 0$, this is $\varepsilon_\mathrm{HOMO} = -I$, which is (5.32).
 
 In *approximate* KS theory — i.e., every calculation you will ever do — (5.32) holds only approximately, and badly so for LDA and GGA. Functionals with the correct asymptotic behaviour (some range-separated hybrids, the optimised effective potential method, etc.) do better. The other KS eigenvalues do *not* have such an exact interpretation, even with the exact functional.
 
@@ -272,9 +411,20 @@ This identifies $\varepsilon_i$ as the derivative of the total energy with respe
 !!! note "Why this step?"
     Janak's theorem (5.33) is the deepest justification for the *thermal smearing* of occupations in SCF calculations (§5.5). It says: changing the occupation of orbital $i$ by an infinitesimal amount $\mathrm d f_i$ changes the total energy by $\varepsilon_i\,\mathrm d f_i$. In a metal where many states cluster near the Fermi level $\varepsilon_F$, the energy difference between adjacent integer-occupation states is small but the *which* states are occupied changes abruptly from one SCF iteration to the next. Janak smoothes this out: by allowing each near-Fermi state to be fractionally occupied with a Fermi–Dirac factor at some artificial temperature, the total energy becomes a smooth function of the orbital energies and the SCF converges. The penalty for this trick is that one must extrapolate to $T\to 0$ to obtain the true ground-state energy — typically done by the entropy correction $E_{T=0} = E - \tfrac{1}{2}T S$ for Gaussian smearing (the so-called "thermal smearing" correction).
 
+    The coefficient $\tfrac{1}{2}$ here is *not* universal: it is specific to Gaussian (and Methfessel–Paxton) smearing, where the free energy $F = E - TS$ and the internal energy are related such that the $T\to0$ extrapolated energy is the average $\tfrac12(E + F) = E - \tfrac12 TS$. Other smearing schemes (Fermi–Dirac, cold smearing) carry different coefficients; the schemes and their corrections are treated in full in Section 5.5.
+
 ### Connection to fractional charges
 
 Combining Janak's theorem with the variational principle gives a powerful diagnostic of approximate functionals. For the *exact* functional, the total energy $E(N)$ as a function of (continuous) electron number is piecewise *linear* between integers, with kinks at each integer. The slope between $N$ and $N+1$ is $-A$ (negative of the electron affinity); the slope between $N-1$ and $N$ is $-I$. The kink at integer $N$ is the *derivative discontinuity* $\Delta = I - A - (\varepsilon_\mathrm{LUMO}-\varepsilon_\mathrm{HOMO})$ discussed in §5.6.
+
+!!! note "Where $\Delta$ comes from (defined in Section 5.6, quoted here)"
+    The quantity $\Delta$ is the **derivative discontinuity**, defined and analysed in Section 5.6; we only quote it here. The one-line argument is a bookkeeping of two different gaps. The **fundamental gap** is the true charged-excitation gap, $E_g = I - A$, obtained from total-energy differences of the $N$- and $(N\pm1)$-electron systems. The **Kohn–Sham gap** is the eigenvalue difference $E_g^\mathrm{KS} = \varepsilon_\mathrm{LUMO} - \varepsilon_\mathrm{HOMO}$ of the *fixed-$N$* auxiliary system. In exact KS theory $\varepsilon_\mathrm{HOMO} = -I$ (equation (5.32)), but $\varepsilon_\mathrm{LUMO} \neq -A$ in general; the two differ precisely because the exact $v_{xc}$ jumps by a spatially-constant amount $\Delta$ as the electron number crosses an integer. Subtracting,
+
+    $$
+    \Delta = \underbrace{(I - A)}_{\text{fundamental gap}} - \underbrace{(\varepsilon_\mathrm{LUMO} - \varepsilon_\mathrm{HOMO})}_{\text{KS gap}},
+    $$
+
+    i.e. the derivative discontinuity is exactly the amount by which the KS gap falls short of the true gap. Even with the exact functional, the KS gap underestimates $E_g$ by $\Delta$; with LDA/GGA, where $\Delta$ is effectively missing, the underestimate is compounded.
 
 Approximate functionals (LDA, GGA) violate piecewise linearity: their $E(N)$ is *concave-up* between integers, with no kink. This violation is the formal expression of *self-interaction error*: electrons artificially want to delocalise to non-integer numbers because the approximate functional underpenalises fractional charges. The integral of this curvature error over an integer interval $\int_{N-1}^{N}[E_\mathrm{approx}(N')-E_\mathrm{linear}(N')]\,\mathrm dN' \sim 0.1$–$1\;\text{eV}$ is the diagnostic, and modern functional development (e.g., $\omega$B97X-V, optimally-tuned range-separated hybrids) explicitly minimises it.
 
@@ -312,6 +462,22 @@ $$
 T_s[n] \;\leq\; T[n].
 $$
 
+!!! note "The clean Levy-constrained-search statement"
+    The phrasing above ("$T$ is a minimum over wavefunctions ... while $T_s$ is a minimum ...") is correct but easy to misread, because $T$ and $T_s$ are not minima of the *same* object. The Levy constrained search makes the inequality transparent by searching both over the **same density class** — all antisymmetric wavefunctions $\Psi$ that yield the given density $n$:
+
+    $$
+    T_s[n] = \min_{\Psi \to n} \langle\Psi|\hat T|\Psi\rangle,
+    \tag{5.33c}
+    $$
+
+    where $\hat T = -\tfrac12\sum_i\nabla_i^{2}$ is the bare kinetic operator (no interaction appears in this search — that is what makes the minimiser a single Slater determinant, the KS state). The interacting ground state $\Psi_0$ also belongs to the search set, because by the KS postulate $\Psi_0 \to n$ reproduces the same density. It is therefore merely *one candidate* in the minimisation (5.33c), not generally the minimiser. Since a minimum is no larger than the value at any candidate,
+
+    $$
+    T_s[n] = \min_{\Psi \to n}\langle\Psi|\hat T|\Psi\rangle \;\le\; \langle\Psi_0|\hat T|\Psi_0\rangle = T[n].
+    $$
+
+    The inequality is *not* a statement that interaction raises kinetic energy in some dynamical sense; it is the elementary fact that constraining the search to non-interacting trial states can only lower (or equal) the minimum of $\langle\hat T\rangle$ over that fixed density.
+
 The difference $T_c[n] \equiv T[n] - T_s[n] \geq 0$ is the **correlation kinetic energy** and is part of $E_{xc}$. For most chemical systems $T_c$ is of order 10–50 millihartree per electron, while $T_s$ is of order 1 Hartree per electron: a few per cent correction. By computing $T_s$ exactly via the orbitals, KS theory captures the dominant kinetic energy without approximation; only the small remainder $T_c$ is bundled into $E_{xc}$ and approximated.
 
 This is precisely the failure mode that doomed Thomas–Fermi (§5.1). TF tried to write the entire $T$ as an explicit functional of $n$ — $C_F\int n^{5/3}$ — and got the magnitude roughly right but the spatial dependence so wrong that no molecule could bind. KS bypasses the problem by introducing orbitals to compute $T_s$ directly, leaving $T_c$ (which is small and smooth) to be approximated as a functional of $n$. The orbitals are the price; the prize is chemistry.
@@ -347,6 +513,52 @@ $$
 
 and the variational object is $\Omega = E - T S - \mu N$. Setting $\partial\Omega/\partial f_i = 0$ gives back (5.31a) — Janak's theorem $\partial E/\partial f_i = \varepsilon_i$ (which we derived in §5.2.4b) plus the entropy derivative.
 
+??? note "Full derivation: minimising $\Omega$ recovers Fermi–Dirac"
+    Differentiate $\Omega = E - TS - \mu N$ with respect to the occupation $f_i$, treating each $f_i$ as an independent variable. There are three contributions.
+
+    *Energy term.* By Janak's theorem (5.33), $\dfrac{\partial E}{\partial f_i} = \varepsilon_i$.
+
+    *Particle-number term.* With $N = \sum_j f_j$, we have $\dfrac{\partial N}{\partial f_i} = 1$, so $-\mu\,\partial N/\partial f_i = -\mu$.
+
+    *Entropy term.* From $S = -k_B\sum_j[f_j\ln f_j + (1-f_j)\ln(1-f_j)]$, differentiate the single $j=i$ term:
+
+    $$
+    \frac{\partial}{\partial f_i}\big[f_i\ln f_i\big] = \ln f_i + 1,
+    \qquad
+    \frac{\partial}{\partial f_i}\big[(1-f_i)\ln(1-f_i)\big] = -\ln(1-f_i) - 1.
+    $$
+
+    Adding these, the $+1$ and $-1$ cancel:
+
+    $$
+    \frac{\partial S}{\partial f_i} = -k_B\big[\ln f_i - \ln(1-f_i)\big] = -k_B\ln\frac{f_i}{1-f_i}.
+    \tag{5.31d}
+    $$
+
+    *Assemble.* The stationarity condition $\partial\Omega/\partial f_i = 0$ is
+
+    $$
+    \varepsilon_i - T\left(-k_B\ln\frac{f_i}{1-f_i}\right) - \mu = 0
+    \;\;\Longrightarrow\;\;
+    \varepsilon_i + k_B T\ln\frac{f_i}{1-f_i} - \mu = 0.
+    $$
+
+    Solve for $f_i$. Isolate the logarithm:
+
+    $$
+    \ln\frac{f_i}{1-f_i} = -\frac{\varepsilon_i - \mu}{k_B T}
+    \;\;\Longrightarrow\;\;
+    \frac{f_i}{1-f_i} = \mathrm e^{-(\varepsilon_i-\mu)/k_B T}.
+    $$
+
+    Write $x = \mathrm e^{(\varepsilon_i-\mu)/k_B T}$, so $f_i/(1-f_i) = 1/x$, i.e. $x f_i = 1 - f_i$, hence $f_i(1+x) = 1$ and
+
+    $$
+    f_i = \frac{1}{1+x} = \frac{1}{1 + \mathrm e^{(\varepsilon_i-\mu)/k_B T}},
+    $$
+
+    which is exactly the Fermi–Dirac distribution (5.31a). The entropy term is therefore precisely what turns the integer step-function occupations into smooth fractional ones.
+
 !!! note "Why this step?"
     The mathematical content of finite-$T$ DFT is that smoothing the occupations from discontinuous step functions to smooth Fermi–Dirac distributions makes the energy functional differentiable in *every* variable, including the orbital occupations. For metals, where states near the Fermi level are nearly degenerate and tiny changes in the KS potential can flip which states are occupied, this smoothing is *essential* for SCF convergence. We return to this in §5.5. Even for $T=0$ insulator calculations, the underlying mathematical framework requires the freedom of fractional occupations because the constrained-search functional $F_L[n]$ is defined on the full $N$-representable class, which includes mixed-state densities corresponding to fractional occupations.
 
@@ -375,6 +587,57 @@ $$
 E_{xc}[n] \;=\; \int_0^{1}\!\mathrm d\lambda\,\langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle - U_H[n].
 \tag{5.33a}
 $$
+
+??? note "Full derivation: the adiabatic-connection formula via Hellmann–Feynman"
+    Let $E_\lambda = \langle\Psi_\lambda|\hat H_\lambda|\Psi_\lambda\rangle$ be the ground-state energy of $\hat H_\lambda = \hat T + \lambda\hat V_{ee} + \hat V_\mathrm{ext}^{\lambda}$, where at each $\lambda$ the external potential $\hat V_\mathrm{ext}^{\lambda}$ is *adjusted* so that the ground-state density is held fixed at the physical $n_0$ for all $\lambda$.
+
+    **Hellmann–Feynman along the path.** Differentiating $E_\lambda$ with respect to $\lambda$, the terms where $\partial/\partial\lambda$ hits the wavefunction vanish because $\Psi_\lambda$ is an eigenstate (normalised), leaving only the explicit derivative of the Hamiltonian:
+
+    $$
+    \frac{\mathrm dE_\lambda}{\mathrm d\lambda} = \Big\langle\Psi_\lambda\Big|\frac{\partial\hat H_\lambda}{\partial\lambda}\Big|\Psi_\lambda\Big\rangle
+    = \langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle + \Big\langle\Psi_\lambda\Big|\frac{\partial\hat V_\mathrm{ext}^{\lambda}}{\partial\lambda}\Big|\Psi_\lambda\Big\rangle.
+    $$
+
+    Because $\hat V_\mathrm{ext}^{\lambda} = \int v_\mathrm{ext}^{\lambda}(\mathbf r)\,\hat n(\mathbf r)\,\mathrm d\mathbf r$ is a one-body operator and the density is pinned to $n_0$ independent of $\lambda$,
+
+    $$
+    \Big\langle\Psi_\lambda\Big|\frac{\partial\hat V_\mathrm{ext}^{\lambda}}{\partial\lambda}\Big|\Psi_\lambda\Big\rangle = \int \frac{\partial v_\mathrm{ext}^{\lambda}(\mathbf r)}{\partial\lambda}\,n_0(\mathbf r)\,\mathrm d\mathbf r.
+    $$
+
+    **Integrate from 0 to 1.** Integrating the total derivative recovers the endpoint difference:
+
+    $$
+    E_{\lambda=1} - E_{\lambda=0} = \int_0^1 \langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle\,\mathrm d\lambda + \int_0^1\!\!\int \frac{\partial v_\mathrm{ext}^{\lambda}}{\partial\lambda}\,n_0\,\mathrm d\mathbf r\,\mathrm d\lambda.
+    $$
+
+    The last term integrates trivially in $\lambda$ to $\int (v_\mathrm{ext}^{1} - v_\mathrm{ext}^{0})\,n_0\,\mathrm d\mathbf r$.
+
+    **Identify the endpoints.** At $\lambda=1$ the system is fully interacting: $\Psi_1 = \Psi_0$, $v_\mathrm{ext}^{1} = v_\mathrm{ext}$ (the physical potential), and $E_1 = T + V_{ee} + \int v_\mathrm{ext} n_0$ is the exact energy (5.25). At $\lambda=0$ there is no interaction: $\Psi_0^{\lambda=0}$ is the KS determinant, $v_\mathrm{ext}^{0} = v_\mathrm{KS}$, and $E_0 = T_s + \int v_\mathrm{KS} n_0$. Subtracting,
+
+    $$
+    E_1 - E_0 = \big(T - T_s\big) + V_{ee} + \int (v_\mathrm{ext} - v_\mathrm{KS})\,n_0\,\mathrm d\mathbf r,
+    $$
+
+    while the right-hand side of the integrated Hellmann–Feynman relation gives
+
+    $$
+    E_1 - E_0 = \int_0^1 \langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle\,\mathrm d\lambda + \int (v_\mathrm{ext} - v_\mathrm{KS})\,n_0\,\mathrm d\mathbf r.
+    $$
+
+    The external-potential pieces are identical on both sides and cancel, leaving
+
+    $$
+    \big(T - T_s\big) + V_{ee} = \int_0^1 \langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle\,\mathrm d\lambda.
+    \tag{5.33d}
+    $$
+
+    **Assemble $E_{xc}$.** By the definition (5.27), $E_{xc} = (T - T_s) + (V_{ee} - U_H)$. Substituting (5.33d) for $(T-T_s)+V_{ee}$ and subtracting the Hartree energy $U_H$ (which is $\lambda$-independent — it depends only on the fixed density $n_0$):
+
+    $$
+    E_{xc}[n] = \int_0^1 \langle\Psi_\lambda|\hat V_{ee}|\Psi_\lambda\rangle\,\mathrm d\lambda - U_H[n],
+    $$
+
+    which is (5.33a). The coupling-strength integral thus assembles the kinetic correlation $T-T_s$ together with the non-classical part of $V_{ee}$ into $E_{xc}$, with the classical Hartree piece removed.
 
 This *Levy–Langreth adiabatic connection formula* (independently derived by Harris–Jones and Gunnarsson–Lundqvist) gives an exact, explicit expression for $E_{xc}$ as an integral of the interaction energy along the adiabatic path. It is the foundation of the modern view of exchange–correlation as an "exchange–correlation hole" averaged over coupling strength, and it underpins virtually every modern functional construction including hybrids (which can be derived as the trapezoidal-rule approximation to (5.33a)) and double-hybrids (which add information from the $\lambda=0$ endpoint via MP2-style correlation).
 
@@ -411,6 +674,53 @@ $$
 $$
 
 which interpolates smoothly between the unpolarised and fully polarised limits. PBE and similar GGAs use analogous interpolations for the spin-dependent correlation energy. The two limits $\zeta=0$ and $\zeta=\pm 1$ are exactly known from many-body theory; the interpolation in between is constrained but has some freedom.
+
+??? note "Full derivation: the $\tfrac12[(1+\zeta)^{4/3}+(1-\zeta)^{4/3}]$ spin-scaling factor"
+    The bracket follows from two exact facts about exchange.
+
+    **Fact 1 — the spin-scaling relation.** Exchange acts only between *same-spin* electrons (opposite-spin electrons have no exchange interaction). Hence the total exchange energy splits cleanly into independent spin channels, and the exact relation
+
+    $$
+    E_x[n_\uparrow, n_\downarrow] = \tfrac12\Big(E_x[2n_\uparrow] + E_x[2n_\downarrow]\Big)
+    \tag{5.34a}
+    $$
+
+    holds, where $E_x[n]$ on the right is the *spin-unpolarised* functional. The factor of 2 inside the brackets and the $\tfrac12$ outside come from treating each spin channel as a fully polarised system of density $2n_\sigma$ and weighting it by one-half.
+
+    **Fact 2 — the density scaling of the exchange energy density.** For the uniform electron gas (Dirac exchange, derived in §5.1), the exchange energy per particle scales as the cube root of the density,
+
+    $$
+    \epsilon_x(n) = -C_x\,n^{1/3}, \qquad C_x = \tfrac34\Big(\tfrac{3}{\pi}\Big)^{1/3},
+    $$
+
+    so the exchange energy *density* (energy per unit volume) is $n\,\epsilon_x(n) = -C_x\,n^{4/3}$, scaling as $n^{4/3}$.
+
+    **Combine.** Apply (5.34a) at the level of energy densities. Writing the spin densities in terms of total density and polarisation,
+
+    $$
+    n_\uparrow = \tfrac12 n(1+\zeta), \qquad n_\downarrow = \tfrac12 n(1-\zeta),
+    $$
+
+    so that $2n_\uparrow = n(1+\zeta)$ and $2n_\downarrow = n(1-\zeta)$. The spin-resolved exchange energy density is
+
+    $$
+    n\,\epsilon_x(n,\zeta) = \tfrac12\Big[(2n_\uparrow)\,\epsilon_x(2n_\uparrow) + (2n_\downarrow)\,\epsilon_x(2n_\downarrow)\Big]
+    = \tfrac12\Big[-C_x(2n_\uparrow)^{4/3} - C_x(2n_\downarrow)^{4/3}\Big].
+    $$
+
+    Substitute $2n_\sigma = n(1\pm\zeta)$ and factor out $n^{4/3}$:
+
+    $$
+    n\,\epsilon_x(n,\zeta) = -C_x\,n^{4/3}\cdot\tfrac12\Big[(1+\zeta)^{4/3} + (1-\zeta)^{4/3}\Big].
+    $$
+
+    Divide both sides by $n$ and recognise $-C_x n^{1/3} = \epsilon_x(n,0)$, the unpolarised energy per particle:
+
+    $$
+    \epsilon_x(n,\zeta) = \epsilon_x(n,0)\cdot\tfrac12\Big[(1+\zeta)^{4/3} + (1-\zeta)^{4/3}\Big].
+    $$
+
+    **Check the limits.** At $\zeta=0$ the bracket is $\tfrac12(1+1)=1$, recovering $\epsilon_x(n,0)$. At $\zeta=1$ (full polarisation) the bracket is $\tfrac12(2^{4/3}+0) = 2^{1/3}\approx 1.26$, the exact enhancement of a fully spin-polarised gas. Both endpoints match the many-body results, as claimed in the main text.
 
 In what follows, unless stated otherwise, we work with the spin-unpolarised theory; the generalisation is straightforward but notationally heavier.
 

@@ -42,7 +42,7 @@ What follows is a careful, derivation-first development.
 - **§5.4 Exchange–correlation functionals.** Everything we do not know is hidden inside $E_{xc}[n]$. Perdew's Jacob's ladder organises the approximations: LDA, GGA, meta-GGA, hybrids, and beyond. We derive the LDA exchange energy from the uniform electron gas, explain when GGAs help, where hybrids buy accuracy with cost, and how van der Waals corrections plug a real hole. The section closes with a decision table for choosing a functional.
 - **§5.5 The self-consistent field.** The KS equations are nonlinear because the potential depends on the density that the equations themselves produce. We work through the SCF loop, see why naive iteration oscillates, and implement Pulay/DIIS mixing in a complete, runnable Python program that solves a 1D model hydrogen chain end-to-end.
 - **§5.6 Where DFT fails.** An honest tour of band gap underestimation, the dispersion problem, strong correlation, self-interaction error, and the inaccessibility of excited states from a ground-state theory. We point to GW, BSE, DMFT, and coupled cluster as the methods to reach for when DFT will not do.
-- **§5.7 Exercises.** Eight problems, with worked solutions, ranging from re-deriving Hohenberg–Kohn in your own words to extending the SCF code.
+- **§5.7 Exercises.** Graded exercises organised in five levels (A–E), with worked solutions and hints, ranging from re-deriving Hohenberg–Kohn in your own words to extending the SCF code.
 
 ## Why DFT became the workhorse
 

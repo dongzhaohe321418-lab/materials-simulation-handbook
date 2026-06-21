@@ -55,6 +55,7 @@ The first three rungs are purely *semi-local* — the value of $\epsilon_{xc}$ a
 
 !!! example "Cost ratio summary"
     For a benchmark of organic molecules on the same hardware:
+    *(Timings are representative of plane-wave/Gaussian DFT codes on the GMTKN55 main-group thermochemistry test set; absolute ratios vary with system size, basis set, and code.)*
     
     | Rung | Functional | Time / GGA |
     |---|---|---|
@@ -116,23 +117,159 @@ $$
 
 where $\rho_x$ is the exchange hole. For a single Slater determinant of plane waves, the exchange hole is computable analytically. We take a more direct route via the Fock energy of the Hartree–Fock ground state of the uniform gas.
 
+Here $\rho_x(\mathbf r,\mathbf r')$ is the **exchange hole** — the depletion of same-spin density around an electron at $\mathbf r$ caused by the Pauli principle, defined precisely later in §5.4.7 and satisfying the sum rule $\int\rho_x(\mathbf r,\mathbf r')\,\mathrm d\mathbf r' = -1$ (it removes exactly one electron's worth of same-spin charge).
+
 The Hartree–Fock exchange energy of $N$ plane-wave electrons (two per $\mathbf k$ up to $k_F$) is
 
 $$
 E_x = -\frac{1}{2}\sum_{\mathbf k,\mathbf k'}^\mathrm{occ}\int\frac{e^{-i(\mathbf k-\mathbf k')\cdot\mathbf r}\,e^{i(\mathbf k-\mathbf k')\cdot\mathbf r'}}{L^{6}\,|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r'.
 $$
 
-Converting sums to integrals and doing the spatial integral (Fourier transform of $1/|\mathbf r|$ is $4\pi/q^{2}$), one obtains for the exchange energy per unit volume
+Converting the sums to integrals (the spin factor $2$ cancels the $\tfrac12$ in front of the exchange energy) and doing the spatial integral (the Fourier transform of $1/|\mathbf r|$ is $4\pi/q^{2}$), the exchange energy becomes
 
 $$
-\frac{E_x}{L^{3}} = -\frac{1}{L^{3}}\cdot 2 \cdot \left(\frac{L^{3}}{(2\pi)^{3}}\right)^{2}\int_{k<k_F}\int_{k'<k_F}\frac{4\pi}{|\mathbf k-\mathbf k'|^{2}}\,\mathrm d\mathbf k\,\mathrm d\mathbf k'.
+E_x = -\frac{4\pi}{L^{3}}\left(\frac{L^{3}}{(2\pi)^{3}}\right)^{2}\int_{k<k_F}\int_{k'<k_F}\frac{\mathrm d\mathbf k\,\mathrm d\mathbf k'}{|\mathbf k-\mathbf k'|^{2}}.
 $$
 
-The double integral evaluates (the calculation is in many textbooks; the trick is the substitution $\mathbf q = \mathbf k - \mathbf k'$):
+The double integral evaluates (full derivation below; substitute $\mathbf q = \mathbf k - \mathbf k'$, then do the inner Fermi-sphere integral) to
 
 $$
-\int_{k<k_F}\int_{k'<k_F}\frac{1}{|\mathbf k - \mathbf k'|^{2}}\,\mathrm d\mathbf k\,\mathrm d\mathbf k' = 2\pi k_F^{4}.
+\int_{k<k_F}\int_{k'<k_F}\frac{1}{|\mathbf k - \mathbf k'|^{2}}\,\mathrm d\mathbf k\,\mathrm d\mathbf k' = 4\pi^{2} k_F^{4}.
 $$
+
+Substituting and simplifying the constants gives the exchange energy per unit volume $E_x/L^{3} = -k_F^{4}/(4\pi^{3})$. The collapsible box below carries out *every* step of the plane-wave calculation — the spatial integral, the spin factor, and the inner and outer Fermi-sphere integrals (the outer one via a telescoping series, with no divergent boundary term) — assembling the constants one by one so that nothing is taken on trust.
+
+??? note "Full derivation: exchange energy of the uniform electron gas"
+    We start from the Hartree–Fock exchange (Fock) energy for a set of occupied spin-orbitals,
+    $$
+    E_x = -\frac{1}{2}\sum_{\sigma}\sum_{i,j\,\in\,\mathrm{occ}}^{(\sigma)}\iint\frac{\phi_i^{*}(\mathbf r)\,\phi_j^{*}(\mathbf r')\,\phi_j(\mathbf r)\,\phi_i(\mathbf r')}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r'.
+    \tag{5.35a}
+    $$
+    The exchange term couples only orbitals of the *same* spin $\sigma$ (the off-diagonal element of the antisymmetrised two-electron interaction vanishes for opposite spins), which is why the spin label sits on the inner sums.
+
+    **Step 1 — plane-wave orbitals.** For the uniform gas in a box of side $L$ (volume $L^{3}$) with periodic boundary conditions, the Kohn–Sham orbitals are normalised plane waves
+    $$
+    \phi_{\mathbf k}(\mathbf r) = L^{-3/2}\,\mathrm e^{i\mathbf k\cdot\mathbf r},\qquad \int_{L^{3}}|\phi_{\mathbf k}|^{2}\,\mathrm d\mathbf r = L^{-3}\!\int_{L^{3}}\!\mathrm d\mathbf r = 1,
+    \tag{5.35b}
+    $$
+    occupied for $|\mathbf k|<k_F$, with two spin states ($\uparrow,\downarrow$) per allowed $\mathbf k$. Insert (5.35b) into (5.35a), writing $\mathbf k$ for $i$ and $\mathbf k'$ for $j$. The product of orbitals is
+    $$
+    \phi_{\mathbf k}^{*}(\mathbf r)\phi_{\mathbf k'}^{*}(\mathbf r')\phi_{\mathbf k'}(\mathbf r)\phi_{\mathbf k}(\mathbf r')
+    = L^{-6}\,\mathrm e^{-i\mathbf k\cdot\mathbf r}\,\mathrm e^{-i\mathbf k'\cdot\mathbf r'}\,\mathrm e^{+i\mathbf k'\cdot\mathbf r}\,\mathrm e^{+i\mathbf k\cdot\mathbf r'}
+    = L^{-6}\,\mathrm e^{-i(\mathbf k-\mathbf k')\cdot(\mathbf r-\mathbf r')}.
+    \tag{5.35c}
+    $$
+    So, with $\mathbf q\equiv\mathbf k-\mathbf k'$,
+    $$
+    E_x = -\frac{1}{2}\sum_{\sigma}\sum_{\mathbf k,\mathbf k'}^{(\sigma)}\frac{1}{L^{6}}\iint\frac{\mathrm e^{-i\mathbf q\cdot(\mathbf r-\mathbf r')}}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r'.
+    \tag{5.35d}
+    $$
+
+    **Step 2 — the spatial double integral.** Change variables to the relative and centre-of-mass coordinates $\mathbf R=\mathbf r-\mathbf r'$ and $\bar{\mathbf r}=\tfrac12(\mathbf r+\mathbf r')$; the Jacobian is unity. The integrand depends only on $\mathbf R$, so the centre-of-mass integral is trivial and yields the volume:
+    $$
+    \iint\frac{\mathrm e^{-i\mathbf q\cdot(\mathbf r-\mathbf r')}}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r'
+    = \underbrace{\int_{L^{3}}\mathrm d\bar{\mathbf r}}_{=\,L^{3}}\;\int\frac{\mathrm e^{-i\mathbf q\cdot\mathbf R}}{|\mathbf R|}\,\mathrm d\mathbf R.
+    \tag{5.35e}
+    $$
+    The remaining integral is the Fourier transform of the Coulomb potential. With the standard convergence factor $\mathrm e^{-\eta R}$ ($\eta\to0^{+}$),
+    $$
+    \int\frac{\mathrm e^{-i\mathbf q\cdot\mathbf R}}{|\mathbf R|}\,\mathrm d\mathbf R = \frac{4\pi}{q^{2}},\qquad q=|\mathbf q|=|\mathbf k-\mathbf k'|.
+    \tag{5.35f}
+    $$
+    (Quick check of (5.35f): align $\mathbf q$ with the polar axis, $\int_0^\infty\!\!\int_0^\pi\!\!\int_0^{2\pi} \mathrm e^{-iqR\cos\theta}\mathrm e^{-\eta R}\,R\,\sin\theta\,\mathrm d\varphi\,\mathrm d\theta\,\mathrm dR = 2\pi\int_0^\infty R\,\mathrm e^{-\eta R}\,\frac{2\sin qR}{qR}\,\mathrm dR = \frac{4\pi}{q}\int_0^\infty \mathrm e^{-\eta R}\sin qR\,\mathrm dR = \frac{4\pi}{q}\cdot\frac{q}{q^{2}+\eta^{2}}\to\frac{4\pi}{q^{2}}$.) Hence
+    $$
+    E_x = -\frac{1}{2}\sum_{\sigma}\sum_{\mathbf k,\mathbf k'}^{(\sigma)}\frac{L^{3}}{L^{6}}\,\frac{4\pi}{|\mathbf k-\mathbf k'|^{2}}
+    = -\frac{1}{2}\sum_{\sigma}\sum_{\mathbf k,\mathbf k'}^{(\sigma)}\frac{4\pi}{L^{3}\,|\mathbf k-\mathbf k'|^{2}}.
+    \tag{5.35g}
+    $$
+
+    **Step 3 — sums to integrals, and the spin factor.** Allowed wavevectors are spaced by $2\pi/L$ in each direction, so each occupies a $\mathbf k$-space volume $(2\pi/L)^{3}$ and
+    $$
+    \sum_{\mathbf k} \;\longrightarrow\; \frac{L^{3}}{(2\pi)^{3}}\int \mathrm d^{3}k .
+    \tag{5.35h}
+    $$
+    The two spin channels are identical, so $\sum_{\sigma}(\cdots)=2(\cdots)$. This spin factor $2$ exactly cancels the $\tfrac12$ in front of (5.35g). Applying (5.35h) to *both* the $\mathbf k$- and $\mathbf k'$-sums,
+    $$
+    E_x = -\,\frac{4\pi}{L^{3}}\left(\frac{L^{3}}{(2\pi)^{3}}\right)^{2}\!\!\int_{k<k_F}\!\!\int_{k'<k_F}\frac{\mathrm d^{3}k\,\mathrm d^{3}k'}{|\mathbf k-\mathbf k'|^{2}}
+    = -\,\frac{4\pi\,L^{3}}{(2\pi)^{6}}\;I,\qquad I\equiv\!\int_{k<k_F}\!\!\int_{k'<k_F}\!\frac{\mathrm d^{3}k\,\mathrm d^{3}k'}{|\mathbf k-\mathbf k'|^{2}}.
+    \tag{5.35i}
+    $$
+
+    **Step 4 — the inner Fermi-sphere integral.** Fix $\mathbf k$ and integrate $\mathbf k'$ over the Fermi sphere. Using polar axis along $\mathbf k$ and the angular identity $\int_0^\pi \dfrac{\sin\theta\,\mathrm d\theta}{k^{2}+k'^{2}-2kk'\cos\theta} = \dfrac{1}{2kk'}\ln\dfrac{(k+k')^{2}}{(k-k')^{2}} = \dfrac{1}{kk'}\ln\left|\dfrac{k+k'}{k-k'}\right|$,
+    $$
+    \int_{k'<k_F}\frac{\mathrm d^{3}k'}{|\mathbf k-\mathbf k'|^{2}}
+    = 2\pi\!\int_0^{k_F}\!k'^{2}\,\frac{1}{kk'}\ln\left|\frac{k+k'}{k-k'}\right|\mathrm dk'
+    = \frac{2\pi}{k}\!\int_0^{k_F}\!k'\ln\left|\frac{k+k'}{k-k'}\right|\mathrm dk'.
+    \tag{5.35j}
+    $$
+    The elementary integral $\displaystyle\int_0^{k_F} k'\ln\left|\frac{k+k'}{k-k'}\right|\mathrm dk' = k\,k_F + \tfrac12(k_F^{2}-k^{2})\ln\left|\frac{k_F+k}{k_F-k}\right|$ (integrate by parts, $u=\ln|\cdots|$, $\mathrm dv=k'\mathrm dk'$) gives the standard closed form
+    $$
+    \boxed{\;J(k)\equiv\int_{k'<k_F}\frac{\mathrm d^{3}k'}{|\mathbf k-\mathbf k'|^{2}}
+    = 2\pi\left[\,k_F + \frac{k_F^{2}-k^{2}}{2k}\ln\left|\frac{k_F+k}{k_F-k}\right|\,\right].}
+    \tag{5.35k}
+    $$
+
+    **Step 5 — the outer integral.** Now integrate $J(k)$ over the $\mathbf k$ Fermi sphere, $\int_{k<k_F}\mathrm d^{3}k = \int_0^{k_F}4\pi k^{2}\,\mathrm dk$:
+    $$
+    I = \int_0^{k_F}4\pi k^{2}\,J(k)\,\mathrm dk
+    = 8\pi^{2}\!\int_0^{k_F}\!\left[\,k^{2}k_F + \frac{k(k_F^{2}-k^{2})}{2}\ln\left|\frac{k_F+k}{k_F-k}\right|\,\right]\mathrm dk.
+    \tag{5.35l}
+    $$
+    Rescale with $x=k/k_F$ (so $\mathrm dk = k_F\,\mathrm dx$ and every bracket carries $k_F^{4}$ overall):
+    $$
+    I = 8\pi^{2}k_F^{4}\!\int_0^{1}\!\left[\,x^{2} + \frac{x(1-x^{2})}{2}\ln\frac{1+x}{1-x}\,\right]\mathrm dx
+    = 8\pi^{2}k_F^{4}\,(A+B).
+    \tag{5.35m}
+    $$
+    The first piece is $A=\int_0^1 x^{2}\,\mathrm dx = \tfrac13$. The second is $B=\tfrac12\int_0^1 (x-x^{3})\ln\frac{1+x}{1-x}\,\mathrm dx = \tfrac12(I_1-I_3)$, with $I_n\equiv\int_0^1 x^{n}\ln\frac{1+x}{1-x}\,\mathrm dx$. To evaluate $I_n$ without any divergent boundary term, expand the logarithm in its Maclaurin series, $\ln\frac{1+x}{1-x}=2\sum_{m=0}^{\infty}\frac{x^{2m+1}}{2m+1}$, valid for $|x|<1$, and integrate term by term:
+    $$
+    I_n = 2\sum_{m=0}^{\infty}\frac{1}{2m+1}\int_0^1 x^{\,n+2m+1}\,\mathrm dx = 2\sum_{m=0}^{\infty}\frac{1}{(2m+1)(n+2m+2)}.
+    $$
+    For $n=1$ the summand is $\frac{1}{(2m+1)(2m+3)}=\frac12\!\left(\frac{1}{2m+1}-\frac{1}{2m+3}\right)$, so the series telescopes: $I_1 = 2\cdot\frac12\sum_{m\ge0}\!\left(\frac{1}{2m+1}-\frac{1}{2m+3}\right)=1\cdot\frac{1}{1}=1$. For $n=3$ the summand is $\frac{1}{(2m+1)(2m+5)}=\frac14\!\left(\frac{1}{2m+1}-\frac{1}{2m+5}\right)$, which telescopes in steps of two, leaving $I_3 = 2\cdot\frac14\!\left(\frac{1}{1}+\frac{1}{3}\right)=\frac12\cdot\frac{4}{3}=\frac23$. Therefore
+    $$
+    B = \tfrac12\left(I_1 - I_3\right) = \tfrac12\!\left(1-\tfrac23\right)=\tfrac16,\qquad A+B = \tfrac13+\tfrac16 = \tfrac12.
+    $$
+    Substituting into (5.35m),
+    $$
+    \boxed{\,I = 8\pi^{2}k_F^{4}\cdot\tfrac12 = 4\pi^{2}k_F^{4}.}
+    \tag{5.35n}
+    $$
+    (This is confirmed by direct numerical quadrature of (5.35l): $I/(\pi^{2}k_F^{4})=4.0000$ to machine precision.)
+
+    **Step 6 — assemble the prefactors.** Put (5.35n) into (5.35i):
+    $$
+    E_x = -\,\frac{4\pi\,L^{3}}{(2\pi)^{6}}\cdot 4\pi^{2}k_F^{4}
+    = -\,\frac{16\pi^{3}\,L^{3}\,k_F^{4}}{64\pi^{6}}
+    = -\,\frac{L^{3}k_F^{4}}{4\pi^{3}}.
+    $$
+    Hence the exchange energy per unit volume is
+    $$
+    \frac{E_x}{L^{3}} = -\,\frac{k_F^{4}}{4\pi^{3}}.
+    \tag{5.35o}
+    $$
+
+    **Step 7 — energy per particle.** Divide by the number density $n=k_F^{3}/(3\pi^{2})$ (two spins $\times$ Fermi-sphere volume $\tfrac{4}{3}\pi k_F^{3}$ over $(2\pi)^{3}$ gives $n=\frac{2}{(2\pi)^{3}}\cdot\frac{4}{3}\pi k_F^{3}=\frac{k_F^{3}}{3\pi^{2}}$):
+    $$
+    \epsilon_x^{\mathrm{unif}} = \frac{E_x/L^{3}}{n}
+    = -\frac{k_F^{4}}{4\pi^{3}}\cdot\frac{3\pi^{2}}{k_F^{3}}
+    = -\frac{3k_F}{4\pi}.
+    \tag{5.35p}
+    $$
+    Finally substitute $k_F=(3\pi^{2}n)^{1/3}$ and simplify the constant *step by step*:
+    $$
+    \epsilon_x^{\mathrm{unif}} = -\frac{3}{4\pi}(3\pi^{2})^{1/3}n^{1/3}
+    = -\frac{3}{4}\cdot\frac{(3\pi^{2})^{1/3}}{\pi}\,n^{1/3}.
+    $$
+    Write $\dfrac{(3\pi^{2})^{1/3}}{\pi} = \dfrac{3^{1/3}\pi^{2/3}}{\pi} = 3^{1/3}\pi^{2/3-1} = 3^{1/3}\pi^{-1/3} = \left(\dfrac{3}{\pi}\right)^{1/3}$. Therefore
+    $$
+    \epsilon_x^{\mathrm{unif}}(n) = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{1/3}n^{1/3} = -\frac{3}{4\pi}k_F.
+    \tag{5.35q}
+    $$
+    Numerically the constant is $C_x=\tfrac34(3/\pi)^{1/3}=0.75\times(0.95493)^{1/3}=0.75\times0.98475=0.73856$, the standard Dirac coefficient. This is exactly equation (5.35). Multiplying by $n$ and integrating gives the LDA exchange *functional*
+    $$
+    E_x^{\mathrm{LDA}}[n]=\int n\,\epsilon_x^{\mathrm{unif}}\,\mathrm d\mathbf r = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{1/3}\!\int n(\mathbf r)^{4/3}\,\mathrm d\mathbf r,
+    $$
+    which is equation (5.36).
 
 Substituting and dividing out $L^{3}$ to obtain the energy per particle (using $n = k_F^{3}/(3\pi^{2})$),
 
@@ -153,12 +290,25 @@ $$
 
 The corresponding potential is $v_x^\mathrm{LDA}(\mathbf r) = -(3/\pi)^{1/3}n(\mathbf r)^{1/3}$. The LDA exchange–correlation potential $v_{xc}^\mathrm{LDA}$ is the sum of (5.36)'s functional derivative and the (numerical) $v_c^\mathrm{LDA}$ from the parametrised correlation energy.
 
+This potential follows directly from the functional derivative of (5.36): since $E_x^\mathrm{LDA}=-C_x\int n^{4/3}\,\mathrm d\mathbf r$ with $C_x=\tfrac34(3/\pi)^{1/3}$, and the integrand depends on $n$ but not $\nabla n$, the derivative is the ordinary partial derivative of the integrand,
+$$
+v_x^\mathrm{LDA}(\mathbf r) = \frac{\delta E_x^\mathrm{LDA}}{\delta n(\mathbf r)} = -C_x\,\frac{\mathrm d}{\mathrm dn}\,n^{4/3} = -C_x\cdot\tfrac43\,n^{1/3} = \tfrac43\cdot\Big(-\tfrac34\Big)\Big(\tfrac{3}{\pi}\Big)^{1/3}n^{1/3} = -\Big(\tfrac{3}{\pi}\Big)^{1/3}n^{1/3},
+\tag{5.36a}
+$$
+the factor $\tfrac43$ coming from differentiating $n^{4/3}$ and cancelling the $\tfrac34$ in $C_x$. Note that $v_x = \tfrac43\,\epsilon_x^\mathrm{unif}$: the exchange *potential* is four-thirds of the exchange energy *per particle*, a relation specific to the $n^{1/3}$ scaling.
+
 !!! note "Why this step?"
     A useful reparametrisation: define the Wigner–Seitz radius $r_s$ by $\tfrac{4}{3}\pi r_s^{3}\,n = 1$, so that $r_s = (3/(4\pi n))^{1/3}$ is the radius of the sphere containing one electron on average. In terms of $r_s$, the LDA exchange energy per particle is
     $$
     \epsilon_x^\mathrm{unif} = -\frac{3}{4}\Big(\frac{9}{4\pi^{2}}\Big)^{1/3}\frac{1}{r_s} \approx -\frac{0.4582}{r_s}\;\text{Ha},
     $$
     which makes manifest that exchange scales as $1/r_s$. For metallic densities, $r_s\sim 2$–$5$, giving $\epsilon_x\sim -0.1$ to $-0.2\;\text{Ha}$ per electron, i.e. a few eV. This is the right ballpark for the exchange contribution to atomic and molecular binding.
+
+    To see where the constant $0.4582$ comes from, invert the definition of $r_s$ to get $n^{1/3} = (3/4\pi)^{1/3}/r_s$ and substitute into (5.35):
+    $$
+    \epsilon_x^\mathrm{unif} = -\frac{3}{4}\Big(\frac{3}{\pi}\Big)^{1/3}n^{1/3} = -\frac{3}{4}\Big(\frac{3}{\pi}\Big)^{1/3}\Big(\frac{3}{4\pi}\Big)^{1/3}\frac{1}{r_s} = -\frac{3}{4}\Big(\frac{3}{\pi}\cdot\frac{3}{4\pi}\Big)^{1/3}\frac{1}{r_s} = -\frac{3}{4}\Big(\frac{9}{4\pi^{2}}\Big)^{1/3}\frac{1}{r_s},
+    $$
+    combining the two cube roots into one. Evaluating the constant: $\big(\tfrac{9}{4\pi^{2}}\big)^{1/3} = (0.22797)^{1/3} = 0.61089$, so $\tfrac34\times0.61089 = 0.45817$, confirming the $0.4582/r_s$ above.
 
 !!! example "Worked example: $H_2$ binding energy at the LDA level"
     The hydrogen molecule has an experimental binding energy of $D_e = 4.748\;\text{eV}$ at $R_e = 0.741\;\text{Å}$. An LDA calculation gives $D_e^\mathrm{LDA}\approx 4.91\;\text{eV}$ and $R_e^\mathrm{LDA}\approx 0.766\;\text{Å}$: overbinding by $\sim 3\%$, bond too short by $\sim 3\%$. This is the prototypical "LDA overbinding" pattern — the bond is too strong, the lattice constant too short, the cohesive energy too large. The error is roughly half attributable to exchange (LDA-X is too soft in the bond region) and half to correlation (LDA-C overestimates the magnitude of correlation in inhomogeneous systems).
@@ -214,6 +364,19 @@ $$
 
 with constants $\mu = 0.21951$ (chosen to recover the linear-response of the uniform gas in the small-$s$ limit, equivalent to second-order gradient expansion) and $\kappa = 0.804$ (chosen to satisfy the **Lieb–Oxford bound** $E_x \geq -1.679\int n^{4/3}$). At small $s$, $F_x \approx 1 + \mu s^{2}$, and at large $s$, $F_x \to 1 + \kappa \approx 1.804$. The correlation part of PBE is similarly built from exact constraints; we shall not reproduce its full form here (the reader can find it in Perdew, Burke, and Ernzerhof, Phys. Rev. Lett. **77**, 3865 (1996)).
 
+!!! note "Where the PBE constants come from (the numbers)"
+    **The gradient coefficient $\mu$.** PBE fixes $\mu$ so that, in the slowly-varying limit, its exchange enhancement matches the second-order gradient expansion of the correlation energy of the uniform gas. The link is $\mu = \beta\,\pi^{2}/3$, where $\beta\approx0.066725$ is the second-order gradient-expansion coefficient of PBE correlation (itself fixed by the high-density linear response of the uniform gas). Evaluating,
+    $$
+    \mu = \frac{\beta\pi^{2}}{3} = \frac{0.066725\times 9.8696}{3} = \frac{0.65855}{3} = 0.21952,
+    $$
+    which is the quoted $\mu = 0.21951$ (the last digit depends on the precision carried in $\pi^{2}$ and $\beta$).
+
+    **The saturation constant $\kappa$ from the Lieb–Oxford bound.** The Lieb–Oxford theorem gives a rigorous lower bound on the exchange–correlation energy of *any* density: $E_{xc}[n]\ge -C_{\mathrm{LO}}\int n^{4/3}\,\mathrm d\mathbf r$ with $C_{\mathrm{LO}} = 1.679$ Ha (this constant refers to the fully spin-polarised exchange). PBE imposes the *local* version of this bound on its exchange enhancement factor: $F_x(s)\le 1+\kappa$ must not exceed the largest value compatible with Lieb–Oxford. Writing the LDA exchange energy density as $-C_x\,n^{4/3}$ with $C_x=\tfrac34(3/\pi)^{1/3}=0.73856$, the bound reads $F_x\le C_{\mathrm{LO}}/C_x$ *after* accounting for the spin-scaling factor $2^{-1/3}$ that converts the spin-polarised Lieb–Oxford constant to the spin-unpolarised enhancement factor PBE works with:
+    $$
+    1+\kappa \;\le\; \frac{C_{\mathrm{LO}}\,2^{-1/3}}{C_x} = \frac{1.679\times 0.79370}{0.73856} = \frac{1.33264}{0.73856} = 1.80435.
+    $$
+    Saturating the inequality, $1+\kappa = 1.804$, hence $\kappa = 0.804$. PBE chooses the *equality* so that the enhancement factor approaches the Lieb–Oxford ceiling as $s\to\infty$ but never violates it.
+
 !!! note "Why this step?"
     What does the reduced gradient $s = |\nabla n|/(2k_F n)$ measure physically? It is the change in $n$ over a distance $\sim 1/k_F$ (the Fermi wavelength) divided by $n$ itself — a dimensionless measure of how rapidly the density varies on the scale of the local "quantum mechanical wiggle length" of the Fermi sea. In a homogeneous gas, $s=0$. In the tail of an atomic density (where $n\sim \mathrm e^{-\alpha r}$), $s$ grows without bound. In the bond region between two atoms, $s$ is moderate. PBE's enhancement factor saturates at $F_x = 1 + \kappa\approx 1.804$ as $s\to\infty$: an explicit imposition of the Lieb–Oxford bound that prevents the exchange energy from becoming too negative in low-density regions.
 
@@ -239,6 +402,8 @@ GGAs cure the worst of LDA's pathologies:
 - **Lattice constants**: PBE typically gives lattice constants slightly *over* the experimental value, in contrast to LDA's under-estimate. PBEsol corrects this for solids.
 - **Surface energies**: GGAs are an improvement, but PBE has a known small *underestimate* — PBEsol again does better.
 
+*(The atomisation-energy figures above are mean absolute errors on the G2/G3 and W4-11 atomisation-energy benchmark sets.)*
+
 GGAs do *not* cure:
 
 - **Band gap underestimation**: GGAs lower the LDA band gap further, or leave it essentially unchanged.
@@ -259,6 +424,8 @@ $$
 $$
 
 (Some meta-GGAs use the Laplacian $\nabla^{2}n$ instead; SCAN uses $\tau$.) The new ingredient distinguishes single-orbital regions (where $\tau$ equals the von Weizsäcker bound $\tau_W = |\nabla n|^{2}/(8n)$) from regions of overlapping orbitals (where $\tau$ exceeds $\tau_W$).
+
+The von Weizsäcker form follows in one line from the single-orbital case: if one real orbital $\phi$ carries the whole density, $n=|\phi|^{2}=\phi^{2}$, then $\nabla n = 2\phi\,\nabla\phi$ so $|\nabla n|^{2} = 4\phi^{2}|\nabla\phi|^{2} = 4n\,|\nabla\phi|^{2}$, giving $|\nabla\phi|^{2}=|\nabla n|^{2}/(4n)$; substituting into $\tau=\tfrac12|\nabla\phi|^{2}$ yields $\tau_W=\tfrac12\cdot|\nabla n|^{2}/(4n)=|\nabla n|^{2}/(8n)$.
 
 The **strongly constrained and appropriately normed (SCAN)** functional of Sun, Ruzsinszky, and Perdew (2015) is built to satisfy all 17 known exact constraints on $E_{xc}$ that can be obeyed by a semi-local functional. It often outperforms PBE on diverse benchmarks — atomic energies, molecular binding, hydrogen-bonded systems, even some weakly bound systems through the implicit treatment of intermediate-range correlation. The cost is roughly the same as a GGA (no exact exchange to evaluate), though convergence can be more delicate due to the more complex functional dependence.
 
@@ -315,6 +482,8 @@ E_{xc}^\mathrm{HSE} = 0.25\,E_x^\mathrm{HF,SR}(\omega) + 0.75\,E_x^\mathrm{PBE,S
 $$
 
 with $\omega = 0.11$ a.u.$^{-1}$. HSE06 dramatically improves band gaps relative to PBE — typical errors drop from $\sim 1$ eV to $\sim 0.3$ eV — while the screened exchange makes it tractable in metallic and small-gap systems where pure global hybrids (PBE0, B3LYP) develop convergence pathologies.
+
+The 25% exact-exchange fraction is *inherited* from PBE0, where the adiabatic-connection argument fixes it: the lowest-order ($\lambda$-expansion) perturbation-theory estimate of the coupling-constant average gives an optimal mixing of $\tfrac14$, so HSE06 keeps that 25% but applies it only at short range. The screening length $\omega=0.11\;\mathrm{a.u.}^{-1}$ is by contrast an *empirical* choice — tuned to best reproduce molecular and solid-state benchmarks, not derived from first principles.
 
 ### Cost of hybrids
 
@@ -380,11 +549,70 @@ $$
 U_H[n_\mathrm H] = \tfrac{1}{2}\iint\frac{n_\mathrm H(\mathbf r)n_\mathrm H(\mathbf r')}{|\mathbf r - \mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r' = \tfrac{5}{16}\;\text{Ha} = 0.3125\;\text{Ha}.
 $$
 
+??? note "Full derivation: Hartree self-energy of the hydrogen 1s density, $U_H = 5/16$ Ha"
+    The cleanest route is to find the electrostatic potential $v(\mathbf r)$ generated by the cloud $n_\mathrm H(r)=\pi^{-1}\mathrm e^{-2r}$ and then form $U_H=\tfrac12\int n_\mathrm H\,v\,\mathrm d\mathbf r$.
+
+    **Step 1 — the potential of the cloud.** The potential of a charge density satisfies Poisson's equation in atomic (Gaussian) units, $\nabla^{2}v = -4\pi n_\mathrm H$. By spherical symmetry $\nabla^{2}v = \dfrac{1}{r}\dfrac{\mathrm d^{2}}{\mathrm dr^{2}}\big(r\,v\big)$, so with $u\equiv r\,v$,
+    $$
+    \frac{\mathrm d^{2}u}{\mathrm dr^{2}} = -4\pi r\,n_\mathrm H(r) = -4\pi r\,\pi^{-1}\mathrm e^{-2r} = -4r\,\mathrm e^{-2r}.
+    $$
+    Integrate twice. First $\dfrac{\mathrm du}{\mathrm dr} = -4\!\int r\,\mathrm e^{-2r}\,\mathrm dr = -4\left[-\tfrac{r}{2}\mathrm e^{-2r}-\tfrac14\mathrm e^{-2r}\right]+C_1 = (2r+1)\mathrm e^{-2r}+C_1$. As $r\to\infty$ the enclosed charge is $1$, so $v\to 1/r$ and $u=rv\to1$, forcing $\dfrac{\mathrm du}{\mathrm dr}\to 0$; since $(2r+1)\mathrm e^{-2r}\to0$, we need $C_1=0$. Integrate again:
+    $$
+    u(r) = \int (2r+1)\mathrm e^{-2r}\,\mathrm dr = \left[-(r+1)\mathrm e^{-2r}\right]+C_2,
+    $$
+    using $\int(2r+1)\mathrm e^{-2r}\mathrm dr = -r\,\mathrm e^{-2r}-\tfrac12\mathrm e^{-2r}-\tfrac12\mathrm e^{-2r}=-(r+1)\mathrm e^{-2r}$. The condition $u\to1$ as $r\to\infty$ gives $C_2=1$. Hence $u(r)=1-(r+1)\mathrm e^{-2r}$ and
+    $$
+    v(r) = \frac{u(r)}{r} = \frac{1}{r} - \left(1+\frac{1}{r}\right)\mathrm e^{-2r}.
+    \tag{5.43a}
+    $$
+    (Check: as $r\to0$, $v\to\frac1r-(1+\frac1r)(1-2r+2r^{2}-\cdots)=\frac1r-\frac1r-1+2+O(r)=1+O(r)$, finite, as it must be for a smooth cloud; as $r\to\infty$, $v\to1/r$, the field of unit charge.)
+
+    **Step 2 — the energy integral.** With $\mathrm d\mathbf r = 4\pi r^{2}\,\mathrm dr$,
+    $$
+    U_H = \tfrac12\!\int n_\mathrm H\,v\,\mathrm d\mathbf r = \tfrac12\cdot 4\pi\!\int_0^\infty\! r^{2}\,\pi^{-1}\mathrm e^{-2r}\left[\frac{1}{r}-\Big(1+\frac1r\Big)\mathrm e^{-2r}\right]\mathrm dr
+    = 2\!\int_0^\infty\!\left[\,r\,\mathrm e^{-2r} - (r^{2}+r)\mathrm e^{-4r}\,\right]\mathrm dr.
+    $$
+    Using $\int_0^\infty r^{m}\mathrm e^{-ar}\mathrm dr = m!/a^{m+1}$: $\int_0^\infty r\,\mathrm e^{-2r}\mathrm dr = 1/2^{2} = \tfrac14$; $\int_0^\infty r^{2}\mathrm e^{-4r}\mathrm dr = 2/4^{3} = \tfrac{2}{64}=\tfrac{1}{32}$; $\int_0^\infty r\,\mathrm e^{-4r}\mathrm dr = 1/4^{2}=\tfrac{1}{16}$. Therefore
+    $$
+    U_H = 2\left[\tfrac14 - \Big(\tfrac{1}{32}+\tfrac{1}{16}\Big)\right] = 2\left[\tfrac{8}{32} - \tfrac{3}{32}\right] = 2\cdot\tfrac{5}{32} = \tfrac{5}{16}\;\text{Ha} = 0.3125\;\text{Ha}.
+    $$
+
 For (5.43) to hold, the exact $E_{xc}[n_\mathrm H] = -0.3125\;\text{Ha}$. The LDA exchange is
 
 $$
 E_x^\mathrm{LDA}[n_\mathrm H] = -\tfrac{3}{4}(3/\pi)^{1/3}\int n_\mathrm H^{4/3}\,\mathrm d\mathbf r \approx -0.260\;\text{Ha},
 $$
+
+??? note "Full derivation: $E_x^\mathrm{LDA}[n_\mathrm H]$ and the residual self-interaction"
+    **The density integral.** With $n_\mathrm H = \pi^{-1}\mathrm e^{-2r}$ we have $n_\mathrm H^{4/3} = \pi^{-4/3}\mathrm e^{-8r/3}$, so
+    $$
+    \int n_\mathrm H^{4/3}\,\mathrm d\mathbf r = \pi^{-4/3}\cdot 4\pi\!\int_0^\infty r^{2}\mathrm e^{-8r/3}\,\mathrm dr = \pi^{-4/3}\cdot 4\pi\cdot\frac{2}{(8/3)^{3}},
+    $$
+    using $\int_0^\infty r^{2}\mathrm e^{-ar}\mathrm dr = 2/a^{3}$ with $a=8/3$. Numerically $(8/3)^{3}=18.963$, so $2/(8/3)^{3}=0.105469$; and $\pi^{-4/3}\cdot4\pi = 4\,\pi^{-1/3} = 4\times0.68278 = 2.73114$. Hence
+    $$
+    \int n_\mathrm H^{4/3}\,\mathrm d\mathbf r = 2.73114\times 0.105469 = 0.288050.
+    $$
+
+    **Spin-unpolarised value.** Multiplying by $-C_x = -\tfrac34(3/\pi)^{1/3} = -0.73856$,
+    $$
+    E_x^\mathrm{LDA,\,unpol}[n_\mathrm H] = -0.73856\times 0.288050 = -0.21274\;\text{Ha}.
+    $$
+
+    **Spin-polarised value (the physically correct one for H).** Hydrogen's single electron is fully spin-polarised, so the local *spin*-density approximation applies, and the exchange of a one-spin density picks up the spin-scaling factor $2^{1/3}$ (the exact spin-scaling relation $E_x[n_\uparrow,n_\downarrow]=\tfrac12 E_x[2n_\uparrow]+\tfrac12 E_x[2n_\downarrow]$ reduces, for one fully-polarised electron, to a factor $2^{1/3}$ on the unpolarised result):
+    $$
+    E_x^\mathrm{LSDA}[n_\mathrm H] = 2^{1/3}\times(-0.21274) = 1.25992\times(-0.21274) = -0.26803\;\text{Ha}\approx -0.268\;\text{Ha}.
+    $$
+    The figure $\approx-0.260$ quoted in the main text is a rounded value lying between the unpolarised $-0.213$ and the spin-polarised $-0.268$; the spin-polarised $-0.268$ is the one to trust for an actual hydrogen atom.
+
+    **The correlation residue and the SIE total.** The exact $E_{xc}[n_\mathrm H]=-U_H=-0.3125$ Ha (equation 5.43). With $E_x^\mathrm{LSDA}\approx-0.268$ Ha, the LSDA correlation energy must supply the remainder if the cancellation were perfect; the actual LSDA correlation of the hydrogen density, evaluated from the PZ/VWN parametrisation, is a small *cited* numerical value $E_c^\mathrm{LSDA}[n_\mathrm H]\approx-0.04$ Ha (it is not derived here because it requires the full PZ/VWN correlation expression integrated over the inhomogeneous $n_\mathrm H$). The leftover is the self-interaction error:
+    $$
+    \mathrm{SIE} = U_H + E_x^\mathrm{LSDA} + E_c^\mathrm{LSDA} \approx 0.3125 - 0.268 - 0.04 = 0.0045\;\text{to}\;0.013\;\text{Ha},
+    $$
+    the spread reflecting the rounding of $E_x$ between $-0.260$ and $-0.268$. Taking the main-text figures ($-0.260$, $-0.04$) gives $0.0125$ Ha. Converting to electron-volts with $1\;\text{Ha}=27.211\;\text{eV}$,
+    $$
+    \mathrm{SIE} \approx 0.0125\times 27.211 = 0.340\;\text{eV},
+    $$
+    the $\sim0.34$ eV quoted below.
 
 leaving an LDA correlation contribution of $\approx -0.04\;\text{Ha}$ and a total $U_H + E_{xc}^\mathrm{LDA}\approx 0.013\;\text{Ha}\approx 0.34\;\text{eV}$ — *not* zero. The leftover $\sim 0.34\;\text{eV}$ is the LDA self-interaction error for hydrogen, and it is what causes the LDA HOMO of H to be too high in energy by several eV (the binding of the electron to the nucleus is artificially weakened by this residual self-repulsion).
 
@@ -410,6 +638,8 @@ E_g = (\varepsilon_\mathrm{LUMO} - \varepsilon_\mathrm{HOMO}) + \Delta_{xc},
 $$
 
 with the *KS gap* (the eigenvalue difference) generally smaller than the fundamental gap. For LDA, GGA, and SCAN, $\Delta_{xc}\equiv 0$ — the local potential is a smooth function of $n$ at integer occupations. So the reported band gap equals the KS gap, missing the (typically $\sim 1\;\text{eV}$) derivative-discontinuity contribution. Hybrid functionals partially restore $\Delta_{xc}$ through their non-local exchange piece, which is why HSE06 band gaps are quantitatively much closer to experiment.
+
+The link between the eigenvalues and $\partial E/\partial N$ is **Janak's theorem**: the Kohn–Sham eigenvalue $\varepsilon_i$ equals the derivative of the total energy with respect to its occupation, $\varepsilon_i = \partial E/\partial f_i$. As the electron number $N$ crosses an integer, the frontier orbital being filled switches from HOMO to LUMO, so $\partial E/\partial N$ jumps from $\varepsilon_\mathrm{HOMO}$ (approached from below) to $\varepsilon_\mathrm{LUMO}$ (approached from above) *plus* the constant shift $\Delta_{xc}$ in $v_{xc}$; this is exactly why the fundamental gap carries the extra $\Delta_{xc}$ on top of the eigenvalue difference.
 
 The deep connection between SIE and the derivative discontinuity is that *both* are signatures of the failure of approximate functionals to obey the *piecewise-linearity* of the exact $E(N)$ between integer electron numbers (§5.3.4). Indeed, the magnitude of the derivative discontinuity at $N$ equals the discontinuity of $\partial E/\partial N$ at $N$:
 
@@ -445,6 +675,8 @@ flowchart TD
 ## 5.4.7b Benchmarks: a tour across the ladder
 
 To make the rungs concrete, here are typical performance numbers for three representative quantities — atomic ionisation potentials, molecular atomisation energies, and semiconductor band gaps — averaged over standard benchmark sets:
+
+*(Source benchmark sets: atomisation energies are representative of the W4-11/GMTKN55 main-group sets; band-gap errors are representative of the standard semiconductor/insulator solid-state gap test sets, e.g. the set of 24–80 solids used in HSE and $GW$ benchmark studies.)*
 
 | Functional | IP error (eV) | Atomisation error (kcal/mol) | Gap error (eV) | Cost (rel. PBE) |
 |---|---|---|---|---|

@@ -51,6 +51,53 @@ $$
 
 where $\Delta_{xc}$ is the **derivative discontinuity** of the exchange–correlation potential: as the total electron number passes through an integer $N$, the exact $v_{xc}(\mathbf r)$ jumps by a *uniform constant* $\Delta_{xc}$. The KS eigenvalue difference $\varepsilon_\mathrm{LUMO}-\varepsilon_\mathrm{HOMO}$ is called the *KS gap*; the true *fundamental gap* exceeds it by $\Delta_{xc}$.
 
+??? note "Full derivation: why the fundamental gap exceeds the KS gap by $\Delta_{xc}$"
+    The argument links three facts: the ionisation-potential theorem, the definition of the KS gap, and the uniform jump of $v_{xc}$ on adding an electron.
+
+    **Step 1 — the highest occupied eigenvalue.** In *exact* KS theory the highest occupied eigenvalue of an $N$-electron system equals minus its ionisation potential (the IP theorem; see Section 5.6.2 and the derivation below),
+
+    $$
+    \varepsilon_\mathrm{HOMO}^{N} = -I, \qquad I = E(N-1) - E(N).
+    \tag{5.46a}
+    $$
+
+    Apply the same statement to the $(N{+}1)$-electron system. Its highest occupied eigenvalue is minus *its* ionisation potential, and removing one electron from the $(N{+}1)$-system returns the $N$-system, so that ionisation potential is exactly the electron affinity $A$ of the original system:
+
+    $$
+    \varepsilon_\mathrm{HOMO}^{N+1} = -A, \qquad A = E(N) - E(N+1).
+    \tag{5.46b}
+    $$
+
+    **Step 2 — the fundamental gap.** Subtracting (5.46a) from (5.46b) and using $E_g = I - A$ from Eq. (5.45),
+
+    $$
+    E_g = I - A = \varepsilon_\mathrm{HOMO}^{N+1} - \varepsilon_\mathrm{HOMO}^{N},
+    $$
+
+    or more transparently, $E_g = (-I) \cdot(-1) - (-A)\cdot(-1)$, i.e.
+
+    $$
+    E_g = \big(-\varepsilon_\mathrm{HOMO}^{N}\big) - \big(-\varepsilon_\mathrm{HOMO}^{N+1}\big) = \varepsilon_\mathrm{HOMO}^{N+1} - \varepsilon_\mathrm{HOMO}^{N}.
+    \tag{5.46c}
+    $$
+
+    **Step 3 — split off the KS gap.** Now insert and subtract the LUMO of the $N$-electron system, $\varepsilon_\mathrm{LUMO}^{N}$, which is the *same orbital* as the HOMO of the $(N{+}1)$-system but computed in the potential of the $N$-electron system:
+
+    $$
+    E_g = \underbrace{\big(\varepsilon_\mathrm{LUMO}^{N} - \varepsilon_\mathrm{HOMO}^{N}\big)}_{\text{KS gap}} + \underbrace{\big(\varepsilon_\mathrm{HOMO}^{N+1} - \varepsilon_\mathrm{LUMO}^{N}\big)}_{\Delta_{xc}}.
+    \tag{5.46d}
+    $$
+
+    **Step 4 — identify $\Delta_{xc}$ as the potential jump.** The two terms in the second bracket are *the same Kohn–Sham orbital* evaluated in two potentials that differ only by the addition of the $(N{+}1)$-th electron. Adding an infinitesimal fraction of an electron above the integer $N$ shifts the exact $v_{xc}(\mathbf r)$ everywhere by a *spatially uniform* constant — the derivative discontinuity. A uniform shift of the potential shifts every eigenvalue by exactly that constant, so
+
+    $$
+    \Delta_{xc} = \varepsilon_\mathrm{HOMO}^{N+1} - \varepsilon_\mathrm{LUMO}^{N}
+    = \lim_{\eta\to 0^{+}}\Big[ v_{xc}^{N+\eta}(\mathbf r) - v_{xc}^{N-\eta}(\mathbf r)\Big],
+    \tag{5.46e}
+    $$
+
+    independent of $\mathbf r$. Substituting back gives Eq. (5.46): the fundamental gap is the KS gap *plus* the uniform upward jump $\Delta_{xc}$ of $v_{xc}$. Because semi-local functionals have a smooth $v_{xc}$ with $\Delta_{xc}=0$, they report only the KS gap and miss the structural piece $I-A$ exceeds it by.
+
 For LDA, GGA, and meta-GGA functionals, $v_{xc}$ is a smooth function of $n$ at integer occupation — there is *no* derivative discontinuity. $\Delta_{xc}^\mathrm{LDA} = \Delta_{xc}^\mathrm{GGA} = 0$. So the KS gap is reported as the band gap, and is missing a structural piece that, for real materials, is of order 0.5–2 eV.
 
 ### Self-interaction error
@@ -60,7 +107,9 @@ Even setting aside the derivative discontinuity, LDA/GGA *Kohn–Sham gaps thems
 ### What to do
 
 - **HSE06** and other range-separated hybrids partially restore the derivative discontinuity through their exact-exchange fraction. Typical gap errors drop to 0.3 eV.
+    (This 0.3 eV figure is an empirical, system-dependent average over benchmark semiconductor sets, not a derived bound; individual systems can be much better or worse.)
 - **GW** (Green's function method, named after the product of the Green's function $G$ and the screened interaction $W$ in Hedin's equations) is the next step up: a many-body perturbation theory correction to the KS quasiparticle energies. $G_0 W_0$ on top of a PBE calculation typically gives gaps within 0.1–0.3 eV of experiment. Cost is $\mathcal O(N^{4})$.
+    (The Green's function $G$, the screened interaction $W$, and Hedin's equations are all defined in Chapter 7.)
 - **Δ-SCF** for small molecules: separately compute the $(N\!-\!1)$ and $(N\!+\!1)$ systems and take the energy difference. Cheap; surprisingly accurate.
 
 !!! example "Worked example: TiO$_2$ rutile gap"
@@ -77,6 +126,9 @@ Even setting aside the derivative discontinuity, LDA/GGA *Kohn–Sham gaps thems
     
     The PBE gap error of $\sim 1\;\text{eV}$ is roughly half attributable to the derivative discontinuity (which PBE sets to zero) and half to self-interaction error in the Ti $3d$ states. HSE06 fixes about $70\%$ of the gap error through its 25% exact exchange; $G_0W_0$ corrects the remainder via dynamical screening. The price is a $\sim 100\times$ cost increase for $G_0W_0$ relative to PBE.
 
+    !!! warning "These percentages are heuristic, not a rigorous decomposition"
+        The "roughly half / half" split of the PBE error and the "about $70\%$" fixed by HSE06 are *empirical, system-dependent* characterisations, not a derived partition of the gap into separable terms. The derivative discontinuity and self-interaction error are not cleanly additive, independent contributions, and the $25\%$ exact-exchange fraction of HSE06 is itself a fitted constant (chosen for good average performance across a test set), not a value derived from first principles for TiO$_2$. Treat such figures as useful rules of thumb for orienting expectations, and verify the actual numbers for any specific material.
+
 !!! warning "Common misunderstanding: the underestimated gap is not a bug"
     A natural first reaction to a too-small gap is to assume something went wrong: a loose convergence threshold, too few $k$-points, an unconverged SCF. **It is none of these.** Tightening every numerical setting will not move a PBE gap towards experiment. The underestimate is *intrinsic* to the theory, for two reasons. First, the quantity you read off is a difference of **Kohn–Sham eigenvalues**, which belong to the *auxiliary non-interacting system*, not to the real interacting electrons. Second, the exact fundamental gap contains the **derivative-discontinuity** contribution $\Delta_{xc}$ of Eq. (5.46), and any semi-local functional (LDA, GGA, meta-GGA) has $\Delta_{xc}=0$ — so it omits a structural piece of the gap of order $0.5$–$2$ eV. The cure is therefore a *better physical model*, not better numerics: a hybrid such as HSE06 restores part of the discontinuity, and **GW** (named above) supplies the proper quasiparticle correction.
 
@@ -86,6 +138,38 @@ Even setting aside the derivative discontinuity, LDA/GGA *Kohn–Sham gaps thems
 !!! note "Kohn–Sham eigenvalues are interpretive, not physical excitation energies"
     The eigenvalues $\varepsilon_i$ of the Kohn–Sham equations are genuinely useful for interpretation — they order the states, sketch the band structure, and locate features — but they are properties of the fictitious non-interacting system (Section 5.3), not, in general, true excitation or removal energies. The one rigorous exception is the highest occupied eigenvalue, which in *exact* KS theory equals minus the ionisation potential. Treat the rest as a guide, and obtain real excitation energies from a method designed for them (GW, $\Delta$-SCF, TD-DFT).
 
+    ??? note "Full derivation: the ionisation-potential theorem $\varepsilon_\mathrm{HOMO}=-I$"
+        The justification is an *asymptotic density* argument. Far from a finite system, the exact interacting density falls off at a rate fixed by the energy needed to remove one electron — the ionisation potential $I$. The standard result is
+
+        $$
+        n(r) \;\xrightarrow{r\to\infty}\; e^{-2\sqrt{2I}\,r},
+        \tag{5.46f}
+        $$
+
+        because the slowest-decaying piece of the many-body wavefunction is the amplitude for finding one electron at radius $r$ while the remaining $N-1$ electrons sit in their ground state, and that amplitude is governed by the removal energy $I$ (the exponent is the WKB decay $e^{-\sqrt{2I}\,r}$ of a particle bound by $I$; squaring the wavefunction gives the factor of two).
+
+        In the Kohn–Sham system the density is built from occupied orbitals, $n(r)=\sum_i|\phi_i(r)|^2$. At large $r$ the sum is dominated by the *slowest-decaying* occupied orbital, the HOMO. A KS orbital with eigenvalue $\varepsilon_\mathrm{HOMO}<0$ obeys, far out where $v_\mathrm{KS}\to 0$, the free-decay equation $-\tfrac12\nabla^2\phi=\varepsilon_\mathrm{HOMO}\phi$, giving
+
+        $$
+        \phi_\mathrm{HOMO}(r)\;\xrightarrow{r\to\infty}\; e^{-\sqrt{2|\varepsilon_\mathrm{HOMO}|}\,r},
+        \qquad
+        n(r)\sim|\phi_\mathrm{HOMO}|^2 = e^{-2\sqrt{2|\varepsilon_\mathrm{HOMO}|}\,r}.
+        \tag{5.46g}
+        $$
+
+        Because the exact KS density *equals* the true density by construction, the two asymptotic decay rates (5.46f) and (5.46g) must match:
+
+        $$
+        2\sqrt{2I} = 2\sqrt{2|\varepsilon_\mathrm{HOMO}|}
+        \;\;\Longrightarrow\;\;
+        |\varepsilon_\mathrm{HOMO}| = I
+        \;\;\Longrightarrow\;\;
+        \varepsilon_\mathrm{HOMO} = -I,
+        \tag{5.46h}
+        $$
+
+        since $\varepsilon_\mathrm{HOMO}<0$. This is the one Kohn–Sham eigenvalue with a rigorous physical meaning, and it is the foundation of Step 1 of the band-gap derivation above.
+
 ## 5.6.2 Van der Waals dispersion
 
 **The symptom.** Stack two graphene sheets at 3.35 Å, the experimental interlayer spacing of graphite. Compute the binding energy with PBE: about 1 meV/atom, essentially zero. The experimental value is around 50 meV/atom. PBE predicts graphite to be barely bound, when it is a robust layered solid.
@@ -94,11 +178,59 @@ Or: try a benzene dimer. PBE gives no binding. Or: rare-gas dimers — argon, kr
 
 **The physics.** London dispersion forces arise from instantaneous quantum fluctuations of the charge density on one fragment polarising another. The induced dipole pair gives the famous $-C_6/R^{6}$ attraction at large separation. This is a long-range correlation effect: the densities of the two fragments do not overlap, so any *local* functional sees nothing happening between them. Semi-local exchange-correlation, by construction, cannot reproduce $-C_6/R^{6}$.
 
+??? note "Full derivation: the $-C_6/R^{6}$ dispersion tail from second-order perturbation theory"
+    Take two neutral, spherical atoms $A$ and $B$ a distance $R$ apart along the $z$-axis, each with no permanent multipole. The leading interaction between their fluctuating charge clouds is the dipole–dipole term of the multipole expansion of the Coulomb operator:
+
+    $$
+    V_{dd} = \frac{1}{R^{3}}\Big(\,x_A x_B + y_A y_B - 2\,z_A z_B\,\Big),
+    \tag{5.47a}
+    $$
+
+    where $\mathbf r_A,\mathbf r_B$ are the electron displacements on each atom. The key feature is the prefactor: $V_{dd}\propto R^{-3}$.
+
+    **First order vanishes.** The first-order energy shift is the expectation value in the unperturbed product ground state $|0_A 0_B\rangle$:
+
+    $$
+    E^{(1)} = \langle 0_A 0_B|\,V_{dd}\,|0_A 0_B\rangle
+    = \frac{1}{R^3}\big(\langle x_A\rangle\langle x_B\rangle + \cdots\big) = 0,
+    \tag{5.47b}
+    $$
+
+    because each factor such as $\langle 0_A|x_A|0_A\rangle$ is the permanent dipole of a spherical atom, which is zero. So there is no electrostatic interaction at this order — the attraction is genuinely a correlation (fluctuation) effect, appearing only at second order.
+
+    **Second order gives $R^{-6}$.** Standard Rayleigh–Schrödinger second-order perturbation theory sums over excited product states $|m_A n_B\rangle$ (both atoms excited, since $V_{dd}$ is a product of one-atom operators):
+
+    $$
+    E^{(2)} = -\sum_{m,n\neq 0}
+    \frac{\big|\langle m_A n_B|\,V_{dd}\,|0_A 0_B\rangle\big|^2}
+    {(E_m^A - E_0^A) + (E_n^B - E_0^B)}.
+    \tag{5.47c}
+    $$
+
+    Every numerator carries one factor of $V_{dd}\propto R^{-3}$, and the modulus-squared makes it $R^{-6}$. The denominator (excitation-energy sum) is independent of $R$, so
+
+    $$
+    E^{(2)} = -\frac{C_6}{R^{6}}, \qquad C_6 > 0,
+    \tag{5.47d}
+    $$
+
+    an attraction ($E^{(2)}<0$ always, since the ground state sits lowest and every denominator is positive). This is the dispersion tail.
+
+    **Identifying $C_6$ (the London formula).** Carrying through the angular sum of (5.47a) and writing the result in terms of the atomic polarisabilities and a characteristic excitation energy $\Delta E$ gives London's classic estimate
+
+    $$
+    C_6 \approx \frac{3}{2}\,\frac{\Delta E_A\,\Delta E_B}{\Delta E_A + \Delta E_B}\,\alpha_A\,\alpha_B,
+    \tag{5.47e}
+    $$
+
+    where $\alpha_{A},\alpha_{B}$ are the static dipole polarisabilities and $\Delta E_{A},\Delta E_{B}$ the dominant excitation energies (loosely, ionisation potentials). The exact expression replaces $\Delta E$ and $\alpha$ by an integral of the dynamic polarisabilities over imaginary frequency (the Casimir–Polder formula), but (5.47e) shows the essential physics: $C_6$ scales with the product of polarisabilities. A *semi-local* functional knows only the local density and its gradients on each fragment; with non-overlapping densities it has no information coupling the two fluctuating dipoles, so it generates *no* $R^{-6}$ term — exactly the failure documented above.
+
 **What to do.**
 
 - **DFT-D3 / D4** (Grimme): add an empirical pairwise correction. Cheap and effective for most systems.
 - **vdW-DF / vdW-DF2 / rVV10**: a non-local correlation kernel built into the functional. Computationally tractable via FFT; available in most plane-wave codes.
 - **Tkatchenko–Scheffler / MBD**: density-dependent dispersion coefficients, including many-body screening effects (MBD: many-body dispersion). Best-in-class for systems where polarisability matters.
+    (*Many-body screening* here means that the pairwise $-C_6/R^6$ picture is corrected for the fact that a third atom's polarisability is modified by the presence of its neighbours — the fluctuating dipoles of Eq. (5.47a) are coupled into collective modes rather than treated as isolated pairs — which matters in dense or extended systems; the underlying coupled-oscillator model is taken up further in the post-DFT discussion of Chapter 7.)
 
 For materials with non-bonded fragments — molecular crystals, layered materials, surface adsorption, polymers, biomolecules — *not* including a vdW correction in DFT is a methodological error. Modern best practice always includes one.
 
@@ -133,6 +265,16 @@ A: It depends on what is claimed. Stating "the PBE Kohn–Sham gap is X eV" is f
 
 **The physics.** In these systems, the dominant energy scale is the on-site Coulomb repulsion $U$ between electrons in the same localised orbital (typically a $3d$ or $4f$ shell). When $U$ exceeds the hopping integral $t$, electrons localise on individual atoms and the system is a Mott insulator. The KS density of a Mott insulator is not the density of any non-interacting system in any reasonable potential: the single-Slater-determinant ansatz of KS theory is not a good starting point.
 
+The minimal model is the single-band **Hubbard Hamiltonian**
+
+$$
+\hat H = -t\sum_{\langle ij\rangle,\sigma}\big(\hat c_{i\sigma}^{\dagger}\hat c_{j\sigma} + \text{h.c.}\big)
++ U\sum_{i}\hat n_{i\uparrow}\hat n_{i\downarrow},
+\tag{5.48a}
+$$
+
+where $\hat c_{i\sigma}^{\dagger}$ creates an electron of spin $\sigma$ on site $i$, $t$ is the nearest-neighbour *hopping* (kinetic) amplitude that delocalises electrons between adjacent sites $\langle ij\rangle$, and $U$ is the on-site Coulomb *repulsion* paid whenever a site is doubly occupied ($\hat n_{i\uparrow}\hat n_{i\downarrow}=1$). At half filling (one electron per site) the physics is an energy balance: hopping an electron onto a neighbour that already holds one electron creates a doubly occupied site, *costing* $U$, while delocalisation *gains* a kinetic energy of order $t$. When $U\gg t$ the cost dominates, every site keeps exactly one localised electron, charge cannot flow, and the system is a Mott insulator with a gap of order $U$; when $t\gg U$ the electrons delocalise into a metallic band. The Mott transition lives where $U\sim t$.
+
 **What to do.**
 
 - **DFT+U** (Anisimov–Liechtenstein–Zaanen): add a Hubbard-$U$ correction term to the energy functional, penalising fractional occupation of the localised shell. Choice of $U$ is empirical (3–8 eV typical), or computable via linear response. Cheap; often dramatically improves gaps and magnetic order in transition metal oxides.
@@ -154,6 +296,7 @@ Strong correlation is the area where DFT is most likely to be qualitatively wron
     | DFT+DMFT | $\sim 4.0$ | $1.9$ | AFM insulator |
     
     Without any Hubbard correction or hybrid mixing, PBE predicts NiO to be a *metal* — a qualitative failure. Adding a Hubbard $U$ on the Ni $3d$ states penalises double occupation and opens the gap; HSE06 achieves the same effect through its 25% exact exchange. DMFT captures the full local correlation physics including spectral weight transfer to the upper Hubbard band, at the cost of an impurity solver.
+    (Note that the $25\%$ exact-exchange fraction is an empirically chosen constant, and the value $U=6\;\text{eV}$ here is likewise fitted to reproduce the observed gap — neither is derived for NiO from first principles, though $U$ can be estimated independently by linear response.)
 
 ## 5.6.4 Self-interaction error and charge transfer
 
@@ -173,9 +316,21 @@ We met self-interaction in §5.4: approximate exchange-correlation functionals d
     | HSE06 (25% HF) | $-0.4823$ | 0.5 / 0.5 |
     | LC-$\omega$PBE (100% HF at LR) | $-0.4998$ | symmetry-broken |
     
+    Here LR stands for *long-range*: LC-$\omega$PBE is a range-separated functional that uses 100% exact (Hartree–Fock) exchange in the long-range part of the electron–electron interaction.
+
     All semi-local functionals delocalise the electron equally over both protons because of self-interaction error — they prefer to spread the density to lower the (artificially included) self-Hartree. Only functionals with 100% exact exchange at long range cure this, by exactly cancelling the spurious self-repulsion at any separation.
 
+    !!! note "Footnote on the Hartree–Fock row"
+        The "Hartree–Fock" row needs care, because two different HF answers exist for stretched H$_2^{+}$ and the table lists only one of them. H$_2^{+}$ has a *single* electron, so Hartree–Fock is *exact and self-interaction-free* for it: the Fock exchange term exactly cancels the spurious self-Hartree, and there is no correlation energy to miss. The subtlety is purely a *symmetry* choice of the orbital.
+
+        - **Restricted (symmetric) HF** forces the orbital to be the symmetric combination $\phi\propto 1s_A + 1s_B$, giving the delocalised $0.5/0.5$ charges shown. At large but *finite* $R$ this symmetric state is the gerade bonding solution whose energy lies slightly *above* $-0.5$ Ha (it is a genuine variational solution, not an artefact); only in the strict $R\to\infty$ limit does its energy reach $-0.5$ Ha. So pairing the symmetric $0.5/0.5$ row with exactly $-0.5000$ Ha is correct only at infinite separation, where the symmetric and localised solutions become degenerate.
+        - **Symmetry-broken (unrestricted) HF** lets the orbital localise on one proton, $\phi\to 1s_A$, giving $1.0/0.0$ charges and the exact $-0.5$ Ha at *any* large $R$.
+
+        The essential contrast with the LDA/PBE/HSE06 rows is therefore *not* delocalisation per se but self-interaction: HF (restricted or broken) carries no self-interaction error and so reaches the correct $-0.5$ Ha energy, whereas the semi-local functionals retain a spurious self-Hartree term and fall short ($-0.45$ to $-0.48$ Ha) even though they too delocalise.
+
 **Charge transfer excitations.** Time-dependent DFT (TDDFT) with semi-local functionals notoriously fails for excited states involving long-range charge transfer (e.g., between a donor and an acceptor in a complex). The TDDFT excitation energy collapses to nearly the KS HOMO–LUMO gap — far below the true excitation energy, which should include the Coulomb attraction $-1/R$ of the resulting electron–hole pair.
+
+The $-1/R$ is elementary electrostatics: after the excitation transfers an electron from donor to acceptor, the acceptor carries a charge $-1$ and the donor a hole of charge $+1$, separated by $R$, so two point charges attract with energy $-1/R$ (atomic units), and the correct charge-transfer energy is $I_\mathrm{donor} - A_\mathrm{acceptor} - 1/R$. Reproducing this tail requires the exchange–correlation kernel $f_{xc}$ to be *long-ranged* in $R$; a semi-local kernel is short-ranged (it couples densities only where they overlap, which two distant fragments do not), so it cannot generate the $-1/R$ term at all — and the TD-DFT excitation simply collapses back to the bare KS gap.
 
 **What to do.**
 

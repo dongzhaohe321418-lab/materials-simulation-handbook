@@ -187,6 +187,42 @@ Several subtle points often confuse first-time readers of HK I. We list them.
 2. *Where is information stored in $n_0$?* The information lives in the spatial profile of $n_0$, in particular in its asymptotic decay (which encodes the ionisation potential, §5.3.4) and in the cusps at the nuclei (which encode $Z_\alpha$ via Kato's cusp condition $-\tfrac{1}{2n}\,\partial n/\partial r|_{\mathbf r=\mathbf R_\alpha} = Z_\alpha$). Roughly, the high-$r$ tail tells you the HOMO; the cusp at each nucleus tells you the nuclear charge and position; everything in between encodes the bonding pattern.
 3. *Why is the theorem hard to use in practice?* Because the map $n_0 \to v_\mathrm{ext}$ is not given by any explicit formula. It exists, is unique, but is not computable in closed form. Inverse DFT — given $n$, find $v$ — uses iterative procedures (e.g., the van Leeuwen–Baerends construction) that are themselves tricky to converge.
 
+??? note "Full derivation: Kato's cusp condition"
+    The cusp condition quoted above is not magic — it follows from demanding that the Schrödinger equation stay finite at a point where the potential blows up. Place a nucleus of charge $Z$ at the origin, so $v_\mathrm{ext}\to -Z/r$ as $r\to 0$. Near the nucleus the dominant orbital behaves like a smooth function with a possible kink; expand its spherical average as
+
+    $$
+    \psi(r) = \psi(0)\,\big(1 + a\,r + \mathcal O(r^{2})\big),
+    \tag{5.15a}
+    $$
+
+    with $a = \psi'(0)/\psi(0)$ the quantity we want to pin down. Apply the single-particle Hamiltonian. The kinetic operator acting on the linear term needs the radial Laplacian of $r$,
+
+    $$
+    \nabla^{2} r = \frac{1}{r^{2}}\frac{\mathrm d}{\mathrm d r}\!\Big(r^{2}\,\frac{\mathrm d r}{\mathrm d r}\Big) = \frac{2}{r},
+    $$
+
+    so that
+
+    $$
+    -\tfrac{1}{2}\nabla^{2}\psi \;\supset\; -\tfrac{1}{2}\,\psi(0)\,a\,\frac{2}{r} \;=\; -\frac{\psi(0)\,a}{r}.
+    $$
+
+    The potential contributes $v_\mathrm{ext}\,\psi \supset -\dfrac{Z}{r}\,\psi(0)$. For $\hat h\psi = \varepsilon\psi$ to have a *finite* right-hand side at $r=0$, the two $1/r$ singularities must cancel:
+
+    $$
+    -\frac{\psi(0)\,a}{r} - \frac{Z\,\psi(0)}{r} = \text{finite}
+    \;\;\Longrightarrow\;\; a = -Z.
+    $$
+
+    Hence $\psi'(0)/\psi(0) = -Z$. The density is dominated near the nucleus by this orbital, $n(r)\approx n(0)\,(1 + 2a\,r)$ (squaring (5.15a)), so $n'(0)/n(0) = 2a = -2Z$, i.e.
+
+    $$
+    -\frac{1}{2\,n(\mathbf r)}\,\frac{\partial n}{\partial r}\bigg|_{\mathbf r = \mathbf R_\alpha} = Z_\alpha.
+    \tag{5.15b}
+    $$
+
+    The slope of the density at each nucleus reads off the nuclear charge directly — which is exactly why the density "knows" the external potential.
+
 ### Consequence: every observable is a functional of $n_0$
 
 Since $n_0$ determines $v_\mathrm{ext}$, hence $\hat{H}$, hence $|\Psi_0\rangle$, every ground-state expectation value is a functional of $n_0$. In particular the kinetic energy $T[n_0] = \langle\Psi_0[n_0]|\hat T|\Psi_0[n_0]\rangle$ and the electron–electron energy $V_{ee}[n_0] = \langle\Psi_0[n_0]|\hat V_{ee}|\Psi_0[n_0]\rangle$ are *exact* density functionals. They are universal — defined by the operators $\hat T$ and $\hat V_{ee}$, which do not depend on the system — but they are also unknown: the existence of $\Psi_0[n]$ does not give us a way to compute it.

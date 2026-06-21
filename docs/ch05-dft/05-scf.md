@@ -85,10 +85,79 @@ $$
 
 where $\mathcal J$ is the (integral-kernel) **SCF Jacobian** evaluated at the fixed point. Its eigenvalues $\{\lambda_i\}$ determine the convergence: if $\max_i|\lambda_i|<1$, iteration converges with rate $\max_i|\lambda_i|$; if $\max_i|\lambda_i|>1$, the iteration diverges.
 
+??? note "Full derivation: linearising the SCF map and factorising the Jacobian"
+    Write the SCF map (one full trip round the loop) as $n_\mathrm{out} = \mathcal F[n_\mathrm{in}]$, and let $n^{*}$ be the fixed point, i.e. the self-consistent density that satisfies
+    $$
+    \mathcal F[n^{*}] = n^{*}.
+    \tag{5.41b}
+    $$
+    Take the input density at iteration $k$ to be a small departure from the fixed point,
+    $$
+    n^{(k)} = n^{*} + \delta n^{(k)},
+    \qquad
+    \delta n^{(k)} \equiv n^{(k)} - n^{*},
+    $$
+    and Taylor-expand $\mathcal F$ as a functional about $n^{*}$. To first order in $\delta n^{(k)}$,
+    $$
+    \mathcal F[n^{*} + \delta n^{(k)}]
+    = \mathcal F[n^{*}]
+    + \int \frac{\delta n_\mathrm{out}(\mathbf r)}{\delta n_\mathrm{in}(\mathbf r')}\bigg|_{n^{*}}\,\delta n^{(k)}(\mathbf r')\,\mathrm d\mathbf r'
+    + \mathcal O\!\big(\delta n^{2}\big).
+    \tag{5.41c}
+    $$
+    The left-hand side is, by definition of the map, the *new* input density: with naive iteration $n^{(k+1)} = n_\mathrm{out}^{(k)} = \mathcal F[n^{(k)}]$, so the left-hand side equals $n^{(k+1)} = n^{*} + \delta n^{(k+1)}$. The first term on the right is $\mathcal F[n^{*}] = n^{*}$ by the fixed-point condition (5.41b). Subtracting $n^{*}$ from both sides cancels it and leaves, to linear order,
+    $$
+    \delta n^{(k+1)}(\mathbf r)
+    \approx \int \mathcal J(\mathbf r,\mathbf r')\,\delta n^{(k)}(\mathbf r')\,\mathrm d\mathbf r',
+    \qquad
+    \mathcal J(\mathbf r,\mathbf r') \equiv \frac{\delta n_\mathrm{out}(\mathbf r)}{\delta n_\mathrm{in}(\mathbf r')}\bigg|_{n^{*}},
+    $$
+    which is (5.41a) written out as an integral kernel. The constant ($n^{*}$) drops out *because* we expand about the fixed point — this is why the error $\delta n$, not $n$ itself, is the natural object.
+
+    **Chain-rule factorisation.** The map $n_\mathrm{in}\mapsto n_\mathrm{out}$ is not direct: it passes through the Kohn–Sham potential. A change in the input density changes $v_\mathrm{KS}$, and the changed potential changes the orbitals and hence the output density. By the functional chain rule,
+    $$
+    \mathcal J
+    = \frac{\delta n_\mathrm{out}}{\delta n_\mathrm{in}}
+    = \frac{\delta n_\mathrm{out}}{\delta v_\mathrm{KS}}\,
+      \frac{\delta v_\mathrm{KS}}{\delta n_\mathrm{in}}
+    \equiv \chi\,K,
+    \tag{5.41d}
+    $$
+    where we have *defined* two pieces:
+
+    - the **response function** $\chi \equiv \dfrac{\delta n_\mathrm{out}}{\delta v_\mathrm{KS}}$ — how the output density responds when the potential it is built from is perturbed (this is the independent-particle, or Kohn–Sham, susceptibility);
+    - the **kernel** $K \equiv \dfrac{\delta v_\mathrm{KS}}{\delta n_\mathrm{in}}$ — how the potential changes when the density that builds it is perturbed. Since $v_\mathrm{KS} = v_\mathrm{ext} + v_H[n] + v_{xc}[n]$ and $v_\mathrm{ext}$ is density-independent, only the Hartree and exchange–correlation pieces contribute:
+      $$
+      K(\mathbf r,\mathbf r')
+      = \frac{\delta v_H(\mathbf r)}{\delta n(\mathbf r')}
+      + \frac{\delta v_{xc}(\mathbf r)}{\delta n(\mathbf r')}
+      = \frac{1}{|\mathbf r-\mathbf r'|}
+      + \frac{\delta^{2}E_{xc}}{\delta n(\mathbf r)\,\delta n(\mathbf r')},
+      $$
+      i.e. the bare Coulomb (Hartree) kernel plus the xc kernel.
+
+    We write the kernel as $K$, not $v_\mathrm{eff}$, deliberately: in the loop diagram above $v_\mathrm{eff}$ already denotes the *KS potential itself*, whereas $K = \delta v_\mathrm{KS}/\delta n$ is its *functional derivative with respect to the density*. They are different objects and conflating the symbols would be a genuine error. With this factorisation, $\mathcal J = \chi K$: the divergence that drives charge sloshing lives in $\chi$ (the long-wavelength electronic response of a metal), while $K$ supplies the always-present Hartree $1/|\mathbf r-\mathbf r'|$ term that is itself large at small $|\mathbf q|$ (its Fourier transform is $4\pi/|\mathbf q|^{2}$).
+
 For an insulating finite system, $\mathcal J$ has eigenvalues bounded by unity in magnitude (the dielectric response is small for short-wavelength density fluctuations and vanishes for the long-wavelength constant mode). For a metallic system, however, the long-wavelength response is large — the *dielectric function* $\epsilon(\mathbf q) \to \infty$ as $|\mathbf q|\to 0$ — and $\mathcal J$ can have eigenvalues of magnitude much larger than 1. This is the formal expression of charge sloshing.
+
+!!! note "What is $\epsilon(\mathbf q)$, and why does it behave differently in metals and insulators?"
+    The **dielectric function** $\epsilon(\mathbf q)$ measures how strongly the electron gas screens an externally imposed potential of wavevector $\mathbf q$: an applied perturbation $v_\mathrm{ext}(\mathbf q)$ produces a *total* (screened) potential $v_\mathrm{tot}(\mathbf q) = v_\mathrm{ext}(\mathbf q)/\epsilon(\mathbf q)$. A large $\epsilon$ means strong screening — the electrons rearrange to almost cancel the applied potential. Within the Thomas–Fermi model of a uniform electron gas,
+    $$
+    \epsilon_\mathrm{TF}(\mathbf q) = 1 + \frac{q_0^{2}}{|\mathbf q|^{2}},
+    \tag{5.41e}
+    $$
+    where $q_0$ is the Thomas–Fermi screening wavevector (set by the density of states at the Fermi level). The contrast is then sharp:
+
+    - **Metal.** There are gapless electron–hole excitations, so a long-wavelength perturbation is screened essentially perfectly: $\epsilon(\mathbf q)\to\infty$ as $|\mathbf q|\to 0$ (in (5.41e), $q_0^{2}/|\mathbf q|^{2}\to\infty$). A small change in the long-wavelength density therefore produces a large change in the screened potential, the response $\chi$ is large, and the corresponding eigenvalue of $\mathcal J = \chi K$ is large in magnitude — charge sloshing.
+    - **Insulator.** The gap suppresses long-wavelength density fluctuations, so the screening response saturates: $\epsilon(\mathbf q)\to\epsilon_\infty$, a *finite* constant (the familiar static dielectric constant), as $|\mathbf q|\to 0$. The long-wavelength eigenvalues of $\mathcal J$ stay bounded below unity and naive iteration is comparatively well-behaved.
+
+    This is precisely why the cure for metals (the Kerker preconditioner, §5.5.3) targets the small-$|\mathbf q|$ components: it is there, and only there, that the metallic response misbehaves.
 
 !!! note "Why this step?"
     The Jacobian $\mathcal J$ is essentially $\chi v_\mathrm{eff}$, the product of the response function $\chi$ (how the density responds to a perturbation of the KS potential) and the kernel $v_\mathrm{eff}$ (how a perturbation of the density changes the KS potential). For metals, $\chi$ diverges in the long-wavelength limit, making $|\mathcal J|$ large there. The cure is to multiply the residual by an operator that *suppresses* the long-wavelength components — this is the *Kerker preconditioner*, which we meet below.
+
+    !!! warning "Notation: the kernel is $K$, not $v_\mathrm{eff}$"
+        The line above writes the second factor of $\mathcal J = \chi\,(\cdot)$ as $v_\mathrm{eff}$, but that symbol is overloaded: in the loop diagram $v_\mathrm{eff}$ is the *KS potential itself*. The factor that actually appears in $\mathcal J = \chi\,(\delta v_\mathrm{KS}/\delta n)$ is the *functional derivative* of that potential with respect to the density, which we write $K \equiv \delta v_\mathrm{KS}/\delta n$ (the Hartree-plus-xc kernel, derived just above). Read "$\mathcal J = \chi K$" throughout.
 
 Convergence of fixed-point iteration requires that the Jacobian (the *dielectric response* of the system) have spectral radius below unity in some norm. For metallic or polarisable systems it typically does not. Physically: if the density at one iteration has slightly too much charge in region $A$, the new Hartree potential pushes electrons out of $A$. The screening response sends *more* charge out of $A$ than the original excess — overshoot — and the next iteration has too little charge in $A$. The system oscillates with growing amplitude. This is **charge sloshing**.
 
@@ -101,6 +170,8 @@ n^{(k+1)} = (1-\alpha)\,n^{(k)} + \alpha\,n_\mathrm{out}^{(k)},
 $$
 
 Linearising near $n^{*}$, the *effective* iteration matrix becomes $(1-\alpha)\mathbf I + \alpha\,\mathcal J$ with eigenvalues $(1-\alpha) + \alpha\lambda_i$. For an unstable mode with $\lambda_i = -|\lambda|$ (typical of charge-sloshing modes, since the screening response is anti-correlated with the input perturbation), the linear-mixed eigenvalue is $(1-\alpha)(1) - \alpha|\lambda| = 1 - \alpha(1 + |\lambda|)$. Convergence ($|1-\alpha(1+|\lambda|)|<1$) requires $\alpha < 2/(1+|\lambda|)$ — a much stricter bound than $\alpha<1$ for the simple case. For $|\lambda|\sim 5$ (a typical metallic value), one needs $\alpha\lesssim 0.3$, and for $|\lambda|\sim 10$, $\alpha\lesssim 0.18$. Far from the fixed point, the linear analysis is only suggestive and one usually needs even smaller $\alpha$.
+
+To see where this single bound comes from, unpack the modulus inequality $|1-\alpha(1+|\lambda|)|<1$ into its two branches: it holds iff $-1 < 1-\alpha(1+|\lambda|) < 1$. The *upper* branch, $1-\alpha(1+|\lambda|) < 1$, rearranges to $-\alpha(1+|\lambda|)<0$, i.e. $\alpha(1+|\lambda|)>0$, which is satisfied automatically for any $\alpha>0$ (since $1+|\lambda|>0$) — so it imposes no constraint. The *lower* branch, $1-\alpha(1+|\lambda|) > -1$, rearranges to $\alpha(1+|\lambda|) < 2$, i.e. $\alpha < 2/(1+|\lambda|)$ — this is the binding one, and it is the bound quoted.
 
 Small $\alpha$ (e.g., $\alpha = 0.1$) almost always converges but does so slowly — convergence rate scales as $1 - \alpha$ per iteration. Large $\alpha$ converges fast when it converges and oscillates when it does not. For typical insulators $\alpha = 0.3$ is reasonable; for metals one often needs $\alpha = 0.05$.
 
@@ -150,16 +221,72 @@ $$
 
 where $\lambda$ is the Lagrange multiplier for the constraint $\sum c_j = 1$. The next-iteration density is
 
+??? note "Full derivation: the bordered Pulay system (5.43) by constrained minimisation"
+    We want the coefficients $\{c_j\}$ that make the combined residual as small as possible while keeping the combined density a genuine *average* (the constraint $\sum_j c_j = 1$ ensures that if every $n^{(j)}$ already equalled the fixed point, so would $\bar n$). Write the combined residual using the residuals stored in the history,
+    $$
+    \bar r = \sum_j c_j\, r^{(j)},
+    $$
+    and form its squared $L^{2}$ norm. Expanding the square and using bilinearity of the inner product,
+    $$
+    \big\|\bar r\big\|^{2}
+    = \Big\langle \sum_j c_j r^{(j)} \,\Big|\, \sum_k c_k r^{(k)} \Big\rangle
+    = \sum_{j}\sum_{k} c_j c_k \langle r^{(j)} | r^{(k)} \rangle
+    = \sum_{j}\sum_{k} c_j\, B_{jk}\, c_k
+    = \mathbf c^{T} B\,\mathbf c,
+    \tag{5.43c}
+    $$
+    where $B_{jk} = \langle r^{(j)} | r^{(k)}\rangle$ is exactly the overlap (Gram) matrix introduced above. Note $B$ is symmetric ($B_{jk}=B_{kj}$) and positive semi-definite, so $\mathbf c^{T}B\,\mathbf c \ge 0$ is a sensible thing to minimise.
+
+    **Impose the constraint with a Lagrange multiplier.** To minimise $\mathbf c^{T}B\,\mathbf c$ subject to $\mathbf 1^{T}\mathbf c = 1$ (where $\mathbf 1 = (1,1,\dots,1)^{T}$), form the Lagrangian
+    $$
+    \mathcal L(\mathbf c, \lambda)
+    = \mathbf c^{T} B\,\mathbf c - 2\lambda\big(\mathbf 1^{T}\mathbf c - 1\big).
+    $$
+    The factor $2$ on the multiplier is a harmless convention chosen to make the final equations tidy (it just rescales $\lambda$). Differentiate with respect to the coefficient vector. Using $\partial_{\mathbf c}(\mathbf c^{T}B\,\mathbf c) = 2B\,\mathbf c$ (valid because $B$ is symmetric) and $\partial_{\mathbf c}(\mathbf 1^{T}\mathbf c) = \mathbf 1$,
+    $$
+    \frac{\partial \mathcal L}{\partial \mathbf c}
+    = 2B\,\mathbf c - 2\lambda\,\mathbf 1 = \mathbf 0
+    \quad\Longrightarrow\quad
+    B\,\mathbf c = \lambda\,\mathbf 1.
+    \tag{5.43d}
+    $$
+    Differentiating with respect to $\lambda$ simply returns the constraint,
+    $$
+    \frac{\partial \mathcal L}{\partial \lambda}
+    = -2\big(\mathbf 1^{T}\mathbf c - 1\big) = 0
+    \quad\Longrightarrow\quad
+    \mathbf 1^{T}\mathbf c = 1.
+    \tag{5.43e}
+    $$
+
+    **Assemble into one matrix.** Equations (5.43d) and (5.43e) are a coupled linear system in the unknowns $(\mathbf c, \lambda)$. Stack them. The first, $B\,\mathbf c - \lambda\,\mathbf 1 = \mathbf 0$, becomes the top block-row; the second, $\mathbf 1^{T}\mathbf c = 1$, becomes the bottom row. Writing the multiplier slot as $-\lambda$ so the signs line up with (5.43),
+    $$
+    \begin{pmatrix} B & \mathbf 1 \\ \mathbf 1^{T} & 0 \end{pmatrix}
+    \begin{pmatrix} \mathbf c \\ -\lambda \end{pmatrix}
+    = \begin{pmatrix} B\,\mathbf c - \lambda\,\mathbf 1 \\ \mathbf 1^{T}\mathbf c \end{pmatrix}
+    = \begin{pmatrix} \mathbf 0 \\ 1 \end{pmatrix},
+    $$
+    which is exactly the bordered system (5.43). The top block reproduces (5.43d) and the bottom row reproduces the constraint (5.43e). Solving this one $(m{+}1)\times(m{+}1)$ system yields the optimal Pulay weights $\mathbf c$ in a single linear solve; the multiplier $\lambda$ falls out as a by-product and equals the minimised residual norm, $\lambda = \mathbf c^{T}B\,\mathbf c = \|\bar r\|^{2}$ (multiply (5.43d) on the left by $\mathbf c^{T}$ and use $\mathbf 1^{T}\mathbf c = 1$).
+
 $$
 n^{(k+1)} = \sum_j c_j\,n_\mathrm{out}^{(j)}
 \qquad(\text{or}\;\;\sum_j c_j\,n^{(j)} + \alpha\sum_j c_j r^{(j)},\text{ DIIS with damping}).
 \tag{5.44}
 $$
 
+The two forms in (5.44) are connected by the definition of the residual. Since $r^{(j)} = n_\mathrm{out}^{(j)} - n^{(j)}$, we have $n_\mathrm{out}^{(j)} = n^{(j)} + r^{(j)}$, and substituting into the first form,
+$$
+n^{(k+1)} = \sum_j c_j\,n_\mathrm{out}^{(j)} = \sum_j c_j\big(n^{(j)} + r^{(j)}\big) = \sum_j c_j\,n^{(j)} + \sum_j c_j\,r^{(j)}.
+\tag{5.44a}
+$$
+This separates the next density into an *extrapolated input* $\sum_j c_j n^{(j)}$ plus the *combined residual* $\sum_j c_j r^{(j)}$. The undamped scheme takes the residual term at full strength (coefficient $1$); the damped variant rescales just that residual term by $\alpha$, giving $\sum_j c_j n^{(j)} + \alpha\sum_j c_j r^{(j)}$ — the second form quoted in (5.44). Setting $\alpha=1$ recovers the undamped scheme; taking $\alpha<1$ adds back a touch of the conservatism of linear mixing onto the optimal Pulay direction, which helps when the history is not yet reliable.
+
 In practice DIIS converges much faster than linear mixing — often quadratically near the solution. It needs a small history (typically $m = 6$–$10$). Far from convergence DIIS can be unstable; codes typically start with several linear-mixing steps before switching to DIIS, or fall back to linear mixing if DIIS diverges.
 
 !!! note "Why this step?"
     DIIS works because, near a fixed point, the SCF map is approximately linear: $r^{(k+1)}\approx \mathcal J\,r^{(k)}$. A linear combination of past inputs $\bar n = \sum c_j n^{(j)}$ has a residual $\bar r = \sum c_j r^{(j)}$ (by linearity of $\mathcal F - \mathbf I$ when $\mathcal F$ is linear). Minimising $\|\bar r\|^{2}$ over $\{c_j\}$ subject to $\sum c_j = 1$ finds the linear combination *most consistent with zero residual* — essentially a Krylov-subspace projection of the fixed-point equation. The result is faster than any single-step linear mixing because it uses information from $m$ past iterates simultaneously, effectively building a low-rank approximation to the inverse Jacobian on the fly.
+
+    To make the "quasi-Newton" reading concrete: a Newton step for the root of the residual map $r(n) = 0$ would be $n^{(k+1)} = n^{(k)} - \tilde{\mathcal J}^{-1} r^{(k)}$, where $\tilde{\mathcal J} = \delta r/\delta n = \mathcal J - \mathbf I$ is the Jacobian of the *residual* (not of the SCF map itself). The exact $\tilde{\mathcal J}^{-1}$ is unavailable — that is the whole difficulty — so all the acceleration schemes here replace it by a cheap approximation assembled from the history: DIIS/Anderson build it implicitly through the least-squares weights $\{c_j\}$, while Broyden (below) maintains it explicitly as the matrix $G\approx\tilde{\mathcal J}^{-1}$ and takes literally the step $n^{(k+1)} = n^{(k)} - \tilde{\mathcal J}^{-1} r^{(k)}$ with $\tilde{\mathcal J}^{-1}\to G$. This is what "quasi-Newton" means: a Newton iteration with an approximate, history-built inverse Jacobian in place of the true one.
 
 ### Worked example: Pulay applied by hand
 
@@ -169,7 +296,65 @@ $$
 B = \begin{pmatrix} 1 & 0 & -0.5 \\ 0 & 1 & -0.5 \\ -0.5 & -0.5 & 0.51 \end{pmatrix}.
 $$
 
-The constrained system (5.43) with this $B$ and right-hand side $(0, 0, 0, 1)$ gives $\mathbf c = (0.024, 0.024, 0.951)^{T}$, i.e. the optimal combination is dominated by the most recent iterate (which has the smallest residual). The new density is then $n^{(4)} = 0.024\,n_\mathrm{out}^{(1)} + 0.024\,n_\mathrm{out}^{(2)} + 0.951\,n_\mathrm{out}^{(3)}$. The interpretation: Pulay automatically discounts old, less-relevant iterates and emphasises the current best guess, much like a momentum optimiser in machine learning.
+The constrained system (5.43) with this $B$ and right-hand side $(0, 0, 0, 1)$ gives $\mathbf c = (0.2512, 0.2512, 0.4975)^{T}$ (derived step by step below), i.e. the optimal combination leans most heavily on the most recent iterate (which has the smallest residual). The new density is then $n^{(4)} = 0.2512\,n_\mathrm{out}^{(1)} + 0.2512\,n_\mathrm{out}^{(2)} + 0.4975\,n_\mathrm{out}^{(3)}$. The interpretation: Pulay automatically discounts old, less-relevant iterates and emphasises the current best guess, much like a momentum optimiser in machine learning.
+
+!!! note "Where these weights come from"
+    These weights are not guessed — they are the exact solution $\mathbf c = B^{-1}\mathbf 1/(\mathbf 1^{T}B^{-1}\mathbf 1) = \big(\tfrac{101}{402},\,\tfrac{101}{402},\,\tfrac{100}{201}\big)^{T}$ of the constrained least-squares system (5.43). The combination leans most heavily on the most recent iterate $r^{(3)}$ (about twice the weight of the older two); the step-by-step hand calculation is in the collapsible box below.
+
+??? note "Full derivation: solving the $3\times 3$ Pulay example by hand"
+    **Step 1 — build $B$.** The overlap matrix has entries $B_{jk} = \langle r^{(j)} | r^{(k)}\rangle = r^{(j)}\cdot r^{(k)}$ (ordinary dot products, since the residuals here are plain 3-vectors). With $r^{(1)} = [1,0,0]$, $r^{(2)} = [0,1,0]$, $r^{(3)} = [-0.5,-0.5,0.1]$:
+
+    - $B_{11} = 1^2+0+0 = 1$, $\;B_{22} = 0+1^2+0 = 1$;
+    - $B_{12} = B_{21} = (1)(0)+(0)(1)+(0)(0) = 0$;
+    - $B_{13} = B_{31} = (1)(-0.5)+(0)(-0.5)+(0)(0.1) = -0.5$;
+    - $B_{23} = B_{32} = (0)(-0.5)+(1)(-0.5)+(0)(0.1) = -0.5$;
+    - $B_{33} = (-0.5)^2 + (-0.5)^2 + (0.1)^2 = 0.25 + 0.25 + 0.01 = 0.51.$
+
+    The last line verifies the $0.51$ entry quoted for the matrix; this reproduces $B$ exactly.
+
+    **Step 2 — reduce the bordered system.** From the derivation of (5.43), the optimality condition is $B\,\mathbf c = \lambda\,\mathbf 1$ together with $\mathbf 1^{T}\mathbf c = 1$. Solve the first relation for $\mathbf c$ in terms of $\lambda$,
+    $$
+    \mathbf c = \lambda\,B^{-1}\mathbf 1,
+    $$
+    then fix $\lambda$ by the constraint $\mathbf 1^{T}\mathbf c = \lambda\,(\mathbf 1^{T}B^{-1}\mathbf 1) = 1$, i.e.
+    $$
+    \lambda = \frac{1}{\mathbf 1^{T}B^{-1}\mathbf 1},
+    \qquad
+    \mathbf c = \frac{B^{-1}\mathbf 1}{\mathbf 1^{T}B^{-1}\mathbf 1}.
+    \tag{5.43f}
+    $$
+    So we only need the vector $B^{-1}\mathbf 1$, i.e. the solution $\mathbf u$ of $B\,\mathbf u = \mathbf 1$.
+
+    **Step 3 — solve $B\,\mathbf u = \mathbf 1$.** Writing $\mathbf u = (u_1,u_2,u_3)^{T}$, the three equations are
+    $$
+    \begin{aligned}
+    u_1 - 0.5\,u_3 &= 1, \\
+    u_2 - 0.5\,u_3 &= 1, \\
+    -0.5\,u_1 - 0.5\,u_2 + 0.51\,u_3 &= 1.
+    \end{aligned}
+    $$
+    The first two rows are identical in structure, so $u_1 = u_2 = 1 + 0.5\,u_3$. Substitute into the third row:
+    $$
+    -0.5\,(1+0.5u_3) - 0.5\,(1+0.5u_3) + 0.51\,u_3 = 1.
+    $$
+    Expand: $-0.5 - 0.25u_3 - 0.5 - 0.25u_3 + 0.51u_3 = 1$, i.e. $-1 + (-0.25-0.25+0.51)u_3 = 1$, i.e. $-1 + 0.01\,u_3 = 1$. Hence
+    $$
+    0.01\,u_3 = 2 \;\Longrightarrow\; u_3 = 200,
+    \qquad
+    u_1 = u_2 = 1 + 0.5(200) = 101.
+    $$
+    So $B^{-1}\mathbf 1 = \mathbf u = (101,\,101,\,200)^{T}$.
+
+    **Step 4 — normalise.** The denominator in (5.43f) is $\mathbf 1^{T}\mathbf u = 101 + 101 + 200 = 402$, so $\lambda = 1/402 \approx 0.00249$ and
+    $$
+    \mathbf c = \frac{1}{402}\,(101,\,101,\,200)^{T}
+    = \Big(\tfrac{101}{402},\,\tfrac{101}{402},\,\tfrac{100}{201}\Big)^{T}
+    \approx (0.2512,\,0.2512,\,0.4975)^{T}.
+    $$
+    As a check, the components sum to $(101+101+200)/402 = 402/402 = 1$, satisfying the constraint exactly. The most recent iterate $r^{(3)}$ (smallest residual) carries the largest weight $\approx 0.4975$, the two older iterates share the rest equally — exactly the behaviour the prose describes, with the corrected numbers. The new density is therefore
+    $$
+    n^{(4)} = 0.2512\,n_\mathrm{out}^{(1)} + 0.2512\,n_\mathrm{out}^{(2)} + 0.4975\,n_\mathrm{out}^{(3)}.
+    $$
 
 ### Anderson mixing
 
@@ -190,6 +375,27 @@ $$
 
 where $\theta = \langle\Delta r, r^{(k)}\rangle/\|\Delta r\|^{2}$ is chosen to minimise the linearised residual. Note that for $\theta=0$, this reduces to linear mixing; for general $\theta$, it interpolates between two recent linearly-mixed updates, suppressing the *common* component of the residuals (which is the slow mode) while preserving the orthogonal component.
 
+??? note "Full derivation: the Anderson weight $\theta$"
+    Near the fixed point the SCF map is approximately linear, so the residual of an *interpolated* iterate is the same interpolation of the residuals: blending input $(1-\theta)n^{(k)} + \theta n^{(k-1)}$ produces (to linear order) the residual $(1-\theta)r^{(k)} + \theta r^{(k-1)}$. Choose $\theta$ to make that blended residual as small as possible. Write it using $\Delta r = r^{(k)} - r^{(k-1)}$:
+    $$
+    (1-\theta)r^{(k)} + \theta r^{(k-1)}
+    = r^{(k)} - \theta\big(r^{(k)} - r^{(k-1)}\big)
+    = r^{(k)} - \theta\,\Delta r.
+    $$
+    So we minimise the scalar function
+    $$
+    f(\theta) = \big\| r^{(k)} - \theta\,\Delta r \big\|^{2}
+    = \langle r^{(k)} - \theta\Delta r \,|\, r^{(k)} - \theta\Delta r\rangle
+    = \|r^{(k)}\|^{2} - 2\theta\,\langle \Delta r, r^{(k)}\rangle + \theta^{2}\|\Delta r\|^{2},
+    $$
+    a simple upward parabola in $\theta$ (coefficient $\|\Delta r\|^{2} \ge 0$). Set the derivative to zero:
+    $$
+    f'(\theta) = -2\,\langle \Delta r, r^{(k)}\rangle + 2\theta\,\|\Delta r\|^{2} = 0
+    \quad\Longrightarrow\quad
+    \theta = \frac{\langle \Delta r, r^{(k)}\rangle}{\|\Delta r\|^{2}},
+    $$
+    which is the quoted weight. (The second derivative $f''(\theta) = 2\|\Delta r\|^{2} > 0$ confirms a minimum.) Geometrically, $\theta\,\Delta r$ is the orthogonal projection of $r^{(k)}$ onto the direction $\Delta r$, so $r^{(k)} - \theta\Delta r$ is the component of $r^{(k)}$ *orthogonal* to the change in residual — Anderson removes exactly the part of the residual that the last step was able to move.
+
 ### Broyden's second method
 
 Broyden mixing is a quasi-Newton scheme that approximates the inverse Jacobian of the SCF map from the iteration history. It generalises both Anderson and DIIS and is the default in some plane-wave codes (e.g., VASP). The implementation is more involved but the convergence behaviour is similar to DIIS for most problems.
@@ -199,10 +405,39 @@ Broyden mixing is a quasi-Newton scheme that approximates the inverse Jacobian o
 **Broyden's second method** maintains an approximate inverse Jacobian $G^{(k)}$ that is updated each iteration to satisfy the secant equation $G^{(k)}\Delta r = \Delta n$. The update is
 
 $$
-G^{(k+1)} = G^{(k)} + \frac{(\Delta n - G^{(k)}\Delta r)\,(G^{(k)})^{T}\Delta r}{\|\Delta r\|^{2}},
+G^{(k+1)} = G^{(k)} + \frac{(\Delta n - G^{(k)}\Delta r)\,\Delta r^{T}}{\|\Delta r\|^{2}},
 $$
 
-and the SCF step is $n^{(k+1)} = n^{(k)} + G^{(k+1)}r^{(k)}$. In practice $G$ is stored in low-rank form (a few past $(\Delta n_j, \Delta r_j)$ pairs); this is the *limited-memory Broyden* method used by VASP.
+and the SCF step is $n^{(k+1)} = n^{(k)} - G^{(k+1)}r^{(k)}$ (the minus sign is the Newton step for the root of the residual map, consistent with the quasi-Newton reading above). In practice $G$ is stored in low-rank form (a few past $(\Delta n_j, \Delta r_j)$ pairs); this is the *limited-memory Broyden* method used by VASP.
+
+??? note "Full derivation: the Broyden update satisfies the secant equation"
+    Broyden's second method builds an approximate *inverse* Jacobian $G \approx \mathcal J^{-1}$ of the SCF map directly from the iteration history. The single piece of new information at each step is one input–output pair: the density moved by $\Delta n = n^{(k)} - n^{(k-1)}$ and, correspondingly, the residual moved by $\Delta r = r^{(k)} - r^{(k-1)}$. A true inverse Jacobian would map the second change back to the first; we *demand* the same of our approximation. That requirement is the **secant equation**
+    $$
+    G^{(k+1)}\,\Delta r = \Delta n.
+    \tag{5.45a}
+    $$
+
+    **The rank-1 update.** The minimal-norm update is the *smallest* change to $G^{(k)}$ (in the Frobenius norm $\|G^{(k+1)}-G^{(k)}\|_F$) that satisfies (5.45a). It has the rank-1 form
+    $$
+    G^{(k+1)} = G^{(k)} + \frac{\big(\Delta n - G^{(k)}\Delta r\big)\,\Delta r^{T}}{\|\Delta r\|^{2}},
+    \tag{5.45b}
+    $$
+    i.e. the correction vector $\Delta n - G^{(k)}\Delta r$ (how badly the *current* $G^{(k)}$ violates the secant condition) times the row vector $\Delta r^{T}/\|\Delta r\|^{2}$. (This is the form to use; if the second factor is written with $G^{(k)}$ acting on $\Delta r$ instead of the bare $\Delta r^{T}$, the verification below does not close.)
+
+    **Verify (5.45a) by direct substitution.** Multiply (5.45b) on the right by $\Delta r$:
+    $$
+    G^{(k+1)}\Delta r
+    = G^{(k)}\Delta r
+    + \frac{\big(\Delta n - G^{(k)}\Delta r\big)\,\big(\Delta r^{T}\Delta r\big)}{\|\Delta r\|^{2}}.
+    $$
+    Now $\Delta r^{T}\Delta r = \|\Delta r\|^{2}$ is just the squared norm in the denominator, so the fraction collapses:
+    $$
+    G^{(k+1)}\Delta r
+    = G^{(k)}\Delta r + \big(\Delta n - G^{(k)}\Delta r\big)\,\frac{\|\Delta r\|^{2}}{\|\Delta r\|^{2}}
+    = G^{(k)}\Delta r + \Delta n - G^{(k)}\Delta r
+    = \Delta n.
+    $$
+    The two $G^{(k)}\Delta r$ terms cancel and the secant equation (5.45a) holds exactly — the update *forces* the new $G$ to reproduce the most recent density/residual pair, while the minimal-Frobenius-norm property (the **minimal-norm-update principle**, also called the "least-change" or Broyden update) guarantees it disturbs the rest of $G$ as little as possible, so information accumulated from earlier steps is preserved.
 
 **Kerker preconditioning.** For metallic systems, the SCF Jacobian has eigenvalues that diverge in the long-wavelength limit. The Kerker preconditioner replaces the residual $r$ by a modified residual $\tilde r$ via the reciprocal-space rule
 
@@ -212,6 +447,27 @@ $$
 $$
 
 where $q_0$ is a tunable scale (typically $q_0\sim 1.5\;\text{Bohr}^{-1}$ for typical metals). This kills the long-wavelength components that drive charge sloshing while leaving short-wavelength components essentially unchanged. The mixing scheme then operates on $\tilde r$ rather than $r$, and the effective Jacobian has eigenvalues much closer to 1 in magnitude.
+
+??? note "Full derivation: the Kerker factor is the inverse Thomas–Fermi dielectric"
+    Start from the Thomas–Fermi dielectric function of a uniform electron gas (the same (5.41e) used above to contrast metals and insulators),
+    $$
+    \epsilon_\mathrm{TF}(\mathbf q) = 1 + \frac{q_0^{2}}{|\mathbf q|^{2}},
+    $$
+    where $q_0$ is the **Thomas–Fermi screening wavevector**: $q_0^{2} \propto g(\varepsilon_F)$, the density of states at the Fermi level, so a metal (large $g(\varepsilon_F)$) screens strongly and an insulator (vanishing $g(\varepsilon_F)$) does not. The trouble for SCF is precisely that $\epsilon_\mathrm{TF}\to\infty$ as $|\mathbf q|\to 0$: the long-wavelength response is huge, the corresponding Jacobian eigenvalues blow up, and the iteration sloshes.
+
+    **Invert it.** The natural preconditioner is the *inverse* dielectric, which undoes that divergence. Take the reciprocal and put the two terms over a common denominator:
+    $$
+    \frac{1}{\epsilon_\mathrm{TF}(\mathbf q)}
+    = \frac{1}{\,1 + \dfrac{q_0^{2}}{|\mathbf q|^{2}}\,}
+    = \frac{1}{\dfrac{|\mathbf q|^{2} + q_0^{2}}{|\mathbf q|^{2}}}
+    = \frac{|\mathbf q|^{2}}{|\mathbf q|^{2} + q_0^{2}}.
+    $$
+    This is exactly the Kerker factor in (5.43b). Reading off its two limits shows why it cures sloshing without harming the well-behaved modes:
+
+    - **Long wavelength**, $|\mathbf q|\to 0$: the factor $\to |\mathbf q|^{2}/q_0^{2}\to 0$. The divergent small-$\mathbf q$ components of the residual — the charge-sloshing modes — are strongly damped before mixing.
+    - **Short wavelength**, $|\mathbf q|\gg q_0$: the factor $\to |\mathbf q|^{2}/|\mathbf q|^{2} = 1$. The large-$\mathbf q$ components, which were already well-behaved, pass through essentially unchanged.
+
+    Because applying $1/\epsilon_\mathrm{TF}$ approximately cancels the leading small-$\mathbf q$ divergence of $\mathcal J = \chi K$, the preconditioned residual $\tilde r$ behaves as if the effective Jacobian had eigenvalues near unity across all wavevectors — which is the condition for fast, stable iteration. The parameter $q_0$ is identified as the Thomas–Fermi screening wavevector and is tuned (typically $\sim 1.5\,\text{Bohr}^{-1}$) so the crossover between the two regimes sits below the shortest sloshing wavelength of the system.
 
 !!! note "Why this step?"
     The Kerker factor $|\mathbf q|^{2}/(|\mathbf q|^{2}+q_0^{2})$ is precisely the inverse dielectric response of a Thomas–Fermi electron gas, scaled by $q_0^{-2}$. The Kerker preconditioner is therefore an *approximate inverse* of the SCF Jacobian: applying it cancels the leading divergence of $\mathcal J$ at small $|\mathbf q|$. This is the same idea as preconditioning a linear system in numerical analysis — multiply by an approximation to the inverse of the offending operator.
@@ -223,6 +479,13 @@ Several quantities can be monitored:
 - **Density residual** $\|n_\mathrm{out} - n_\mathrm{in}\| = \int|n_\mathrm{out} - n_\mathrm{in}|^{2}\,\mathrm d\mathbf r$ or $\max|n_\mathrm{out} - n_\mathrm{in}|$. The most rigorous criterion.
 - **Energy difference** $|E^{(k+1)} - E^{(k)}|$. Easy to compute; typical tolerance $10^{-5}$ to $10^{-8}$ Ha. Beware: small energy changes do not always mean converged densities.
 - **Force / stress changes**: critical for geometry optimisations. Want forces converged to $\sim 10^{-3}$ Ha/Bohr or better before trusting them.
+
+!!! note "Notation: the density residual norm carries a square root"
+    The first bullet writes $\|n_\mathrm{out} - n_\mathrm{in}\| = \int|n_\mathrm{out} - n_\mathrm{in}|^{2}\,\mathrm d\mathbf r$, but strictly the $L^{2}$ norm carries a square root,
+    $$
+    \|f\|_2 = \Big(\int|f(\mathbf r)|^{2}\,\mathrm d\mathbf r\Big)^{1/2}.
+    $$
+    The expression written without the root is therefore the *squared* norm $\|n_\mathrm{out}-n_\mathrm{in}\|_2^{2}$, not $\|n_\mathrm{out}-n_\mathrm{in}\|_2$. Either may be used as a convergence measure provided the threshold is set consistently (squaring merely doubles the apparent number of converged decimals per step). The code in §5.5.5 sidesteps the issue entirely by monitoring the max-norm $\max|n_\mathrm{out}-n_\mathrm{in}|$, which needs no root.
 
 A common protocol: require *both* an energy tolerance and a density tolerance to be satisfied for two consecutive iterations.
 
@@ -463,9 +726,70 @@ The single most important line to find is `residual = float(np.max(np.abs(n_out 
 
 - **Grid and operators.** A uniform real-space grid of $n=256$ points on a 20-Bohr box, with periodic boundary conditions. The kinetic operator is the second-order central difference $T = -\tfrac{1}{2}D^{2}$ assembled as a dense matrix; for larger systems one would use a sparse representation.
 - **Soft Coulomb.** A 1D Coulomb $-1/|x-x_0|$ is singular; replacing $1/|x|$ with $1/\sqrt{x^{2}+a^{2}}$ regularises it and makes the model physically reasonable. The Hartree kernel uses the same softening.
+
+!!! warning "The toy 'Hartree' is a 1D soft-Coulomb convolution, not the 3D Poisson solution"
+    The bird's-eye pseudocode (§5.5.5a) writes the Hartree step as *"solve Poisson: $\nabla^{2}v_H = -4\pi n$"*, which is the correct 3D electrostatics: in three dimensions $v_H(\mathbf r) = \int n(\mathbf r')/|\mathbf r-\mathbf r'|\,\mathrm d\mathbf r'$ is the Green's-function solution of Poisson's equation with the $1/|\mathbf r-\mathbf r'|$ kernel. The runnable `hartree_potential` in this listing does *not* solve a 1D Poisson equation. Instead it evaluates a *convolution* of the density with the same softened kernel used for the electron–nucleus attraction,
+    $$
+    v_H(x) = \int \frac{n(x')}{\sqrt{(x-x')^{2} + a^{2}}}\,\mathrm d x'
+    \quad(\text{summed over periodic images}),
+    $$
+    coded as the double loop `contrib += sum(n / sqrt(d**2 + a**2)) * dx`. This is a deliberate, pedagogically convenient choice — the true 1D Poisson kernel ($\nabla^{2}v_H = -4\pi n$ in 1D gives a Green's function $\propto -2\pi|x-x'|$, which grows without bound and behaves quite unlike 3D electrostatics) would not give a sensible bounded potential. So the model borrows the *3D-like* $1/\sqrt{r^{2}+a^{2}}$ interaction throughout, for both $v_\mathrm{ext}$ and $v_H$, rather than literally inverting the 1D Laplacian. Treat the pseudocode's Poisson line as the general 3D recipe and this convolution as its toy-model stand-in.
 - **LDA exchange.** We use the 3D LDA exchange potential $v_x \propto -n^{1/3}$ applied to our 1D density. This is *not* the rigorous 1D exchange (which is different functionally), but it is pedagogically standard and produces qualitatively correct behaviour.
+
+!!! note "Where the factor of 2 comes from: the closed-shell assumption"
+    Throughout this implementation — in `build_density` (`return 2.0 * ...`), in the band sum `band = 2.0 * sum(eigvals[:n_occ])`, and in the energy derivation above — a factor of $2$ multiplies every sum over the $N_\mathrm{occ}$ spatial orbitals. This is the **closed-shell, spin-unpolarised** assumption: each spatial orbital $\phi_i$ is occupied by *two* electrons, one spin-up and one spin-down, sharing the same spatial wavefunction. With $N$ electrons there are then $N_\mathrm{occ} = N/2$ doubly-occupied orbitals (the code sets `n_occ = n_electrons // 2`), and the density is
+    $$
+    n(\mathbf r) = \sum_{i,\sigma}^\mathrm{occ}|\phi_{i\sigma}(\mathbf r)|^{2}
+    = 2\sum_{i}^{N/2}|\phi_i(\mathbf r)|^{2},
+    $$
+    since the two spin channels contribute identical $|\phi_i|^{2}$. The same doubling applies to the eigenvalue sum because each orbital energy $\varepsilon_i$ is counted once per occupying electron. This is *only* valid when the system is non-magnetic and has no partially filled shell; spin-polarised or open-shell systems require separate up- and down-spin densities and orbital sets (and the factor $2$ disappears), as flagged in the closing "Pedagogical, not production" note.
 - **Mixing.** The first few iterations use linear mixing with $\alpha = 0.3$ to stabilise the history; subsequent iterations switch to Pulay/DIIS using the most recent six densities.
 - **Total energy.** Equation (5.28) is computed via the band-sum form: $E = 2\sum_i^\mathrm{occ}\varepsilon_i - U_H + E_x - \int n v_x$, accounting for double-counting between the band-sum $2\sum\varepsilon_i$ and the explicit Hartree/exchange energies.
+
+??? note "Full derivation: the double-counting correction $E = 2\sum_i\varepsilon_i - U_H + E_{xc} - \int n\,v_{xc}$"
+    The Kohn–Sham total energy is *not* simply the sum of occupied eigenvalues. The eigenvalues already contain the electron–electron interaction once *inside* each orbital's potential, so naively summing them counts the Hartree and xc interactions twice — hence "double counting". We reconcile the band sum with the true energy functional explicitly. Throughout, the system is closed-shell with doubly-occupied orbitals, so factors of $2$ accompany every sum over the $N_\mathrm{occ}$ spatial orbitals (see the note on this assumption below).
+
+    **The band sum, expanded.** Each occupied orbital satisfies $\big(-\tfrac12\nabla^2 + v_\mathrm{KS}\big)\phi_i = \varepsilon_i\phi_i$. Taking the expectation value in $\phi_i$ (normalised), $\varepsilon_i = \langle\phi_i| -\tfrac12\nabla^2 |\phi_i\rangle + \langle\phi_i| v_\mathrm{KS}|\phi_i\rangle$. Sum over occupied orbitals with the spin factor $2$:
+    $$
+    2\sum_i^\mathrm{occ}\varepsilon_i
+    = \underbrace{2\sum_i^\mathrm{occ}\langle\phi_i| -\tfrac12\nabla^2|\phi_i\rangle}_{\displaystyle T_s}
+    + 2\sum_i^\mathrm{occ}\langle\phi_i| v_\mathrm{KS}|\phi_i\rangle.
+    $$
+    The first group is, by definition, the non-interacting kinetic energy $T_s$. In the second group $v_\mathrm{KS}(\mathbf r)$ is a local multiplicative potential, so $2\sum_i\langle\phi_i|v_\mathrm{KS}|\phi_i\rangle = \int v_\mathrm{KS}(\mathbf r)\,\big[2\sum_i|\phi_i(\mathbf r)|^{2}\big]\,\mathrm d\mathbf r = \int n(\mathbf r)\,v_\mathrm{KS}(\mathbf r)\,\mathrm d\mathbf r$, using $n = 2\sum_i|\phi_i|^{2}$. Substituting $v_\mathrm{KS} = v_\mathrm{ext} + v_H + v_{xc}$,
+    $$
+    2\sum_i^\mathrm{occ}\varepsilon_i
+    = T_s + \int n\,v_\mathrm{ext} + \int n\,v_H + \int n\,v_{xc}.
+    \tag{5.46a}
+    $$
+
+    **The Hartree term carries a factor 2.** The Hartree potential is $v_H(\mathbf r) = \int \dfrac{n(\mathbf r')}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r'$, whereas the Hartree *energy* is the half-weighted double integral
+    $$
+    U_H = \frac{1}{2}\iint \frac{n(\mathbf r)\,n(\mathbf r')}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r'.
+    $$
+    The factor $\tfrac12$ corrects for counting each electron pair twice. Comparing, $\int n\,v_H = \iint \dfrac{n(\mathbf r)n(\mathbf r')}{|\mathbf r-\mathbf r'|}\,\mathrm d\mathbf r\,\mathrm d\mathbf r' = 2U_H$. So (5.46a) becomes
+    $$
+    2\sum_i^\mathrm{occ}\varepsilon_i
+    = T_s + \int n\,v_\mathrm{ext} + 2U_H + \int n\,v_{xc}.
+    \tag{5.46b}
+    $$
+
+    **The true total energy.** The Kohn–Sham energy functional itself is
+    $$
+    E = T_s + \int n\,v_\mathrm{ext} + U_H + E_{xc},
+    \tag{5.46c}
+    $$
+    with the Hartree energy entering *once* (as $U_H$, not $2U_H$) and the xc *energy* $E_{xc}$ entering (not $\int n\,v_{xc}$, which is a different object — $v_{xc} = \delta E_{xc}/\delta n$).
+
+    **Subtract.** Take (5.46c) minus (5.46b) term by term. The $T_s$ and $\int n\,v_\mathrm{ext}$ pieces are identical and cancel in the difference, leaving
+    $$
+    E - 2\sum_i\varepsilon_i = \big(U_H - 2U_H\big) + \big(E_{xc} - \textstyle\int n\,v_{xc}\big) = -U_H + E_{xc} - \int n\,v_{xc}.
+    $$
+    Rearranging gives the working formula used in `total_energy`,
+    $$
+    \boxed{\,E = 2\sum_i^\mathrm{occ}\varepsilon_i - U_H + E_{xc} - \int n\,v_{xc}\,}.
+    \tag{5.46d}
+    $$
+    Watch the signs: the Hartree term flips from $+2U_H$ in the band sum to a net $-U_H$ (over-counted by $2U_H$, corrected by $+U_H$), and the xc term flips from $+\int n\,v_{xc}$ to a net $E_{xc} - \int n\,v_{xc}$. In the code (LDA exchange only, so $E_{xc}\to E_x$) this is exactly `e_dc = -eH + ex - sum(n*vx)*dx` with `eH` $=U_H$, `ex` $=E_x$, and `sum(n*vx)*dx` $=\int n\,v_x$, added to `band` $=2\sum_i\varepsilon_i$.
 
 ### What you should see
 
@@ -616,6 +940,9 @@ The next section, §5.6, gives an honest account of where this machine fails and
 - **Fermi smearing**: replace step occupations with smooth Fermi–Dirac at artificial $T$. Essential for metals (Janak's theorem and Mermin's finite-$T$ DFT justify this).
 - **Convergence criteria**: density residual, energy difference, force changes — tighter for phonons and elastic constants than for total energies.
 - **Convergence ≠ correctness**: a converged SCF solves the chosen functional self-consistently, not necessarily reality.
+
+!!! note "What Janak's theorem and Mermin's finite-temperature DFT each say"
+    Two results underpin the Fermi-smearing trick. *Janak's theorem* states that the Kohn–Sham eigenvalue is the derivative of the total energy with respect to the occupation of that orbital, $\varepsilon_i = \partial E/\partial f_i$, which is what makes *fractional* occupations a well-defined variational quantity rather than an ad hoc device. *Mermin's finite-temperature DFT* generalises the Hohenberg–Kohn theorems to thermal ensembles, showing that the grand potential is a unique functional of the density at temperature $T$; minimising the free energy $F = E - TS$ with smooth Fermi–Dirac occupations is then a rigorous variational principle (the artificial $T$ enters as a real smearing temperature, and zero-temperature observables are recovered by extrapolating $T\to 0$).
 
 !!! warning "Convergence ≠ correctness"
     A converged SCF only means that the equations have been *solved consistently* for the chosen functional, basis, and pseudopotential. It does *not* mean that the answer is physically correct. A PBE calculation can converge beautifully to an unphysical metallic state for NiO, or to a fictitiously short bond for a vdW-bound dimer. Convergence is necessary, not sufficient. The next section addresses the gap between convergence and physical truth.

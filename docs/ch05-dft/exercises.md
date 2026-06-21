@@ -1,12 +1,12 @@
 # 5.7 Exercises
 
-Eight problems, with worked solutions inline. Difficulty levels:
+Exercises organised in five levels (A–E), with worked solutions inline. Difficulty levels:
 
 - **(★)** routine — checks understanding.
 - **(★★)** moderate — requires non-trivial work or coding.
 - **(★★★)** challenging — could be the basis of a project.
 
-Answer in your own words, derive every step, and run the code yourself.
+Answer in your own words, derive every step (where applicable; Levels A, B and E are conceptual/open-ended), and run the code yourself.
 
 !!! tip "How to use these exercises"
 
@@ -109,9 +109,9 @@ Symmetrically, $E^{(2)} < E^{(1)} + \int n_0(v^{(2)} - v^{(1)})\,\mathrm d\mathb
 
 Consider a cubic box of side $L = 10\,a_0$ containing a uniform electron density $n = 0.05\,a_0^{-3}$.
 
-(a) Compute the LDA exchange energy using equation (5.36).
-(b) Compute the corresponding Fermi wavevector $k_F$ and Fermi energy.
-(c) The Thomas–Fermi kinetic energy from (5.5).
+(a) Compute the LDA exchange energy using equation (5.36), the local-density exchange functional $E_x^\mathrm{LDA}[n] = -\tfrac{3}{4}(3/\pi)^{1/3}\int n^{4/3}\,\mathrm d\mathbf r$ (equivalently $E_x^\mathrm{LDA} = -C_x\int n^{4/3}\,\mathrm d\mathbf r$ with $C_x = \tfrac{3}{4}(3/\pi)^{1/3} \approx 0.7386$).
+(b) Compute the corresponding Fermi wavevector $k_F$ and Fermi energy, using the uniform-gas relation (5.3), $k_F = (3\pi^2 n)^{1/3}$, and $\varepsilon_F = k_F^2/2$.
+(c) The Thomas–Fermi kinetic energy from (5.5), $T_\mathrm{TF}[n] = C_F\int n^{5/3}\,\mathrm d\mathbf r$ with $C_F = \tfrac{3}{10}(3\pi^2)^{2/3} \approx 2.871$.
 
 **Solution.**
 
@@ -142,7 +142,7 @@ Consider two non-interacting spin-paired electrons in a 1D box $[0,L]$ with hard
 
 (a) Write the ground-state density $n_0(x)$.
 (b) Compute the non-interacting kinetic energy $T_s$ directly from the orbitals.
-(c) Apply the Thomas–Fermi approximation: $T_\mathrm{TF}[n_0] = C_F\int n_0^{5/3}\mathrm dx$ (use the 3D $C_F$ as an approximation). Compare $T_\mathrm{TF}$ with the exact $T_s$.
+(c) Apply the Thomas–Fermi approximation: $T_\mathrm{TF}[n_0] = C_F\int n_0^{5/3}\mathrm dx$ with the 3D constant $C_F = \tfrac{3}{10}(3\pi^2)^{2/3} \approx 2.871$ (used here as an approximation; the genuine 1D constant differs). Compare $T_\mathrm{TF}$ with the exact $T_s$.
 
 **Solution.**
 
@@ -158,11 +158,15 @@ L = 5.0
 x = np.linspace(1e-6, L - 1e-6, 1000)
 n = (4 / L) * np.sin(np.pi * x / L) ** 2
 CF = 0.3 * (3 * np.pi ** 2) ** (2 / 3)  # 2.871 in 3D atomic units
-T_TF = CF * np.trapz(n ** (5 / 3), x)
+T_TF = CF * np.trapezoid(n ** (5 / 3), x)
 T_s = np.pi ** 2 / L ** 2
 print(T_TF, T_s)
 # Output: ~0.249, ~0.395
 ```
+
+!!! note "NumPy version"
+
+    `np.trapezoid` is the spelling from NumPy 2.0 onwards. On NumPy 1.x the same function is called `np.trapz` (now deprecated); substitute it if you are on an older install.
 
 The Thomas–Fermi value (~0.25 Ha) underestimates the exact non-interacting kinetic energy (~0.40 Ha) by about 35%. The local kinetic functional is insufficient — a known fact, and the precise reason Kohn–Sham theory chose to compute $T_s$ from orbitals rather than as an explicit density functional.
 
@@ -175,7 +179,7 @@ The Thomas–Fermi value (~0.25 Ha) underestimates the exact non-interacting kin
 A single electron in a hydrogen-like 1s orbital has density $n(r) = (Z^{3}/\pi)e^{-2Zr}$.
 
 (a) Compute the Hartree self-energy $U_H[n] = \tfrac{1}{2}\iint n(r)n(r')/|r-r'|\,\mathrm d^{3}r\,\mathrm d^{3}r'$.
-(b) Compute the LDA exchange energy $E_x^\mathrm{LDA}[n]$ from (5.36).
+(b) Compute the LDA exchange energy $E_x^\mathrm{LDA}[n]$ from (5.36), namely $E_x^\mathrm{LDA}[n] = -\tfrac{3}{4}(3/\pi)^{1/3}\int n^{4/3}\,\mathrm d\mathbf r$.
 (c) For exact DFT, $E_x[n] + U_H[n] = 0$ for a one-electron system (the self-Coulomb is exactly cancelled by exact exchange). Compute the LDA self-interaction error $U_H + E_x^\mathrm{LDA}$ for $Z = 1$ (hydrogen).
 
 **Solution.**
@@ -236,7 +240,15 @@ $$
 \epsilon_c(n) \approx -A\ln(1 + B/r_s),\qquad r_s = (3/(4\pi n))^{1/3},
 $$
 
-with $A = 0.0311$ and $B = 1.0$ (very crude). Add the corresponding $v_c = \delta(n\epsilon_c)/\delta n$ to `v_ks`. Re-run for the H$_4$ chain. Report:
+with $A = 0.0311$ and $B = 1.0$ (very crude). Add the corresponding $v_c$ to `v_ks`. Because $\epsilon_c$ is the energy *per particle*, the correlation potential is the functional derivative of the energy density $n\epsilon_c$:
+
+$$
+v_c = \frac{\delta(n\epsilon_c)}{\delta n} = \epsilon_c + n\,\frac{\partial \epsilon_c}{\partial n},
+\qquad
+\frac{\partial \epsilon_c}{\partial n} = \frac{\partial \epsilon_c}{\partial r_s}\,\frac{\partial r_s}{\partial n}.
+$$
+
+For the form above, $\partial\epsilon_c/\partial r_s = -A\,(-B/r_s^2)/(1 + B/r_s)$ and, from $r_s = (3/(4\pi n))^{1/3}$, $\partial r_s/\partial n = -r_s/(3n)$. Substituting these into the chain rule gives the exact expression coded below — derive it yourself rather than copying the code. Re-run for the H$_4$ chain. Report:
 
 (a) The converged total energy.
 (b) The number of SCF iterations.
@@ -282,7 +294,7 @@ Caveat: for strongly correlated systems (which our toy LDA-X H chain is *not*) d
 
 ## Exercise 5.8 — A Mott-like failure **(★★★)**
 
-In the SCF code, modify the geometry: place two protons close together at $x = 9, 11$ a.u. (an H$_2$ molecule) and *also* set the box length to $L = 40$ a.u. with $n=512$ grid points.
+In the SCF code, modify the geometry: place two protons close together at $x = 9, 11$ a.u. (an H$_2$ molecule) and *also* set the box length to $L = 40$ a.u. with $n=512$ grid points. (Here $a$ denotes the softening parameter of the 1D soft-Coulomb electron–nucleus potential $v(x) = -Z/\sqrt{(x-x_\alpha)^2 + a^2}$ used in the §5.5 code; it regularises the singularity at the proton and its value shifts the numerical bond length slightly.)
 
 (a) Run with $n_\mathrm{electrons} = 2$. Report the bond length: vary the proton positions and find the energy minimum. Compare with the experimental H$_2$ bond length of 1.40 a.u.
 
@@ -300,11 +312,19 @@ In the SCF code, modify the geometry: place two protons close together at $x = 9
 
 The lesson: even a small toy SCF code, faithfully implemented, exhibits the same systematic failure modes as production DFT. Self-interaction error is not a numerical artefact; it is intrinsic to the choice of approximate functional and survives any amount of numerical care.
 
+??? note "Hint"
+
+    The qualitative failure in parts (b) and (c) is the *many-electron* face of the *one-electron* self-interaction error you already quantified analytically in Exercise 5.4. There, for a single electron, $U_H + E_x^\mathrm{LDA} \approx +0.1$ Ha did not cancel as it must for an exact functional. Stretched H$_2^+$ is the same defect in disguise: the lone electron sees a spurious self-repulsion, and LDA-X lowers it by smearing the electron over both protons (fractional charge) instead of localising it. Use the Exercise 5.4 number as your analytic anchor — the per-electron self-interaction it gives is the order of magnitude of the energy error you should expect to see numerically in part (c).
+
 ---
 
 ## E. Apply and critique
 
 Higher-level questions about choosing DFT, reading its output, and recognising when it fails. These are open-ended — there is no single numerical answer.
+
+!!! note "Level E is open-ended by design"
+
+    Unlike Levels A–D, the Level E items below are open-ended judgement calls. They come with *hints only* — there is deliberately no answer key, because a good answer depends on your system, your constraints, and your reading of the literature. Treat the hints as a checklist of considerations, not a marking scheme.
 
 **E1.** You compute a semiconductor's band gap and get a value substantially smaller than the experimental gap. List three plausible causes and, for each, how you would check it.
 
