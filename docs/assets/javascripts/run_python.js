@@ -35,7 +35,10 @@
 
 const HEAVY_PACKAGES = [
   "torch", "mace", "mace_torch", "ase", "pymatgen",
-  "torch_geometric", "botorch", "gpytorch", "mp_api"
+  "torch_geometric", "botorch", "gpytorch", "mp_api",
+  // Not packaged for Pyodide either — point readers to Colab rather than
+  // letting the run fail with a confusing ModuleNotFoundError.
+  "MDAnalysis", "pymbar", "umap", "umap_learn"
 ];
 
 let pyodideReadyPromise = null;
@@ -124,7 +127,11 @@ function loadPyodideOnce() {
       await loadScript(base + "pyodide.js");
     }
     const py = await loadPyodide({ indexURL: base });
-    await py.loadPackage(["numpy", "scipy", "matplotlib"]);
+    // Preload the full set of Pyodide packages used anywhere in the handbook
+    // (numpy 92, matplotlib 45, scipy 14, pandas 4 blocks) once, so every "Run"
+    // works regardless of which one the reader clicks. loadPackagesFromImports
+    // below then covers any snippet that needs something beyond this base set.
+    await py.loadPackage(["numpy", "scipy", "matplotlib", "pandas"]);
     py.runPython(`
 import matplotlib
 matplotlib.use("Agg")
@@ -218,6 +225,11 @@ async function runPythonInto(py, code, output, globalsObj) {
   }
 
   try {
+    // Auto-load any Pyodide packages this snippet imports, so a run never fails
+    // just because the code imports a module without explicitly loading it.
+    // Packages already preloaded are a no-op; anything else in the self-hosted
+    // set is fetched on demand and cached for later runs.
+    await py.loadPackagesFromImports(code);
     await py.runPythonAsync(code);
   } catch (e) {
     const stderr = py.runPython("sys.stdout.getvalue()");
