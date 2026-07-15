@@ -233,13 +233,15 @@ async function runPythonInto(py, code, output, globalsObj) {
     }
   }
 
+  let lastValue;
   try {
     // Auto-load any Pyodide packages this snippet imports, so a run never fails
     // just because the code imports a module without explicitly loading it.
     // Packages already preloaded are a no-op; anything else in the self-hosted
     // set is fetched on demand and cached for later runs.
     await py.loadPackagesFromImports(code);
-    await py.runPythonAsync(code);
+    // Run the code directly so any traceback points only at the user's lines.
+    lastValue = await py.runPythonAsync(code);
   } catch (e) {
     const stderr = py.runPython("sys.stdout.getvalue()");
     output.innerHTML =
@@ -249,6 +251,21 @@ async function runPythonInto(py, code, output, globalsObj) {
   }
 
   const stdout = py.runPython("sys.stdout.getvalue()");
+
+  // REPL-style: show the value of the last expression (like a notebook cell), so
+  // a block ending in a bare expression such as "u @ v" shows its result. Bind it
+  // to "_" too. Statements / assignments / print() evaluate to None → show nothing.
+  let lastRepr = "";
+  if (lastValue !== undefined && lastValue !== null) {
+    try {
+      py.globals.set("_", lastValue);
+      lastRepr = py.runPython("repr(_)");
+    } catch (_) { /* ignore */ }
+  }
+  if (lastValue && typeof lastValue.destroy === "function") {
+    try { lastValue.destroy(); } catch (_) { /* ignore */ }
+  }
+
   let plotB64 = "";
   try {
     plotB64 = py.runPython("__capture_plot()");
@@ -256,6 +273,7 @@ async function runPythonInto(py, code, output, globalsObj) {
 
   let html = "";
   if (stdout) html += "<pre class='pyodide-stdout'>" + escapeHtml(stdout) + "</pre>";
+  if (lastRepr) html += "<pre class='pyodide-stdout pyodide-result'>" + escapeHtml(lastRepr) + "</pre>";
   if (plotB64) html += "<img class='pyodide-plot' src='data:image/png;base64," + plotB64 + "' alt='matplotlib output'>";
   if (!html) html = "<div class='pyodide-note'>Ran successfully — no output.</div>";
   output.innerHTML = html;
