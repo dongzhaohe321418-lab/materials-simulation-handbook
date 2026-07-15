@@ -133,6 +133,15 @@ function loadPyodideOnce() {
     // below then covers any snippet that needs something beyond this base set.
     await py.loadPackage(["numpy", "scipy", "matplotlib", "pandas"]);
     py.runPython(`
+# Pre-bind the conventional aliases (np, pd, plt) and the bare module names, so a
+# snippet that uses them WITHOUT an explicit import still runs — e.g. a fragment
+# that just does "u = np.array(...)". Every Run block shares one namespace, so
+# binding these once at startup covers all of them.
+import numpy as np
+import numpy
+import scipy
+import pandas as pd
+import pandas
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
