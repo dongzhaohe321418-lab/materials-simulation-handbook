@@ -40,12 +40,72 @@ const HEAVY_PACKAGES = [
 
 let pyodideReadyPromise = null;
 
+// Pyodide is fetched from a CDN at runtime. The usual host, cdn.jsdelivr.net,
+// is unreliable on some networks — notably mainland China, where its DNS is
+// intermittently polluted. That surfaces as:
+//   "Failed to fetch dynamically imported module: .../pyodide.asm.js"
+// To be resilient we try several *complete* jsDelivr backends in order. Each is
+// a different hostname, so a block on one does not take down the others, and
+// each mirrors the FULL build — so the numpy/scipy/matplotlib wheels that
+// loadPackage() needs live alongside the core (npmmirror/cdnjs ship core only).
+const PYODIDE_BASES = [
+  "https://gcore.jsdelivr.net/pyodide/v0.26.0/full/",
+  "https://fastly.jsdelivr.net/pyodide/v0.26.0/full/",
+  "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
+];
+
+// Inject a <script src> and resolve once it has executed (reject on error).
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => { s.remove(); reject(new Error("failed to load " + src)); };
+    document.head.appendChild(s);
+  });
+}
+
+// Probe a mirror with a bounded timeout so a blocked/polluted host is skipped
+// quickly instead of hanging on DNS. jsDelivr sends permissive CORS headers,
+// so this cross-origin fetch is allowed.
+async function mirrorReachable(base, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(base + "pyodide.js", { signal: ctrl.signal });
+    return r.ok;
+  } catch (e) {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function loadPyodideOnce() {
   if (pyodideReadyPromise) return pyodideReadyPromise;
   pyodideReadyPromise = (async () => {
-    const py = await loadPyodide({
-      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
-    });
+    // Pick the first mirror that actually responds, then load everything from
+    // it. Probing first means loadPyodide() is called exactly once (calling it
+    // repeatedly across mirrors is not supported).
+    let base = null;
+    for (const candidate of PYODIDE_BASES) {
+      if (await mirrorReachable(candidate, 8000)) { base = candidate; break; }
+      console.warn("[run_python] Pyodide mirror unreachable, trying next: " + candidate);
+    }
+    if (!base) {
+      pyodideReadyPromise = null; // allow a later click to retry from scratch
+      throw new Error(
+        "Could not reach any Pyodide mirror (gcore / fastly / cdn jsDelivr). " +
+        "This is usually a temporary network block — check your connection or " +
+        "VPN/proxy and click Run again."
+      );
+    }
+
+    if (typeof loadPyodide === "undefined") {
+      await loadScript(base + "pyodide.js");
+    }
+    const py = await loadPyodide({ indexURL: base });
     await py.loadPackage(["numpy", "scipy", "matplotlib"]);
     py.runPython(`
 import matplotlib

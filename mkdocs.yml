@@ -101,7 +101,9 @@ markdown_extensions:
 extra_javascript:
   - assets/javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
-  - https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js
+  # pyodide.js is loaded at runtime by run_python.js, which falls back across
+  # several jsDelivr mirrors (gcore/fastly/cdn) for reliability behind China's
+  # intermittent DNS blocking of cdn.jsdelivr.net.
   - assets/javascripts/run_python.js
 
 extra_css:
