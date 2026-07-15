@@ -127,11 +127,13 @@ function loadPyodideOnce() {
       await loadScript(base + "pyodide.js");
     }
     const py = await loadPyodide({ indexURL: base });
-    // Preload the full set of Pyodide packages used anywhere in the handbook
-    // (numpy 92, matplotlib 45, scipy 14, pandas 4 blocks) once, so every "Run"
-    // works regardless of which one the reader clicks. loadPackagesFromImports
-    // below then covers any snippet that needs something beyond this base set.
-    await py.loadPackage(["numpy", "scipy", "matplotlib", "pandas"]);
+    // Preload only numpy + matplotlib to keep first-run download small
+    // (~43 MB vs ~110 MB). These two must be eager: some blocks use bare "np" or
+    // "plt" without importing them, and matplotlib backs the plot capture below.
+    // scipy (45 MB) and pandas (23 MB) are fetched on demand by
+    // loadPackagesFromImports when a snippet actually imports them — every
+    // scipy/pandas block imports it explicitly, so nothing breaks.
+    await py.loadPackage(["numpy", "matplotlib"]);
     py.runPython(`
 # Pre-bind the conventional aliases (np, pd, plt) and the bare module names, so a
 # snippet that uses them WITHOUT an explicit import still runs — e.g. a fragment
@@ -139,9 +141,6 @@ function loadPyodideOnce() {
 # binding these once at startup covers all of them.
 import numpy as np
 import numpy
-import scipy
-import pandas as pd
-import pandas
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -325,7 +324,7 @@ function attachRunButton(blockEl) {
     btn.innerHTML = "<span class='pyodide-icon'>⏳</span> Loading…";
     output.style.display = "block";
     output.innerHTML =
-      "<div class='pyodide-note'>Loading Python runtime in your browser. First run takes ~10 s while NumPy / SciPy / matplotlib are fetched and cached. Subsequent runs are instant.</div>";
+      "<div class='pyodide-note'>Loading Python runtime in your browser (first run only — NumPy + Matplotlib are fetched and cached; SciPy / pandas load on demand). Subsequent runs are instant.</div>";
 
     try {
       const py = await loadPyodideOnce();
