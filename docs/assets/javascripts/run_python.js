@@ -40,15 +40,33 @@ const HEAVY_PACKAGES = [
 
 let pyodideReadyPromise = null;
 
-// Pyodide is fetched from a CDN at runtime. The usual host, cdn.jsdelivr.net,
-// is unreliable on some networks — notably mainland China, where its DNS is
-// intermittently polluted. That surfaces as:
+// Pyodide is fetched at runtime. We prefer a SAME-ORIGIN self-hosted copy
+// (docs/assets/pyodide/ — core + the numpy/scipy/matplotlib dependency
+// closure), which is guaranteed reachable whenever the page itself loaded, so
+// the Run feature no longer depends on any third-party CDN. If that copy is
+// somehow unavailable we fall back to several *complete* jsDelivr backends.
+// cdn.jsdelivr.net alone is unreliable on some networks — notably mainland
+// China, where its DNS is intermittently polluted, surfacing as:
 //   "Failed to fetch dynamically imported module: .../pyodide.asm.js"
-// To be resilient we try several *complete* jsDelivr backends in order. Each is
-// a different hostname, so a block on one does not take down the others, and
-// each mirrors the FULL build — so the numpy/scipy/matplotlib wheels that
+// Each fallback is a different hostname mirroring the FULL build, so the wheels
 // loadPackage() needs live alongside the core (npmmirror/cdnjs ship core only).
+
+// Derive the self-hosted base from this script's own URL, so it works no matter
+// what sub-path the site is deployed under.
+const LOCAL_PYODIDE_BASE = (function () {
+  try {
+    const scripts = document.getElementsByTagName("script");
+    for (const s of scripts) {
+      if (s.src && s.src.indexOf("assets/javascripts/run_python.js") !== -1) {
+        return s.src.replace(/assets\/javascripts\/run_python\.js.*$/, "assets/pyodide/");
+      }
+    }
+  } catch (e) { /* fall through to CDNs */ }
+  return null;
+})();
+
 const PYODIDE_BASES = [
+  ...(LOCAL_PYODIDE_BASE ? [LOCAL_PYODIDE_BASE] : []),
   "https://gcore.jsdelivr.net/pyodide/v0.26.0/full/",
   "https://fastly.jsdelivr.net/pyodide/v0.26.0/full/",
   "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
